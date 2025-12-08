@@ -4,7 +4,9 @@
 # Log file
 *.log
 
+# File particolari negri
 .idea
+DungeonSystem.iml
 
 # BlueJ files
 *.ctxt

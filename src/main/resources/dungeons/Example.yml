@@ -1,0 +1,79 @@
+# Is PvP enabled?
+pvp: false
+
+time:
+  # Has the dungeon a per-party/per-player time limit?
+  limited: true
+  amount: 5
+  # Time unit referred to the amount specified above,
+  # supported units: [SECONDS, MINUTES, HOURS, DAYS]
+  unit: MINUTES
+
+# Any fallback command is independent of the message sent in case of failure or success (configurable in the messages.yml)
+# If in party, all the commands are executed per-player in the party
+entrance:
+  max_slots:
+    # Limit the number of player allowed in the dungeon, exceptions:
+    # - set to 0 for restricting the access to the dungeon
+    # - set to -1 for allowing unlimited amount of players
+    limit: 100
+    bypass_permission: "azure_dungeon.bypass_slots"
+    # Permit to join either if 'max_slots' is set to '0'
+    admin_permission: "azure_dungeon.admin"
+    # Commands to execute in case the player isn't allowed to enter for the 'max_slots' limit
+    fall_back_commands:
+      - "/kill %player%"
+  party:
+    # Don't allow solo players to enter the dungeon if set to true
+    required: false
+    # Commands to execute in case the player isn't allowed to enter for the 'party' limit
+    fall_back_commands:
+      - "/kill %player%"
+  level:
+    # A solo player must have at least the specified level to enter the dungeon
+    personal_minimum: 10
+    # Impose the limit cited above but for a party
+    # The party level is the sum of the levels of all the party members
+    party_minimum: 15
+    # Commands to execute in case the player isn't allowed to enter for the 'level' limit
+    fall_back_commands:
+      - "/kill %player%"
+  # Commands to execute in case the player successfully enters the dungeon
+  successful_entrance_commands:
+    - "/tp %player% %player%"
+
+events:
+  # Any event in this section defines its identifier that will be used in commands
+  # Example: /dungeon trigger 'first_event' %player%
+  first_event:
+    # The type of event: [TIMED, OBJECTIVE, ACTION, STRUCTURAL]
+    type: TIMED
+    # The timed event is the simplest one: given a range of time, executes the given commands
+    # Is fixed establish if the commands are executed AFTER the time has elapsed or randomly in the given range
+    is_fixed: false
+    time:
+      amount: 1
+      unit: MINUTES
+    commands:
+      - "/say TIME!"
+  # The objective is checked ONLY AFTER TRIGGERING THE EVENT!
+  # So a command like "/dungeon trigger 'objective_event' %player%" have to be used before
+  objective_event:
+    type: OBJECTIVE
+    # The objective event triggers the given commands once the requirements are met
+    requirements:
+      # An internal parser will translate the requirements and construct a condition
+      # given some fixed schemas, like: (parameter symbols: <> means required and [] means optional)
+      # slay <amount> <MobType/MythicMobType>
+      # interact <location x, y, z> [MobType/MythicMobType] (Specifying or not the mob type allows to distinguish entity interactions from block interactions)
+      - "slay 100 ZOMBIE"
+    commands:
+      - "/say OBJECTIVE!"
+
+  # Other events: work in progress...
+
+# Work in progress...
+complete-reward:
+
+# Work in progress...
+boss-rooms:

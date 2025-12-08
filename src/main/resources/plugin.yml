@@ -3,6 +3,6 @@ main: com.littlesquad.Main
 version: 1.0
 commands:
   createdungeon:
-    description: "No"
+    description: "Command Used To Create the dungeon"
     aliases:
       - cd

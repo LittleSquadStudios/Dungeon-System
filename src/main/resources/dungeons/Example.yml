@@ -46,7 +46,7 @@ events:
   # Any event in this section defines its identifier that will be used in commands
   # Example: /dungeon trigger 'first_event' %player%
   first_event:
-    # The type of event: [TIMED, OBJECTIVE, ACTION, STRUCTURAL]
+    # The type of event: [TIMED, OBJECTIVE, STRUCTURAL]
     type: TIMED
     # The timed event is the simplest one: given a range of time, executes the given commands
     # Is fixed establish if the commands are executed AFTER the time has elapsed or randomly in the given range
@@ -69,11 +69,90 @@ events:
       - "slay 100 ZOMBIE"
     commands:
       - "/say OBJECTIVE!"
+  # A structural event is a special type of event that modify the structure of a dungeon through
+  # any environmental change that is conditioned by other structural events, example:
+  #
+  #                    ------------------
+  # __________________|                 |________________
+  #    Entrance A         Boss Room         Entrance B
+  # ------------------\________________|-----------------
+  #
+  # If the 'Entrance A' gets triggered and blocks the access, then the 'Entrance B' can't
+  # get triggered, otherwise it'll completely lock the progresses in the dungeon
+  #
+  # The structural events are the only type of event that may trigger without any external
+  # call and that exists in 2 states: ACTIVE or NOT_ACTIVE
+  structural_event_A:
+    type: STRUCTURAL
+    # Supported environment events: [NONE, ROCK_SLIDES]
+    # The ROCK_SLIDES event makes falling blocks of the given types and then occlude the passage
+    # at a given location
+    environment_event: NONE
+    # Ignored for block independent events
+    block_types:
+      - "STONE"
+    # Ignored for location independent events
+    location: "-24 68 -24"
+    # List of events where AT LEAST ONE should be NOT_ACTIVE for allowing this event to trigger
+    conditioned_by:
+      - "structural_event_B"
+    commands:
+      - "/say STRUCTURAL!"
 
-  # Other events: work in progress...
+completion_reward:
+  items:
+    # This might be named as you want, the only requirement is to make it different from the others
+    Example_item:
+      is_mythic_item: true
+      # Ignored if 'is_mythic_item' is false
+      mythic_item_name: "AAA"
+      # Ignored if 'is_mythic_item' is true
+      type: SNOWBALL
+      amount: 16
+      is_glowing: false
+      # Supported enchants: [PROTECTION, FIRE_PROTECTION, FEATHER_FALLING, BLAST_PROTECTION,
+      #                      PROJECTILE_PROTECTION, RESPIRATION, AQUA_AFFINITY, THORNS, DEPTH_STRIDER,
+      #                      FROST_WALKER, BINDING_CURSE, SHARPNESS, SMITE, BANE_OF_ARTHROPODS,
+      #                      KNOCKBACK, FIRE_ASPECT, LOOTING, SWEEPING_EDGE, EFFICIENCY, SILK_TOUCH,
+      #                      UNBREAKING, FORTUNE, POWER, PUNCH, FLAME, INFINITY, LUCK_OF_THE_SEA, LURE,
+      #                      LOYALTY, IMPALING, RIPTIDE, CHANNELING, MULTISHOT, QUICK_CHARGE, PIERCING,
+      #                      DENSITY, BREACH, WIND_BURST, MENDING, VANISHING_CURSE, SOUL_SPEED, SWIFT_SNEAK]
+      enchants:
+        - "PROTECTION"
+      display_name: "abc"
+      lore:
+        - "def"
+  experience: 1000
+  loot_chest:
+    # This might be named as you want, the only requirement is to make it different from the others
+    loot_chest_example:
+      location: "-30 70 -28"
+      loot:
+        # Configure like in 'items', indeed that will have the same parser
+  commands:
+    - "/say BRAVO %player%!"
 
-# Work in progress...
-complete-reward:
-
-# Work in progress...
 boss-rooms:
+  # This might be named as you want, the only requirement is to make it different from the others
+  main_boss_room:
+    # Limit the number of players in the boss room
+    max_players_in: 10
+    max_one_party_at_a_time: true
+    access_denied_commands:
+      - "/say NO!"
+    # Configuration of the boss residing in the boss room
+    boss:
+      base_level: 50
+      # For example a party of 2 players at level 45 or 3 players at level 30
+      # If a player is not in party, then his level is considered the party level
+      party_level: 90
+      multiplier: 1.0
+      exponent: 1.0
+      # Limit the max level the boss can reach
+      # The formula for the final level is: Max(max_level, Min(base_level, Pow((base_level + (real_party_level - party_level)) * multiplier, exponent)))
+      # where 'real_party_level' is the only non-constant value
+      max_level: 80
+      # Mythic mob boss name
+      name: "BOSS"
+    rewards:
+      # Configure like in 'completion_reward', indeed that will have the same parser

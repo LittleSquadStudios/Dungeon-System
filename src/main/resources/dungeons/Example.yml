@@ -1,6 +1,9 @@
 # Is PvP enabled?
 pvp: false
 
+# World in which is defined the dungeon
+world: "World"
+
 time:
   # Has the dungeon a per-party/per-player time limit?
   limited: true
@@ -42,12 +45,7 @@ entrance:
   successful_entrance_commands:
     - "/tp %player% %player%"
 
-events: # TODO: MI RACCOMANDO NELLE ASTRAZIONI I PUNTI IN CUI ACCADE -
-  # TODO: - QUALCOSA SONO SEGNATI COME CHECKPOINT, ED AD OGNUNO PUO' ESSERE ASSEGNATO
-  # TODO: - UNO O PIU EVENTS, C'E' BISOGNO DI QUALCOSA NEL CONFIG CHE FACCIA CAPIRE COS'E' UN CHECKPOINT
-  # TODO: - UN CHECKPOINT PUO' ESSERE DI TIPO AREA REGION CON IL CHECK AABB, UNA SINGOLA LOCATION, INTERACTION CON UN BLOCK
-  # TODO: - SAREBBE MEGLIO FARE DEI FALLBACK COMMANDS ANCHE PER QUELLO VEDI TU COME ADATTARE QUANDO ATTACCHI
-  # TODO: - A LAVORARE - Swape
+events:
   # Any event in this section defines its identifier that will be used in commands
   # Example: /dungeon trigger 'first_event' %player%
   first_event:
@@ -71,7 +69,11 @@ events: # TODO: MI RACCOMANDO NELLE ASTRAZIONI I PUNTI IN CUI ACCADE -
       # given some fixed schemas, like: (parameter symbols: <> means required and [] means optional)
       # slay <amount> <MobType/MythicMobType>
       # interact <location x, y, z> [MobType/MythicMobType] (Specifying or not the mob type allows to distinguish entity interactions from block interactions)
+      # near <location x, y, z> <radius>
+      # enter <location x, y, z> <location x, y, z>
       - "slay 100 ZOMBIE"
+    # Leave this blank in case there is no associated checkpoint once this event gets fired
+    checkpoint: ""
     commands:
       - "/say OBJECTIVE!"
   # A structural event is a special type of event that modify the structure of a dungeon through
@@ -80,7 +82,7 @@ events: # TODO: MI RACCOMANDO NELLE ASTRAZIONI I PUNTI IN CUI ACCADE -
   #                    ------------------
   # __________________|                 |________________
   #    Entrance A         Boss Room         Entrance B
-  # ------------------\________________|-----------------
+  # ------------------|________________|-----------------
   #
   # If the 'Entrance A' gets triggered and blocks the access, then the 'Entrance B' can't
   # get triggered, otherwise it'll completely lock the progresses in the dungeon
@@ -103,6 +105,50 @@ events: # TODO: MI RACCOMANDO NELLE ASTRAZIONI I PUNTI IN CUI ACCADE -
       - "structural_event_B"
     commands:
       - "/say STRUCTURAL!"
+
+# The checkpoints are like save-points that gets activated once a OBJECTIVE
+# event gets fired
+#
+# They may be used as respawn locations or simple progress marks
+#
+# Very useful when it's required to establish what happens AFTER reaching a
+# certain checkpoint
+# NOTE: It's used the term after since the effects are defined to happen
+#       when the checkpoint gets unlocked since it's already done in the
+#       'commands' section of the OBJECTIVE event
+checkpoints:
+  # Name of the checkpoint used in the 'checkpoint' section of the OBJECTIVE event
+  example:
+    location: "-40 66 -16"
+    # May be specified a precedent checkpoint too if this is only a 'technical' checkpoint
+    respawn_at_checkpoint: "example"
+    on_death_commands:
+      - "/say MORTO!"
+
+boss-rooms:
+  # This might be named as you want, the only requirement is to make it different from the others
+  main_boss_room:
+    # Limit the number of players in the boss room
+    max_players_in: 10
+    max_one_party_at_a_time: true
+    access_denied_commands:
+      - "/say NO!"
+    # Configuration of the boss residing in the boss room
+    boss:
+      base_level: 50
+      # For example a party of 2 players at level 45 or 3 players at level 30
+      # If a player is not in party, then his level is considered the party level
+      party_level: 90
+      multiplier: 1.0
+      exponent: 1.0
+      # Limit the max level the boss can reach
+      # The formula for the final level is: Max(max_level, Min(base_level, Pow((base_level + (real_party_level - party_level)) * multiplier, exponent)))
+      # where 'real_party_level' is the only non-constant value
+      max_level: 80
+      # Mythic mob boss name
+      name: "BOSS"
+    rewards:
+      # Configure like in 'completion_reward', indeed that will have the same parser
 
 completion_reward:
   items:
@@ -133,31 +179,6 @@ completion_reward:
     loot_chest_example:
       location: "-30 70 -28"
       loot:
-        # Configure like in 'items', indeed that will have the same parser
+      # Configure like in 'items', indeed that will have the same parser
   commands:
     - "/say BRAVO %player%!"
-
-boss-rooms:
-  # This might be named as you want, the only requirement is to make it different from the others
-  main_boss_room:
-    # Limit the number of players in the boss room
-    max_players_in: 10
-    max_one_party_at_a_time: true
-    access_denied_commands:
-      - "/say NO!"
-    # Configuration of the boss residing in the boss room
-    boss:
-      base_level: 50
-      # For example a party of 2 players at level 45 or 3 players at level 30
-      # If a player is not in party, then his level is considered the party level
-      party_level: 90
-      multiplier: 1.0
-      exponent: 1.0
-      # Limit the max level the boss can reach
-      # The formula for the final level is: Max(max_level, Min(base_level, Pow((base_level + (real_party_level - party_level)) * multiplier, exponent)))
-      # where 'real_party_level' is the only non-constant value
-      max_level: 80
-      # Mythic mob boss name
-      name: "BOSS"
-    rewards:
-      # Configure like in 'completion_reward', indeed that will have the same parser

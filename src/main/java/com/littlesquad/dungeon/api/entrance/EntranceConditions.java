@@ -1,9 +1,8 @@
-package com.littlesquad.api;
+package com.littlesquad.dungeon.api.entrance;
 
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
-public interface EntryRequest {
+public interface EntranceConditions {
 
     int maxSlots();
     int playerMinimumLevel();

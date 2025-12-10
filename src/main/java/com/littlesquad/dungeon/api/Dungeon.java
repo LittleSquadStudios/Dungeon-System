@@ -1,6 +1,8 @@
-package com.littlesquad.api;
+package com.littlesquad.dungeon.api;
 
-import com.littlesquad.api.checkpoint.Checkpoint;
+import com.littlesquad.dungeon.api.checkpoint.Checkpoint;
+import com.littlesquad.dungeon.api.entrance.EntranceConditions;
+import com.littlesquad.dungeon.api.entrance.EntryResponse;
 import org.bukkit.entity.Player;
 
 import java.util.Set;
@@ -63,16 +65,16 @@ public interface Dungeon {
      * @since 1.0.0
      * @author LittleSquad
      * */
-    EntryResponse tryEnter(EntryRequest request);
+    EntryResponse tryEnter(EntranceConditions request);
 
     /**
-     * This method equals to <code>{@link Dungeon#tryEnter(EntryRequest)}</code> but is executed
+     * This method equals to <code>{@link Dungeon#tryEnter(EntranceConditions)}</code> but is executed
      * in async
      * @return {@link CompletableFuture} containing {@link EntryResponse}
      * @since 1.0.0
      * @author LittleSquad
      * */
-    CompletableFuture<EntryResponse> tryEnterAsync(EntryRequest request);
+    CompletableFuture<EntryResponse> tryEnterAsync(EntranceConditions request);
 
     /**
      * Forces the player to exit the dungeon.
@@ -103,16 +105,10 @@ public interface Dungeon {
 
     Checkpoint getCheckPoint(final String checkPointId);
 
-    void triggerEvent(final String eventId, final Player triggerer);
-
-
-
-    void onMobKilled(final Player killer, final String mobType, final int amount);
+    void triggerEvent (final String eventId, final Player triggerer);
+    CompletableFuture<Void> triggerEventAsync (final String eventId, final Player triggerer);
 
     Status status();
 
     void shutdown();
-
-
-
 }

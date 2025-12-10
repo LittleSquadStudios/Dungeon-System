@@ -1,8 +1,8 @@
-package com.littlesquad.api;
+package com.littlesquad.dungeon.api;
 
 /**
  * This enumeration represents the reasons why
- * a player can be kicked from a dungeon
+ * a player can be kicked from a dungeon.
  *
  * @since 1.0.0
  * @author LittleSquad
@@ -14,8 +14,7 @@ public enum ExitReason {
     FINISHED, // If the player finishes the dungeon or kills the boss or bosses
 
     QUIT, // If the player exit the game or server
-    CONNECTION_LOST, // If the player gets a crash
     ERROR, // If an internal plugin error occurs
-    KICKED // If player gets kicked by forceExit or something else like
+    KICKED // If player gets kicked by forceExit or something else like that
 
 }

@@ -1,4 +1,4 @@
-package com.littlesquad.api;
+package com.littlesquad.dungeon.api;
 
 public interface Status {
 

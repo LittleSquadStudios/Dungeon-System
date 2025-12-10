@@ -1,0 +1,42 @@
+database:
+  # If set to 'false', any data regarding the player statistics will be lost
+  # as long as this stay set to 'false'
+  enabled: true
+
+  # The name of the database
+  name: "AzureDungeon"
+
+  # Optional, leave empty if you use the fields below
+  url: ""
+
+  # Database credentials
+  ip-address: '127.0.0.1'
+  port: 3306
+  username: "db_user"
+  password: "db_password"
+  ssl: true
+
+  # Connection pool size
+  maximum-pool_size: 20   # Maximum number of connections in the pool
+  minimum-idle: 5         # Minimum number of idle connections to maintain
+
+  # Timeouts in milliseconds
+  connection-timeout: 30000   # Maximum time to obtain a connection from the pool
+  idle-timeout: 600000        # Maximum idle time before a connection is closed
+  max-lifetime: 1800000       # Maximum lifetime of a connection before it is recreated
+
+  # Optional optimization parameters
+  auto-commit: true               # Defines whether connections should have auto-commit enabled
+  leak-detection-threshold: 2000  # Detect connection leaks longer than 2 seconds
+
+  # Thread pool that will get the connection for the calling thread
+  connection_getter:
+    # Setting this to true will discard the fields below
+    is_cached: true
+    # Defines the number of active threads
+    thread_count: 12
+    # Defines the type of thread pool between FIXED and WORK-STEALING
+    is_work_stealing: true
+
+permissions:
+  # Work in progress

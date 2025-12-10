@@ -42,7 +42,12 @@ entrance:
   successful_entrance_commands:
     - "/tp %player% %player%"
 
-events:
+events: # TODO: MI RACCOMANDO NELLE ASTRAZIONI I PUNTI IN CUI ACCADE -
+  # TODO: - QUALCOSA SONO SEGNATI COME CHECKPOINT, ED AD OGNUNO PUO' ESSERE ASSEGNATO
+  # TODO: - UNO O PIU EVENTS, C'E' BISOGNO DI QUALCOSA NEL CONFIG CHE FACCIA CAPIRE COS'E' UN CHECKPOINT
+  # TODO: - UN CHECKPOINT PUO' ESSERE DI TIPO AREA REGION CON IL CHECK AABB, UNA SINGOLA LOCATION, INTERACTION CON UN BLOCK
+  # TODO: - SAREBBE MEGLIO FARE DEI FALLBACK COMMANDS ANCHE PER QUELLO VEDI TU COME ADATTARE QUANDO ATTACCHI
+  # TODO: - A LAVORARE - Swape
   # Any event in this section defines its identifier that will be used in commands
   # Example: /dungeon trigger 'first_event' %player%
   first_event:

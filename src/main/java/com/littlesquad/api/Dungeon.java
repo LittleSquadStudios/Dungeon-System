@@ -1,9 +1,10 @@
 package com.littlesquad.api;
 
+import com.littlesquad.api.checkpoint.Checkpoint;
 import org.bukkit.entity.Player;
 
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 public interface Dungeon {
 
@@ -61,22 +62,52 @@ public interface Dungeon {
      * @return {@link EntryResponse}
      * @since 1.0.0
      * @author LittleSquad
-     *
-     *
      * */
     EntryResponse tryEnter(EntryRequest request);
 
-    /***/
-    void forceExit(Player player, ExitReason reason);
+    /**
+     * This method equals to <code>{@link Dungeon#tryEnter(EntryRequest)}</code> but is executed
+     * in async
+     * @return {@link CompletableFuture} containing {@link EntryResponse}
+     * @since 1.0.0
+     * @author LittleSquad
+     * */
+    CompletableFuture<EntryResponse> tryEnterAsync(EntryRequest request);
 
+    /**
+     * Forces the player to exit the dungeon.
+     * Regardless of the player's progress or performance, they will be
+     * removed from the dungeon and an {@link ExitReason#KICKED} will be returned.
+     * Additionally, the player registry will record that, at the moment this
+     * method was executed, the player was forcibly removed.
+     *
+     * @return {@link ExitReason#KICKED}
+     * @since 1.0.0
+     * author LittleSquad
+     */
+    ExitReason forceExit(final Player player);
+
+    /**
+     * What happens every time a player joins the dungeon, is different from tryEnter
+     * since there he will check various things, here you should write what happens
+     * exactly after that moment.
+     *
+     * @since 1.0.0
+     * @author LittleSquad
+     * */
     void onEnter(final Player player);
     void onEnter(final Player... players);
 
-    void triggerEvent(String eventId, Player triggerer);
+    void onExit(final Player player);
+    void onExit(final Player... players);
 
-    void onReachCheckpoint(Player player, Checkpoint checkpoint);
+    Checkpoint getCheckPoint(final String checkPointId);
 
-    void onMobKilled(Player killer, String mobType, int amount);
+    void triggerEvent(final String eventId, final Player triggerer);
+
+
+
+    void onMobKilled(final Player killer, final String mobType, final int amount);
 
     Status status();
 

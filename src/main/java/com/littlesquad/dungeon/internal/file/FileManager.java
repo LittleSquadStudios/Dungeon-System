@@ -1,0 +1,99 @@
+package com.littlesquad.dungeon.internal.file;
+
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public final class FileManager {
+    private static volatile ConfigParser config;
+    private static volatile FileConfiguration messages;
+    private static volatile DungeonParser[] dungeons;
+
+    private static final ExecutorService executor = Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors());
+
+    private static File pluginFolder;
+
+    private FileManager () {}
+
+    public static CompletableFuture<Void> loadAll (final File dir) {
+        if (pluginFolder == null) {
+            //noinspection ResultOfMethodCallIgnored
+            (pluginFolder = dir).mkdirs();
+            File f;
+            if (!(f = new File(pluginFolder, "config.yml")).exists())
+                try (final InputStream stream = FileManager.class.getResourceAsStream("/config.yml");
+                     final FileOutputStream out = new FileOutputStream(f)) {
+                    if (stream != null)
+                        out.write(stream.read());
+                    out.flush();
+                } catch (final IOException e) {
+                    throw new RuntimeException(e);
+                }
+            if (!(f = new File(pluginFolder, "messages.yml")).exists())
+                try (final InputStream stream = FileManager.class.getResourceAsStream("/messages.yml");
+                     final FileOutputStream out = new FileOutputStream(f)) {
+                    if (stream != null)
+                        out.write(stream.read());
+                    out.flush();
+                } catch (final IOException e) {
+                    throw new RuntimeException(e);
+                }
+            if ((f = new File(pluginFolder, "dungeons")).exists()
+                    || (f.mkdirs())
+                    && !(f = new File(f, "Example.yml")).exists())
+                try (final InputStream stream = FileManager.class.getResourceAsStream("/dungeons/Example.yml");
+                     final FileOutputStream out = new FileOutputStream(f)) {
+                    if (stream != null)
+                        out.write(stream.read());
+                    out.flush();
+                } catch (final IOException e) {
+                    throw new RuntimeException(e);
+                }
+        }
+        final ArrayList<CompletableFuture<Void>> futures = new ArrayList<>(2);
+        futures.add(CompletableFuture.runAsync(() -> config = new ConfigParser(
+                        YamlConfiguration.loadConfiguration(new File(
+                                pluginFolder,
+                                "config.yml"))),
+                executor));
+        futures.add(CompletableFuture.runAsync(() -> messages = YamlConfiguration
+                        .loadConfiguration(new File(
+                                pluginFolder,
+                                "messages.yml")),
+                executor));
+        final File dungeonDir = new File(pluginFolder, "dungeons");
+        final File[] dungeonFiles;
+        if ((dungeonFiles = dungeonDir.listFiles()) != null) {
+            dungeons = new DungeonParser[dungeonFiles.length];
+            for (int i = 0; i < dungeonFiles.length; i++) {
+                final int finalI = i;
+                futures.add(CompletableFuture.runAsync(() -> dungeons[finalI] = new DungeonParser(
+                        YamlConfiguration.loadConfiguration(dungeonFiles[finalI])),
+                        executor));
+            }
+        }
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+    }
+
+    public static ConfigParser getConfig () {
+        return config;
+    }
+    public static FileConfiguration getMessages () {
+        return messages;
+    }
+    public static DungeonParser[] getDungeons () {
+        return dungeons;
+    }
+
+    public static void close () {
+        executor.shutdownNow();
+    }
+}

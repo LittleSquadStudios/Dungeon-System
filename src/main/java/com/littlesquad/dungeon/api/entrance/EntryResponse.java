@@ -67,27 +67,7 @@ public enum EntryResponse {
 
     FAILURE_PER_ALREADY_PROCESSING,
 
-    DEVELOPING; // SHOULD BE USED TO ADD COMMANDS
+    SUCCESS
 
-    private final Map<String, List<String>> fallBackCommands; // Contains all dungeon and their relative commands
-
-    EntryResponse() {
-        this.fallBackCommands = new ConcurrentHashMap<>();
-    }
-
-    public void addCommand(final String dungeonId, final String command) {
-        fallBackCommands.computeIfAbsent(dungeonId, k -> new CopyOnWriteArrayList<>()).add(command);
-    }
-
-    public void addCommands(final String dungeonId, final List<String> commands) {
-        fallBackCommands.put(dungeonId, new CopyOnWriteArrayList<>(commands));
-    }
-
-    public void clearCommands() {
-        fallBackCommands.clear();
-    }
-
-    public List<String> getFallBackCommands(final String dungeonId) {
-        return fallBackCommands.getOrDefault(dungeonId, Collections.emptyList());
-    }
+    //TODO: Swape, mi sono reso conto che non era necessario il sistema qua dentro, per ulteriori chiarimenti chiamami
 }

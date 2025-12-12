@@ -1,7 +1,6 @@
 package com.littlesquad.dungeon.api;
 
 import com.littlesquad.dungeon.api.checkpoint.Checkpoint;
-import com.littlesquad.dungeon.api.entrance.EntranceConditions;
 import com.littlesquad.dungeon.api.entrance.EntryResponse;
 import org.bukkit.entity.Player;
 
@@ -68,7 +67,7 @@ public interface Dungeon {
     EntryResponse tryEnter(Player player);
 
     /**
-     * This method equals to <code>{@link Dungeon#tryEnter(EntranceConditions, Player)}</code> but is executed
+     * This method equals to <code>{@link Dungeon#tryEnter(Player)}</code> but is executed
      * in async
      * @return {@link CompletableFuture} containing {@link EntryResponse}
      * @since 1.0.0

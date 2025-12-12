@@ -8,9 +8,9 @@ public final class Main extends JavaPlugin {
     @Override
     public void onEnable () {
         FileManager.loadAll(getDataFolder())
-                .thenAccept(v -> {
+                .thenRunAsync(() -> {
 
-
+                    //TODO: Register all the services
 
                 });
     }

@@ -1,9 +1,10 @@
 package com.littlesquad.dungeon.api;
 
 import com.littlesquad.dungeon.api.checkpoint.Checkpoint;
-import com.littlesquad.dungeon.api.entrance.EntranceConditions;
+import com.littlesquad.dungeon.api.entrance.Entrance;
 import com.littlesquad.dungeon.api.entrance.EntryResponse;
 import com.littlesquad.dungeon.internal.file.DungeonParser;
+import com.littlesquad.dungeon.placeholder.PlaceholderFormatter;
 import io.lumine.mythic.lib.data.SynchronizedDataHolder;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.party.AbstractParty;
@@ -11,6 +12,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -20,6 +22,12 @@ public abstract class AbstractDungeon implements Dungeon {
 
     private final Set<UUID> leaders = ConcurrentHashMap.newKeySet();
 
+    //TODO: In the implementations, create a constructor that accept the parameters id (String) and parser (DungeonParser)
+
+    private static void dispatchCommands (final List<String> commands, final Player p) {
+        commands.forEach(s -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), PlaceholderFormatter.formatPerPlayer(s, p)));
+    }
+
     @Override
     public EntryResponse tryEnter(final Player leader) {
 
@@ -28,7 +36,7 @@ public abstract class AbstractDungeon implements Dungeon {
 
         // First check: Are the party required? Is the player alone?
 
-        if (getEntranceConditions().partyRequired()) {
+        if (getEntrance().partyRequired()) {
 
             if (party != null && party.countMembers() > 1) {
 
@@ -36,14 +44,24 @@ public abstract class AbstractDungeon implements Dungeon {
                     if (leaders.contains(pd.getUniqueId()))
                         return EntryResponse.FAILURE_PER_ALREADY_PROCESSING;
 
-            } else return EntryResponse.FAILURE_PER_PARTY;
+            } else {
+                dispatchCommands(getEntrance().partyFallbackCommands(), leader);
+                return EntryResponse.FAILURE_PER_PARTY;
+            }
 
             final int currentPartyMember = party.countMembers();
 
-            if ((status().currentPlayers() + currentPartyMember) > getEntranceConditions().maxSlots()) {
+            if ((status().currentPlayers() + currentPartyMember) > getEntrance().maxSlots()) {
+                //TODO: Swape attento al caso in cui il 'maxSlots' è 0 (leggi il config)
 
-                if (!leader.hasPermission(getEntranceConditions().bypassPermission()) ||
-                        !leader.hasPermission(getEntranceConditions().adminPermission())) {
+                if (!leader.hasPermission(getEntrance().bypassPermission()) ||
+                        !leader.hasPermission(getEntrance().adminPermission())) {
+                    party.getOnlineMembers()
+                            .stream()
+                            .map(SynchronizedDataHolder::getPlayer)
+                            .forEach(p -> dispatchCommands(
+                                    getEntrance().maxSlotsFallbackCommands(),
+                                    p));
                     return EntryResponse.FAILURE_PER_SLOTS;
                 }
 
@@ -53,15 +71,23 @@ public abstract class AbstractDungeon implements Dungeon {
                     .stream()
                     .mapToInt(PlayerData::getLevel)
                     .sum()
-                    < getEntranceConditions()
-                    .partyMinimumLevel())
+                    < getEntrance()
+                    .partyMinimumLevel()) {
+                party.getOnlineMembers()
+                        .stream()
+                        .map(SynchronizedDataHolder::getPlayer)
+                        .forEach(p -> dispatchCommands(
+                                getEntrance().levelFallbackCommands(),
+                                p));
                 return EntryResponse.FAILURE_PER_LEVEL;
+            }
 
             onEnter(party.getOnlineMembers()
                     .stream()
                     .map(SynchronizedDataHolder::getPlayer)
                     .toArray(Player[]::new));
 
+            return EntryResponse.SUCCESS;
         } // TODO: Continuare gestione player singolo
 
 
@@ -86,18 +112,13 @@ public abstract class AbstractDungeon implements Dungeon {
         return null;
     }
 
-    @Override
     public void onEnter(Player player) {
-        getEntranceConditions().onEnterCommands().forEach(s -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), s));
-        //TODO: Format the command with placeholder api
+        dispatchCommands(getEntrance().onEnterCommands(), player);
     }
 
     @Override
     public void onEnter(Player... players) {
-        Arrays.stream(players).forEach(p ->
-                getEntranceConditions().onEnterCommands().forEach(s ->
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), s)));
-        //TODO: Format the command with placeholder api
+        Arrays.stream(players).forEach(p -> dispatchCommands(getEntrance().onEnterCommands(), p));
     }
 
     @Override
@@ -135,7 +156,7 @@ public abstract class AbstractDungeon implements Dungeon {
 
     }
 
-    public abstract EntranceConditions getEntranceConditions();
+    public abstract Entrance getEntrance();
     public abstract void runTimeReload(final DungeonParser parser);
 
 }

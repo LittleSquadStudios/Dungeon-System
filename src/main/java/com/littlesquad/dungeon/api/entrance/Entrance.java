@@ -2,7 +2,7 @@ package com.littlesquad.dungeon.api.entrance;
 
 import java.util.List;
 
-public interface EntranceConditions {
+public interface Entrance {
 
     int maxSlots();
     int playerMinimumLevel();
@@ -15,4 +15,7 @@ public interface EntranceConditions {
 
     List<String> onEnterCommands();
 
+    List<String> maxSlotsFallbackCommands ();
+    List<String> partyFallbackCommands ();
+    List<String> levelFallbackCommands ();
 }

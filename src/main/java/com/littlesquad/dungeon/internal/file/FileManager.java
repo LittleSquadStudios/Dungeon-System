@@ -8,14 +8,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public final class FileManager {
     private static volatile ConfigParser config;
     private static volatile FileConfiguration messages;
-    private static volatile DungeonParser[] dungeons;
+    private static final Map<String, DungeonParser> dungeons = new ConcurrentHashMap<>();
 
     private static final ExecutorService executor = Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors());
 
@@ -27,6 +29,7 @@ public final class FileManager {
         if (pluginFolder == null) {
             //noinspection ResultOfMethodCallIgnored
             (pluginFolder = dir).mkdirs();
+            //Load dynamically directly from the jar if they don't exist...
             File f;
             if (!(f = new File(pluginFolder, "config.yml")).exists())
                 try (final InputStream stream = FileManager.class.getResourceAsStream("/config.yml");
@@ -58,6 +61,7 @@ public final class FileManager {
                     throw new RuntimeException(e);
                 }
         }
+        //Load in parallel the configurations and let the caller wait on it...
         final ArrayList<CompletableFuture<Void>> futures = new ArrayList<>(2);
         futures.add(CompletableFuture.runAsync(() -> config = new ConfigParser(
                         YamlConfiguration.loadConfiguration(new File(
@@ -72,11 +76,12 @@ public final class FileManager {
         final File dungeonDir = new File(pluginFolder, "dungeons");
         final File[] dungeonFiles;
         if ((dungeonFiles = dungeonDir.listFiles()) != null) {
-            dungeons = new DungeonParser[dungeonFiles.length];
+            dungeons.clear();
             for (int i = 0; i < dungeonFiles.length; i++) {
                 final int finalI = i;
-                futures.add(CompletableFuture.runAsync(() -> dungeons[finalI] = new DungeonParser(
-                        YamlConfiguration.loadConfiguration(dungeonFiles[finalI])),
+                futures.add(CompletableFuture.runAsync(() -> dungeons.put(
+                        dungeonFiles[finalI].getName().substring(0, dungeonFiles[finalI].getName().lastIndexOf('.')),
+                                new DungeonParser(YamlConfiguration.loadConfiguration(dungeonFiles[finalI]))),
                         executor));
             }
         }
@@ -89,7 +94,7 @@ public final class FileManager {
     public static FileConfiguration getMessages () {
         return messages;
     }
-    public static DungeonParser[] getDungeons () {
+    public static Map<String, DungeonParser> getDungeons () {
         return dungeons;
     }
 

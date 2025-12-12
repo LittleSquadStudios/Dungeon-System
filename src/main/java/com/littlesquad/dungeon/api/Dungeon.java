@@ -65,16 +65,16 @@ public interface Dungeon {
      * @since 1.0.0
      * @author LittleSquad
      * */
-    EntryResponse tryEnter(EntranceConditions request);
+    EntryResponse tryEnter(Player player);
 
     /**
-     * This method equals to <code>{@link Dungeon#tryEnter(EntranceConditions)}</code> but is executed
+     * This method equals to <code>{@link Dungeon#tryEnter(EntranceConditions, Player)}</code> but is executed
      * in async
      * @return {@link CompletableFuture} containing {@link EntryResponse}
      * @since 1.0.0
      * @author LittleSquad
      * */
-    CompletableFuture<EntryResponse> tryEnterAsync(EntranceConditions request);
+    CompletableFuture<EntryResponse> tryEnterAsync(Player p);
 
     /**
      * Forces the player to exit the dungeon.
@@ -103,12 +103,19 @@ public interface Dungeon {
     void onExit(final Player player);
     void onExit(final Player... players);
 
-    Checkpoint getCheckPoint(final String checkPointId);
-
-    void triggerEvent (final String eventId, final Player triggerer);
-    CompletableFuture<Void> triggerEventAsync (final String eventId, final Player triggerer);
-
+    /**
+     * This method return the status of the dungeon, with infos such as
+     * currentPlayer, totalKills, bossKilled, etc...
+     * @return {@link Status} Status of the dungeon
+     * @since 1.0.0
+     * @author LittleSquad
+     * */
     Status status();
+
+    Checkpoint getCheckPoint(final String checkPointId);
+    void triggerEvent (final String eventId, final Player triggerer);
+
+    CompletableFuture<Void> triggerEventAsync (final String eventId, final Player triggerer);
 
     void shutdown();
 }

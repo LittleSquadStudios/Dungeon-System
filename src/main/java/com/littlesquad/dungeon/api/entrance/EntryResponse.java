@@ -63,7 +63,11 @@ public enum EntryResponse {
      * @author LittleSquad
      * @since 1.0.0
      * */
-    FAILURE_PER_LEVEL;
+    FAILURE_PER_LEVEL,
+
+    FAILURE_PER_ALREADY_PROCESSING,
+
+    DEVELOPING; // SHOULD BE USED TO ADD COMMANDS
 
     private final Map<String, List<String>> fallBackCommands; // Contains all dungeon and their relative commands
 

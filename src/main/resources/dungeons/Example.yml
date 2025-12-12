@@ -14,6 +14,12 @@ time:
 
 # Any fallback command is independent of the message sent in case of failure or success (configurable in the messages.yml)
 # If in party, all the commands are executed per-player in the party
+
+# The entrance command has the format: /dungeon join <dungeon_id>.
+# Since MMOCore doesn't provide a way to determine the party leader,
+# we assume that the player who first runs the command acts as the "leader".
+# Once that player starts the dungeon join process, other party members
+# are prevented from executing the same command to avoid duplicate join attempts.
 entrance:
   max_slots:
     # Limit the number of player allowed in the dungeon, exceptions:
@@ -71,6 +77,10 @@ events:
       # interact <location x, y, z> [MobType/MythicMobType] (Specifying or not the mob type allows to distinguish entity interactions from block interactions)
       # near <location x, y, z> <radius>
       # enter <location x, y, z> <location x, y, z>
+
+      # The instruction set is going to be produced and delivered to the final customer
+      # complete of syntax and description of each token.
+
       - "slay 100 ZOMBIE"
     # Leave this blank in case there is no associated checkpoint once this event gets fired
     checkpoint: ""

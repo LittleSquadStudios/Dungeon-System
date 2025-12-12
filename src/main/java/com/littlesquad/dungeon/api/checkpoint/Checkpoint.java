@@ -1,6 +1,7 @@
 package com.littlesquad.dungeon.api.checkpoint;
 
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 
 import java.util.List;
 
@@ -21,9 +22,23 @@ import java.util.List;
  * @author LittleSquad
  * */
 public interface Checkpoint {
+
+    /**
+     * @return {@link Location} the location where the checkpoint is set
+     * @since 1.0.0
+     * @author LittleSquad
+     * */
     Location getLocation ();
 
-    Checkpoint respawnAtCheckpoint ();
+    /**
+     * Brings the player to this checkpoint
+     * @since 1.0.0
+     * @author LittleSquad
+     * */
+    void respawnAtCheckpoint (final Player player);
 
+    /**
+     *
+     * */
     List<String> onDeathCommands ();
 }

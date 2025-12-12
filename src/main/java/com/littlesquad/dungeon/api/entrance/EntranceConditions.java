@@ -6,7 +6,7 @@ public interface EntranceConditions {
 
     int maxSlots();
     int playerMinimumLevel();
-    int partyMinimum();
+    int partyMinimumLevel();
 
     boolean partyRequired();
 

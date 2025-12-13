@@ -67,7 +67,10 @@ public enum EntryResponse {
 
     FAILURE_PER_ALREADY_PROCESSING,
 
-    SUCCESS
+    FAILURE_PER_DUNGEON_BLOCKED,
+
+    SUCCESS,
+    FAILURE
 
     //TODO: Swape, mi sono reso conto che non era necessario il sistema qua dentro, per ulteriori chiarimenti chiamami
 }

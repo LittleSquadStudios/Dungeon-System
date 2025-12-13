@@ -20,12 +20,25 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AbstractDungeon implements Dungeon {
 
+    /*When someone fires this command we should add him to this set
+    ONLY IF HE'S WITH A PARTY, AND IF HE JOINS WE SHOULD CHECK AGAIN AND EVENTUALLY SET INTO THIS SET*/
     private final Set<UUID> leaders = ConcurrentHashMap.newKeySet();
+    private final DungeonParser parser; // Runtime use also.
+
+    // Fundamental dungeon information
+    private String dungeonId;
 
     //TODO: In the implementations, create a constructor that accept the parameters id (String) and parser (DungeonParser)
 
+    public AbstractDungeon(final String dungeonId, final DungeonParser parser) {
+        this.dungeonId = dungeonId;
+        this.parser = parser;
+    }
+
     private static void dispatchCommands (final List<String> commands, final Player p) {
-        commands.forEach(s -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), PlaceholderFormatter.formatPerPlayer(s, p)));
+        if (p != null)
+            commands.forEach(s -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), PlaceholderFormatter.formatPerPlayer(s, p)));
+        else throw new RuntimeException("Player is offline");
     }
 
     @Override
@@ -34,81 +47,140 @@ public abstract class AbstractDungeon implements Dungeon {
         final PlayerData data = PlayerData.get(leader.getUniqueId());
         final AbstractParty party = data.getParty();
 
+        if (getEntrance().maxSlots() == 0)
+            return EntryResponse.FAILURE_PER_DUNGEON_BLOCKED;
+
         // First check: Are the party required? Is the player alone?
+
+        final boolean hasParty = party != null && getOnlinePartySize(party) > 1;
 
         if (getEntrance().partyRequired()) {
 
-            if (party != null && party.countMembers() > 1) {
+            // Second check: Check if leader has a party if not, it will return FAILURE_PER_PARTY
 
-                for (final PlayerData pd : party.getOnlineMembers())
-                    if (leaders.contains(pd.getUniqueId()))
-                        return EntryResponse.FAILURE_PER_ALREADY_PROCESSING;
-
-            } else {
-                dispatchCommands(getEntrance().partyFallbackCommands(), leader);
+            if (!hasParty) {
+                dispatchCommands(getEntrance().partyFallbackCommands(), leader); // TODO: Da togliere da qui
                 return EntryResponse.FAILURE_PER_PARTY;
             }
 
-            final int currentPartyMember = party.countMembers();
+            // Third check:
 
-            if ((status().currentPlayers() + currentPartyMember) > getEntrance().maxSlots()) {
-                //TODO: Swape attento al caso in cui il 'maxSlots' è 0 (leggi il config)
+            if (isPartyAlreadyProcessing(party))
+                return EntryResponse.FAILURE_PER_ALREADY_PROCESSING;
 
-                if (!leader.hasPermission(getEntrance().bypassPermission()) ||
-                        !leader.hasPermission(getEntrance().adminPermission())) {
-                    party.getOnlineMembers()
-                            .stream()
-                            .map(SynchronizedDataHolder::getPlayer)
-                            .forEach(p -> dispatchCommands(
-                                    getEntrance().maxSlotsFallbackCommands(),
-                                    p));
-                    return EntryResponse.FAILURE_PER_SLOTS;
-                }
+            final int partySize = getOnlinePartySize(party);
 
+            if(!hasEnoughSlots(partySize, leader)) {
+                dispatchSlotFallback(party);
+                return EntryResponse.FAILURE_PER_SLOTS;
             }
 
-            if (party.getOnlineMembers()
-                    .stream()
-                    .mapToInt(PlayerData::getLevel)
-                    .sum()
-                    < getEntrance()
-                    .partyMinimumLevel()) {
-                party.getOnlineMembers()
-                        .stream()
-                        .map(SynchronizedDataHolder::getPlayer)
-                        .forEach(p -> dispatchCommands(
-                                getEntrance().levelFallbackCommands(),
-                                p));
+            if (!hasPartyMinimumLevel(party)) {
+                dispatchLevelFallback(party);
                 return EntryResponse.FAILURE_PER_LEVEL;
             }
 
-            onEnter(party.getOnlineMembers()
-                    .stream()
-                    .map(SynchronizedDataHolder::getPlayer)
-                    .toArray(Player[]::new));
-
+            enterParty(party);
             return EntryResponse.SUCCESS;
-        } // TODO: Continuare gestione player singolo
+        }
 
+        if (hasParty) {
 
+            if (isPartyAlreadyProcessing(party))
+                return EntryResponse.FAILURE_PER_ALREADY_PROCESSING;
 
-        /*if (status().currentPlayers() > request.maxSlots()) {
+            final int partySize = getOnlinePartySize(party);
 
-        }*/
+            if (!hasEnoughSlots(partySize, leader)) {
+                dispatchSlotFallback(party);
+                return EntryResponse.FAILURE_PER_SLOTS;
+            }
 
+            if (!hasPartyMinimumLevel(party)) {
+                dispatchLevelFallback(party);
+                return EntryResponse.FAILURE_PER_LEVEL;
+            }
 
+            enterParty(party);
+            return EntryResponse.SUCCESS;
 
+        }
 
-        return null;
+        if (!hasEnoughSlots(1, leader))
+            return EntryResponse.FAILURE_PER_SLOTS;
+
+        if (leader.getLevel() < getEntrance().playerMinimumLevel())
+            return EntryResponse.FAILURE_PER_LEVEL;
+
+        enterSolo(leader);
+        return EntryResponse.SUCCESS;
     }
+
+    private boolean isPartyAlreadyProcessing(AbstractParty party) {
+        for (final PlayerData pd : party.getOnlineMembers())
+            if (leaders.contains(pd.getUniqueId()))
+                return true;
+        return false;
+    }
+
+    private int getOnlinePartySize(AbstractParty party) {
+        return party.getOnlineMembers().size();
+    }
+
+    private boolean hasEnoughSlots(int incomingPlayers, Player leader) {
+        final int maxSlots = getEntrance().maxSlots();
+
+        if (maxSlots == -1)
+            return true;
+
+        if (status().currentPlayers() + incomingPlayers <= maxSlots)
+            return true;
+
+        return leader.hasPermission(getEntrance().bypassPermission())
+                || leader.hasPermission(getEntrance().adminPermission());
+    }
+
+    private void dispatchSlotFallback(AbstractParty party) {
+        party.getOnlineMembers()
+                .stream()
+                .map(SynchronizedDataHolder::getPlayer)
+                .forEach(p ->
+                        dispatchCommands(
+                                getEntrance().maxSlotsFallbackCommands(), p));
+    }
+
+    private boolean hasPartyMinimumLevel(AbstractParty party) {
+        return party.getOnlineMembers()
+                .stream()
+                .mapToInt(PlayerData::getLevel)
+                .sum() >= getEntrance().partyMinimumLevel();
+    }
+
+    private void dispatchLevelFallback(AbstractParty party) {
+        party.getOnlineMembers()
+                .stream()
+                .map(SynchronizedDataHolder::getPlayer)
+                .forEach(p ->
+                        dispatchCommands(
+                                getEntrance().levelFallbackCommands(), p));
+    }
+
+    private void enterParty(AbstractParty party) {
+        onEnter(party.getOnlineMembers()
+                .stream()
+                .map(SynchronizedDataHolder::getPlayer)
+                .toArray(Player[]::new));
+    }
+
+    private void enterSolo(Player leader) {
+        onEnter(leader);
+    }
+
+
 
     @Override
     public CompletableFuture<EntryResponse> tryEnterAsync(Player p) {
-        return null;
-    }
-
-    @Override
-    public ExitReason forceExit(Player player) {
+        // TODO: Lascio l'onere a draky, saprei come farlo ma non voglio urla addosso ;)
         return null;
     }
 
@@ -154,6 +226,11 @@ public abstract class AbstractDungeon implements Dungeon {
     @Override
     public void shutdown() {
 
+    }
+
+    @Override
+    public String id() {
+        return dungeonId;
     }
 
     public abstract Entrance getEntrance();

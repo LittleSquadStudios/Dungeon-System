@@ -2,6 +2,7 @@ package com.littlesquad.dungeon.api.checkpoint;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
 
 import java.util.List;
 
@@ -21,7 +22,7 @@ import java.util.List;
  * @since 1.0.0
  * @author LittleSquad
  * */
-public interface Checkpoint {
+public interface Checkpoint extends Listener {
 
     /**
      * @return {@link Location} the location where the checkpoint is set

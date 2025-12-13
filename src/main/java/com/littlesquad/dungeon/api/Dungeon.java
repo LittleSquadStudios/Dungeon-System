@@ -2,6 +2,8 @@ package com.littlesquad.dungeon.api;
 
 import com.littlesquad.dungeon.api.checkpoint.Checkpoint;
 import com.littlesquad.dungeon.api.entrance.EntryResponse;
+import com.littlesquad.dungeon.api.entrance.ExitReason;
+import com.littlesquad.dungeon.api.status.Status;
 import org.bukkit.entity.Player;
 
 import java.util.Set;

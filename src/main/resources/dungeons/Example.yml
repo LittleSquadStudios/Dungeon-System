@@ -84,6 +84,7 @@ events:
       - "slay 100 ZOMBIE"
     # Leave this blank in case there is no associated checkpoint once this event gets fired
     checkpoint: ""
+    boss-room: ""
     commands:
       - "/say OBJECTIVE!"
   # A structural event is a special type of event that modify the structure of a dungeon through

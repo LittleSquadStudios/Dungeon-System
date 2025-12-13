@@ -1,4 +1,4 @@
-package com.littlesquad.dungeon.api;
+package com.littlesquad.dungeon.api.entrance;
 
 /**
  * This enumeration represents the reasons why

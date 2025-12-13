@@ -1,4 +1,6 @@
 package com.littlesquad.dungeon.api.event;
 
-public interface Event {
+import org.bukkit.event.Listener;
+
+public interface Event extends Listener {
 }

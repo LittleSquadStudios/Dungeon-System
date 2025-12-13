@@ -1,0 +1,5 @@
+prefix: "§7[§bAzure§fMC§7] §8>> §r"
+
+config:
+  dungeon:
+    requirement_parsing_error: "Cannot parse correctly the requirement: "

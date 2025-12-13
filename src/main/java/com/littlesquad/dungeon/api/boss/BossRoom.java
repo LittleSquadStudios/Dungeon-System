@@ -1,4 +1,4 @@
 package com.littlesquad.dungeon.api.boss;
 
-public interface Bossroom {
+public interface BossRoom {
 }

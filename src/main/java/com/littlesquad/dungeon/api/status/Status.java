@@ -59,6 +59,12 @@ public interface Status extends Listener {
 
     int remainingEnemies();
 
+    /**
+     * It returns a list of fixed bossrooms defined in the config section <code>boss-rooms</code>
+     * @return {@link List} of {@link BossRoom BossRooms}
+     * @since 1.0.0
+     * @author LittleSquad
+     * */
     List<BossRoom> bossrooms();
 
     /**

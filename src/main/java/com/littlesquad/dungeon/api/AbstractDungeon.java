@@ -7,6 +7,7 @@ import com.littlesquad.dungeon.api.status.Status;
 import com.littlesquad.dungeon.internal.file.DungeonParser;
 import com.littlesquad.dungeon.placeholder.PlaceholderFormatter;
 import io.lumine.mythic.lib.data.SynchronizedDataHolder;
+import net.Indyuce.mmocore.api.MMOCoreAPI;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.party.AbstractParty;
 import org.bukkit.Bukkit;
@@ -26,6 +27,8 @@ public abstract class AbstractDungeon implements Dungeon {
     private final Set<UUID> leaders = ConcurrentHashMap.newKeySet();
     private final DungeonParser parser; // Runtime use also.
 
+    private final MMOCoreAPI mmoCoreApi;
+
     // Fundamental dungeon information
     private String dungeonId;
 
@@ -34,6 +37,7 @@ public abstract class AbstractDungeon implements Dungeon {
     public AbstractDungeon(final String dungeonId, final DungeonParser parser) {
         this.dungeonId = dungeonId;
         this.parser = parser;
+        mmoCoreApi = new MMOCoreAPI(null); //TODO: Inserire istanza di main
     }
 
     private static void dispatchCommands (final List<String> commands, final Player p) {
@@ -45,7 +49,7 @@ public abstract class AbstractDungeon implements Dungeon {
     @Override
     public EntryResponse tryEnter(final Player leader) {
 
-        final PlayerData data = PlayerData.get(leader.getUniqueId());
+        final PlayerData data = mmoCoreApi.getPlayerData(leader);
         final AbstractParty party = data.getParty();
 
         if (getEntrance().maxSlots() == 0)

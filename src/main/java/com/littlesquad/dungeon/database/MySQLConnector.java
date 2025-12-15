@@ -1,4 +1,4 @@
-package com.littlesquad.dungeon.database;
+package it.thatsade;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -52,6 +52,7 @@ public final class MySQLConnector {
                           final String password) {
         this(databaseName, ipAddr, port, userName, password, Executors.newCachedThreadPool());
     }
+
     public MySQLConnector(final String databaseName,
                           final String ipAddr,
                           final int port,
@@ -64,6 +65,10 @@ public final class MySQLConnector {
         poolConfig.addDataSourceProperty("serverName", ipAddr);
         poolConfig.addDataSourceProperty("portNumber", port);
         poolConfig.addDataSourceProperty("databaseName", databaseName);
+
+        poolConfig.setJdbcUrl(
+                "jdbc:mariadb://" + ipAddr + ":" + port + "/" + databaseName
+        );
 
         poolConfig.setConnectionTimeout(5000);
 

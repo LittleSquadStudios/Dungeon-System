@@ -1,6 +1,7 @@
 package com.littlesquad.dungeon.api.event;
 
 import com.littlesquad.dungeon.api.Dungeon;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 
 import java.util.List;
@@ -13,8 +14,8 @@ public sealed interface Event extends Listener permits ObjectiveEvent {
     EventType getType ();
 
     //Remember that events are not active since creation!
-    void triggerActivation ();
-    boolean isActive ();
+    void triggerActivation (final Player... players);
+    boolean isActiveFor (final Player... players);
 
     //Remember that events deactivate right before executing commands!
     List<String> commands ();

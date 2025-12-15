@@ -5,7 +5,7 @@ import org.bukkit.entity.Player;
 
 import java.util.Date;
 
-public interface TimedDungeon extends Status, Dungeon {
+public interface TimedDungeon extends Dungeon {
 
     void startTimer(Player player);
 

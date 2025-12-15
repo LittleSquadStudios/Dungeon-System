@@ -1,4 +1,4 @@
-package it.thatsade;
+package com.littlesquad.dungeon.database;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;

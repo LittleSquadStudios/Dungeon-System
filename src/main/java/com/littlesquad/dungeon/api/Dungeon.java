@@ -1,9 +1,13 @@
 package com.littlesquad.dungeon.api;
 
+import com.littlesquad.dungeon.api.boss.BossRoom;
 import com.littlesquad.dungeon.api.checkpoint.Checkpoint;
+import com.littlesquad.dungeon.api.entrance.Entrance;
 import com.littlesquad.dungeon.api.entrance.EntryResponse;
 import com.littlesquad.dungeon.api.entrance.ExitReason;
+import com.littlesquad.dungeon.api.event.Event;
 import com.littlesquad.dungeon.api.status.Status;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.Set;
@@ -50,6 +54,16 @@ public interface Dungeon {
      *
      * */
     Set<TypeFlag> typeFlags();
+
+    World getWorld();
+
+    Entrance getEntrance();
+
+    Event[] getEvents();
+
+    Checkpoint[] getCheckpoints();
+
+    BossRoom[] getBossRooms();
 
     /**
      * This method tries to teleport a player into a dungeon

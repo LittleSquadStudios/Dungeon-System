@@ -1,5 +1,6 @@
 package com.littlesquad.dungeon.api;
 
+import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.checkpoint.Checkpoint;
 import com.littlesquad.dungeon.api.entrance.Entrance;
 import com.littlesquad.dungeon.api.entrance.EntryResponse;
@@ -25,19 +26,14 @@ public abstract class AbstractDungeon implements Dungeon {
     /*When someone fires this command we should add him to this set
     ONLY IF HE'S WITH A PARTY, AND IF HE JOINS WE SHOULD CHECK AGAIN AND EVENTUALLY SET INTO THIS SET*/
     private final Set<UUID> leaders = ConcurrentHashMap.newKeySet();
-    private final DungeonParser parser; // Runtime use also.
-
-    private final MMOCoreAPI mmoCoreApi;
 
     // Fundamental dungeon information
-    private String dungeonId;
+    private final String dungeonId;
 
     //TODO: In the implementations, create a constructor that accept the parameters id (String) and parser (DungeonParser)
 
-    public AbstractDungeon(final String dungeonId, final DungeonParser parser) {
+    public AbstractDungeon(final String dungeonId) {
         this.dungeonId = dungeonId;
-        this.parser = parser;
-        mmoCoreApi = new MMOCoreAPI(null); //TODO: Inserire istanza di main
     }
 
     private static void dispatchCommands (final List<String> commands, final Player p) {
@@ -49,7 +45,7 @@ public abstract class AbstractDungeon implements Dungeon {
     @Override
     public EntryResponse tryEnter(final Player leader) {
 
-        final PlayerData data = mmoCoreApi.getPlayerData(leader);
+        final PlayerData data = Main.getMMOCoreAPI().getPlayerData(leader);
         final AbstractParty party = data.getParty();
 
         if (getEntrance().maxSlots() == 0)
@@ -237,8 +233,4 @@ public abstract class AbstractDungeon implements Dungeon {
     public String id() {
         return dungeonId;
     }
-
-    public abstract Entrance getEntrance();
-    public abstract void runTimeReload(final DungeonParser parser);
-
 }

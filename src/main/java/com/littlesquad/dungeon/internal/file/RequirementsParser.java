@@ -1,23 +1,29 @@
-package com.littlesquad.dungeon.internal.event;
+package com.littlesquad.dungeon.internal.file;
 
 import com.littlesquad.Main;
-import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.event.ObjectiveEvent;
+import com.littlesquad.dungeon.api.event.requirement.Requirements;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EntityType;
 
-public final class RequirementParser {
-    private RequirementParser () {}
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-    private static FailingRequirement failingRequirement (final String error) {
-        return _ -> {
-            Main.getDungeonLogger().warning(error);
-            return false;
-        };
+public final class RequirementsParser {
+    private final FileConfiguration config;
+    private final ExecutorService ex = Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors());
+
+    RequirementsParser (final FileConfiguration config) {
+        this.config = config;
     }
 
     //Cast to 'FailingRequirement' the return for checking if the parsing encountered any error...
-    public static ObjectiveEvent.Requirement parseRequirement (final Dungeon dungeon,
-                                                               final String requirement) {
+    public Requirements parse (final ObjectiveEvent event) {
+
+        //TODO: Remember to check if the event 'isActiveFor()' the players!
+
+        final String[] requirements;
+
         final String[] words = requirement.split(" ");
         switch (words.length) {
             case 3:
@@ -57,5 +63,9 @@ public final class RequirementParser {
                 + '\''
                 + " for "
                 + dungeon.id());
+    }
+
+    public void close () {
+        ex.shutdownNow();
     }
 }

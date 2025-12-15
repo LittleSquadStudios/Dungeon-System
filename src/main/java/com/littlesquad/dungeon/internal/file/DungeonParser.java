@@ -90,4 +90,8 @@ public final class DungeonParser {
             }
         };
     }
+
+    public RequirementsParser getRequirementParser () {
+        return new RequirementsParser(config);
+    }
 }

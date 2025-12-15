@@ -69,6 +69,12 @@ events:
   # So a command like "/dungeon trigger 'objective_event' %player%" have to be used before
   objective_event:
     type: OBJECTIVE
+    # Supported options: [ALL, ANY]
+    # Define if triggering the commands once ALL the requirements or ANY of the requirements are met
+    requirement_mode: ALL
+    # The evaluation of the requirements is done asynchronously since the cost of submitting
+    # the tasks to an Executor is less than most of the computations
+    #
     # The objective event triggers the given commands once the requirements are met
     requirements:
       # An internal parser will translate the requirements and construct a condition
@@ -77,10 +83,7 @@ events:
       # interact <location x, y, z> [MobType/MythicMobType] (Specifying or not the mob type allows to distinguish entity interactions from block interactions)
       # near <location x, y, z> <radius>
       # enter <location x, y, z> <location x, y, z>
-
-      # The instruction set is going to be produced and delivered to the final customer
-      # complete of syntax and description of each token.
-
+      # item <displayName> <amount>
       - "slay 100 ZOMBIE"
     # Leave this blank in case there is no associated checkpoint once this event gets fired
     checkpoint: ""

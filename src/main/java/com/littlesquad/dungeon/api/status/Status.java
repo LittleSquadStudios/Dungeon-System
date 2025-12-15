@@ -65,7 +65,7 @@ public interface Status extends Listener {
      * @since 1.0.0
      * @author LittleSquad
      * */
-    List<BossRoom> bossrooms();
+    List<BossRoom> bossRooms();
 
     /**
      * Calculates how long the player has stayed in the dungeon

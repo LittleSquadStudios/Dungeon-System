@@ -4,5 +4,5 @@ import org.bukkit.event.Event;
 
 @FunctionalInterface
 public interface Requirements {
-    boolean check (final RequirementType type, final Event event);
+    void updateRequirements (final RequirementType type, final Event event);
 }

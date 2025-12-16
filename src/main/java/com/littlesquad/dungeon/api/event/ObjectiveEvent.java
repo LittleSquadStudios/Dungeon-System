@@ -32,18 +32,18 @@ public abstract non-sealed class ObjectiveEvent implements Event {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public final void onEntityDeath (final EntityDeathEvent e) {
-        requirements.check(RequirementType.SLAY, e);
+        requirements.updateRequirements(RequirementType.SLAY, e);
     }
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerMove (final PlayerMoveEvent e) {
-        requirements.check(RequirementType.MOVE, e);
+        requirements.updateRequirements(RequirementType.MOVE, e);
     }
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onItemPickUp (final InventoryPickupItemEvent e) {
-        requirements.check(RequirementType.ITEM, e);
+        requirements.updateRequirements(RequirementType.ITEM, e);
     }
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerInteract (final PlayerInteractEvent e) {
-        requirements.check(RequirementType.INTERACT, e);
+        requirements.updateRequirements(RequirementType.INTERACT, e);
     }
 }

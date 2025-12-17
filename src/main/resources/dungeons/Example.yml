@@ -87,6 +87,7 @@ events:
       - "slay 100 ZOMBIE"
     # Leave this blank in case there is no associated checkpoint once this event gets fired
     checkpoint: ""
+    # Same for the boss-room
     boss-room: ""
     commands:
       - "/say OBJECTIVE!"

@@ -11,7 +11,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.inventory.InventoryPickupItemEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 
@@ -39,11 +40,15 @@ public abstract non-sealed class ObjectiveEvent implements Event {
         requirements.updateRequirements(RequirementType.MOVE, e);
     }
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onItemPickUp (final InventoryPickupItemEvent e) {
-        requirements.updateRequirements(RequirementType.ITEM, e);
-    }
-    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerInteract (final PlayerInteractEvent e) {
         requirements.updateRequirements(RequirementType.INTERACT, e);
+    }
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerInteractAtEntity (final PlayerInteractAtEntityEvent e) {
+        requirements.updateRequirements(RequirementType.INTERACT, e);
+    }
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onItemPickUp (final EntityPickupItemEvent e) {
+        requirements.updateRequirements(RequirementType.ITEM, e);
     }
 }

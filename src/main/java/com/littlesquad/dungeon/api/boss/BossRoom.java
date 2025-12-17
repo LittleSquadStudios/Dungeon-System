@@ -65,6 +65,8 @@ public interface BossRoom {
      */
     boolean join(UUID playerId);
 
+    void join(final Player... players);
+
     /**
      * Returns the maximum number of players that can enter this boss room.
      *

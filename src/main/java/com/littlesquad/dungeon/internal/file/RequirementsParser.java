@@ -3,16 +3,26 @@ package com.littlesquad.dungeon.internal.file;
 import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.event.ObjectiveEvent;
 import com.littlesquad.dungeon.api.event.requirement.Requirements;
+import io.lumine.mythic.bukkit.MythicBukkit;
+import io.lumine.mythic.core.mobs.ActiveMob;
+import io.lumine.mythic.lib.data.SynchronizedDataHolder;
 import net.Indyuce.mmocore.party.AbstractParty;
+import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.event.Event;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -37,15 +47,33 @@ public final class RequirementsParser {
             }
         }
         final Map<String, VariableRequirement> baseSlayRequirements = new ConcurrentHashMap<>();
-        final List<Location> baseLTV = new CopyOnWriteArrayList<>();
         //noinspection ClassCanBeRecord
+        final class DistanceRequirement {
+            private final Location loc;
+            private final double distance;
+            private DistanceRequirement (final Location loc,
+                                         final double distance) {
+                this.loc = loc;
+                this.distance = distance;
+            }
+        }
+        final List<DistanceRequirement> baseLTV = new CopyOnWriteArrayList<>();
         final class LocationPair {
             private final Location firstPos;
             private final Location lastPos;
             private LocationPair (final Location firstPos,
                                   final Location lastPos) {
-                this.firstPos = firstPos;
-                this.lastPos = lastPos;
+                assert firstPos.getWorld().equals(lastPos.getWorld());
+                this.firstPos = new Location(
+                        firstPos.getWorld(),
+                        Math.min(firstPos.getX(), lastPos.getX()),
+                        Math.min(firstPos.getY(), lastPos.getY()),
+                        Math.min(firstPos.getZ(), lastPos.getZ()));
+                this.lastPos = new Location(
+                        lastPos.getWorld(),
+                        Math.max(firstPos.getX(), lastPos.getX()),
+                        Math.max(firstPos.getY(), lastPos.getY()),
+                        Math.max(firstPos.getZ(), lastPos.getZ()));
             }
         }
         final List<LocationPair> baseRTV = new CopyOnWriteArrayList<>();
@@ -53,22 +81,21 @@ public final class RequirementsParser {
         final Map<Location, String> baseInteractions = new ConcurrentHashMap<>();
         final Map<String, VariableRequirement> baseItemRequirements = new ConcurrentHashMap<>();
         final class ParticipantRequirements {
-            final Map<String, VariableRequirement> slayRequirements = new ConcurrentHashMap<>(baseSlayRequirements);
+            private final Object key;
+            private final Map<String, VariableRequirement> slayRequirements = new ConcurrentHashMap<>(baseSlayRequirements);
             //LTV = Locations To Visit
-            final List<Location> nearLTV = new CopyOnWriteArrayList<>(baseLTV);
+            private final List<DistanceRequirement> nearLTV = new CopyOnWriteArrayList<>(baseLTV);
             //RTV = Regions To Visit
-            final List<LocationPair> rtv = new CopyOnWriteArrayList<>(baseRTV);
-            final Map<Location, String> interactions = new ConcurrentHashMap<>(baseInteractions);
-            final Map<String, VariableRequirement> itemRequirements = new ConcurrentHashMap<>(baseItemRequirements);
-            final AtomicBoolean completed = new AtomicBoolean();
-            private ParticipantRequirements () {}
+            private final List<LocationPair> rtv = new CopyOnWriteArrayList<>(baseRTV);
+            private final Map<Location, String> interactions = new ConcurrentHashMap<>(baseInteractions);
+            private final Map<String, VariableRequirement> itemRequirements = new ConcurrentHashMap<>(baseItemRequirements);
+            private final AtomicBoolean completed = new AtomicBoolean();
+            private ParticipantRequirements (final Object key) {
+                this.key = key;
+            }
         }
         //key might be either a player or a party
-        final Map<?, ParticipantRequirements> participantRequirements = new ConcurrentHashMap<>();
-
-
-        //TODO: Remember to check if the event 'isActiveFor()' the players!
-
+        final Map<Object, ParticipantRequirements> participantRequirements = new ConcurrentHashMap<>();
         config.getStringList("events."
                         + event.getID()
                         + ".requirements")
@@ -121,37 +148,517 @@ public final class RequirementsParser {
                 "ALL")
                 .equalsIgnoreCase("ALL")
                 ? (type, e) -> ex.execute(() -> {
-            switch (type) {
+            final ParticipantRequirements req;
+            if ((req = switch (type) {
                 case SLAY -> {
                     final ParticipantRequirements requirements;
-                    if (e instanceof final EntityDeathEvent ev) {
-                        if (ev.isCancelled()
-                                /*|| ev.*/)
-                            return;
-
-                        final Player player;
-
-                        //extract player...
-
-                        final AbstractParty party;
-                        requirements = participantRequirements
-                                .computeIfAbsent((party = Main
-                                                .getMMOCoreAPI()
-                                                .getPlayerData(player)
-                                                .getParty())
-                                                != null
-                                                ? party
-                                                : player,
-                                        _ -> new ParticipantRequirements());
-                    } else return;
-
-
-
+                    {
+                        Object ent;
+                        if (e instanceof final EntityDeathEvent ev
+                                && !ev.isCancelled()
+                                && ((ent = ev
+                                .getDamageSource()
+                                .getCausingEntity())
+                                instanceof Player
+                                || (ev
+                                .getDamageSource()
+                                .getCausingEntity()
+                                instanceof final Projectile proj
+                                && (ent = proj
+                                .getShooter())
+                                instanceof Player))) {
+                            final Player player;
+                            final AbstractParty party;
+                            if (!event.isActiveFor((party = Main
+                                    .getMMOCoreAPI()
+                                    .getPlayerData(player = (Player) ent)
+                                    .getParty())
+                                    != null
+                                    ? party
+                                    .getOnlineMembers()
+                                    .stream()
+                                    .map(SynchronizedDataHolder::getPlayer)
+                                    .toArray(Player[]::new)
+                                    : new Player[]{player}))
+                                yield null;
+                            requirements = participantRequirements.computeIfAbsent(
+                                    party != null ? party : player,
+                                    ParticipantRequirements::new);
+                        } else yield null;
+                    }
+                    final Entity ent;
+                    final ActiveMob mythicMob;
+                    final AtomicBoolean present = new AtomicBoolean();
+                    if (requirements.slayRequirements.computeIfPresent(
+                            (mythicMob = MythicBukkit
+                                    .inst()
+                                    .getMobManager()
+                                    .getMythicMobInstance(ent
+                                            = ((EntityDeathEvent) e)
+                                            .getEntity()))
+                                    != null
+                                    ? mythicMob.getMobType()
+                                    : ent.getType().name(),
+                            (_, v) -> {
+                                present.setPlain(true);
+                                if (++v.current != v.objective)
+                                    return v;
+                                return null;
+                            }) != null
+                            || !present.getPlain())
+                        yield null;
+                    //Return the requirements only if they got updated!
+                    yield requirements;
                 }
+                case MOVE -> {
+                    final ParticipantRequirements requirements;
+                    final Location loc;
+                    if (e instanceof final PlayerMoveEvent ev && !ev.isCancelled()) {
+                        final Player player;
+                        final AbstractParty party;
+                        if (!event.isActiveFor((party = Main
+                                .getMMOCoreAPI()
+                                .getPlayerData(player = ev.getPlayer())
+                                .getParty())
+                                != null
+                                ? party
+                                .getOnlineMembers()
+                                .stream()
+                                .map(SynchronizedDataHolder::getPlayer)
+                                .toArray(Player[]::new)
+                                : new Player[]{player}))
+                            yield null;
+                        requirements = participantRequirements.computeIfAbsent(
+                                party != null ? party : player,
+                                ParticipantRequirements::new);
+                        loc = ev.getTo();
+                    } else yield null;
+                    if (requirements
+                            .nearLTV
+                            .stream()
+                            .anyMatch(dr -> loc
+                                    .distance(dr.loc)
+                                    <= dr.distance
+                                    && requirements
+                                    .nearLTV
+                                    .remove(dr))
+                            | requirements
+                            .rtv
+                            .stream()
+                            .anyMatch(lp -> lp
+                                    .firstPos.getX()
+                                    <= loc.getX()
+                                    && lp.firstPos.getY()
+                                    <= loc.getY()
+                                    && lp.firstPos.getZ()
+                                    <= loc.getZ()
+                                    && lp.lastPos.getX()
+                                    >= loc.getX()
+                                    && lp.lastPos.getY()
+                                    >= loc.getY()
+                                    && lp.lastPos.getZ()
+                                    >= loc.getZ()
+                                    && requirements
+                                    .rtv
+                                    .remove(lp)))
+                        yield requirements;
+                    yield null;
+                }
+                case INTERACT -> {
+                    final ParticipantRequirements requirements;
+                    final Location loc;
+                    final String target;
+                    if (e instanceof final PlayerInteractEvent ev
+                            && ev.useInteractedBlock() != Event.Result.DENY) {
+                        final Player player;
+                        final AbstractParty party;
+                        if (!event.isActiveFor((party = Main
+                                .getMMOCoreAPI()
+                                .getPlayerData(player = ev.getPlayer())
+                                .getParty())
+                                != null
+                                ? party
+                                .getOnlineMembers()
+                                .stream()
+                                .map(SynchronizedDataHolder::getPlayer)
+                                .toArray(Player[]::new)
+                                : new Player[]{player}))
+                            yield null;
+                        requirements = participantRequirements.computeIfAbsent(
+                                party != null ? party : player,
+                                ParticipantRequirements::new);
+                        assert ev.getClickedBlock() != null;
+                        loc = ev.getClickedBlock()
+                                .getLocation();
+                        target = "";
+                    } else if (e instanceof final PlayerInteractAtEntityEvent ev
+                            && !ev.isCancelled()) {
+                        final Player player;
+                        final AbstractParty party;
+                        if (!event.isActiveFor((party = Main
+                                .getMMOCoreAPI()
+                                .getPlayerData(player = ev.getPlayer())
+                                .getParty())
+                                != null
+                                ? party
+                                .getOnlineMembers()
+                                .stream()
+                                .map(SynchronizedDataHolder::getPlayer)
+                                .toArray(Player[]::new)
+                                : new Player[]{player}))
+                            yield null;
+                        requirements = participantRequirements.computeIfAbsent(
+                                party != null ? party : player,
+                                ParticipantRequirements::new);
+                        loc = ev.getRightClicked()
+                                .getLocation()
+                                .toBlockLocation();
+                        final ActiveMob mythicMob;
+                        final Entity ent;
+                        target = (mythicMob = MythicBukkit
+                                .inst()
+                                .getMobManager()
+                                .getMythicMobInstance(ent = ev
+                                        .getRightClicked()))
+                                != null
+                                ? mythicMob.getMobType()
+                                : ent.getType().name();
+                    } else yield null;
+                    final AtomicBoolean present = new AtomicBoolean();
+                    if (requirements.interactions.computeIfPresent(
+                            loc,
+                            (_, v) -> {
+                                present.setPlain(true);
+                                if (target.equalsIgnoreCase(v))
+                                    return null;
+                                return v;
+                            }) != null
+                            || !present.getPlain())
+                        yield null;
+                    yield requirements;
+                }
+                case ITEM -> {
+                    final ParticipantRequirements requirements;
+                    final String displayName;
+                    if (e instanceof final EntityPickupItemEvent ev
+                            && !ev.isCancelled()
+                            && ev.getEntity()
+                            instanceof final Player player) {
+                        final AbstractParty party;
+                        if (!event.isActiveFor((party = Main
+                                .getMMOCoreAPI()
+                                .getPlayerData(player)
+                                .getParty())
+                                != null
+                                ? party
+                                .getOnlineMembers()
+                                .stream()
+                                .map(SynchronizedDataHolder::getPlayer)
+                                .toArray(Player[]::new)
+                                : new Player[]{player}))
+                            yield null;
+                        requirements = participantRequirements.computeIfAbsent(
+                                party != null ? party : player,
+                                ParticipantRequirements::new);
+                        displayName = ((TextComponent) (ev
+                                .getItem()
+                                .getItemStack()
+                                .displayName()))
+                                .content();
+                    } else yield null;
+                    final AtomicBoolean present = new AtomicBoolean();
+                    if (requirements.itemRequirements.computeIfPresent(
+                            displayName,
+                            (_, v) -> {
+                                present.setPlain(true);
+                                if (++v.current != v.objective)
+                                    return v;
+                                return null;
+                            }) != null
+                            || !present.getPlain())
+                        yield null;
+                    yield requirements;
+                }
+            }) != null
+                    && req.slayRequirements.isEmpty()
+                    && req.nearLTV.isEmpty()
+                    && req.rtv.isEmpty()
+                    && req.interactions.isEmpty()
+                    && req.itemRequirements.isEmpty()
+                    && req.completed.compareAndSet(false, true)) {
+                final Player[] players;
+                event.checkpointToUnlock().unlockFor(players
+                        = req
+                        .key
+                        instanceof final AbstractParty party
+                        ? party
+                        .getOnlineMembers()
+                        .stream()
+                        .map(SynchronizedDataHolder::getPlayer)
+                        .toArray(Player[]::new)
+                        : new Player[]{(Player) req.key});
+                event.bossRoomToUnlock().join(players);
+                event.executeCommandsFor(players);
             }
         }) : (type, e) -> ex.execute(() -> {
-
-                });
+            final ParticipantRequirements req;
+            if ((req = switch (type) {
+                case SLAY -> {
+                    final ParticipantRequirements requirements;
+                    {
+                        Object ent;
+                        if (e instanceof final EntityDeathEvent ev
+                                && !ev.isCancelled()
+                                && ((ent = ev
+                                .getDamageSource()
+                                .getCausingEntity())
+                                instanceof Player
+                                || (ev
+                                .getDamageSource()
+                                .getCausingEntity()
+                                instanceof final Projectile proj
+                                && (ent = proj
+                                .getShooter())
+                                instanceof Player))) {
+                            final Player player;
+                            final AbstractParty party;
+                            if (!event.isActiveFor((party = Main
+                                    .getMMOCoreAPI()
+                                    .getPlayerData(player = (Player) ent)
+                                    .getParty())
+                                    != null
+                                    ? party
+                                    .getOnlineMembers()
+                                    .stream()
+                                    .map(SynchronizedDataHolder::getPlayer)
+                                    .toArray(Player[]::new)
+                                    : new Player[]{player}))
+                                yield null;
+                            requirements = participantRequirements.computeIfAbsent(
+                                    party != null ? party : player,
+                                    ParticipantRequirements::new);
+                        } else yield null;
+                    }
+                    final Entity ent;
+                    final ActiveMob mythicMob;
+                    final AtomicBoolean present = new AtomicBoolean();
+                    if (requirements.slayRequirements.computeIfPresent(
+                            (mythicMob = MythicBukkit
+                                    .inst()
+                                    .getMobManager()
+                                    .getMythicMobInstance(ent
+                                            = ((EntityDeathEvent) e)
+                                            .getEntity()))
+                                    != null
+                                    ? mythicMob.getMobType()
+                                    : ent.getType().name(),
+                            (_, v) -> {
+                                present.setPlain(true);
+                                if (++v.current != v.objective)
+                                    return v;
+                                return null;
+                            }) != null
+                            || !present.getPlain()
+                            || !requirements.slayRequirements.isEmpty())
+                        yield null;
+                    yield requirements;
+                }
+                case MOVE -> {
+                    final ParticipantRequirements requirements;
+                    final Location loc;
+                    if (e instanceof final PlayerMoveEvent ev && !ev.isCancelled()) {
+                        final Player player;
+                        final AbstractParty party;
+                        if (!event.isActiveFor((party = Main
+                                .getMMOCoreAPI()
+                                .getPlayerData(player = ev.getPlayer())
+                                .getParty())
+                                != null
+                                ? party
+                                .getOnlineMembers()
+                                .stream()
+                                .map(SynchronizedDataHolder::getPlayer)
+                                .toArray(Player[]::new)
+                                : new Player[]{player}))
+                            yield null;
+                        requirements = participantRequirements.computeIfAbsent(
+                                party != null ? party : player,
+                                ParticipantRequirements::new);
+                        loc = ev.getTo();
+                    } else yield null;
+                    if ((requirements
+                            .nearLTV
+                            .stream()
+                            .anyMatch(dr -> loc
+                                    .distance(dr.loc)
+                                    <= dr.distance
+                                    && requirements
+                                    .nearLTV
+                                    .remove(dr))
+                            && requirements
+                            .nearLTV
+                            .isEmpty())
+                            || (requirements
+                            .rtv
+                            .stream()
+                            .anyMatch(lp -> lp
+                                    .firstPos.getX()
+                                    <= loc.getX()
+                                    && lp.firstPos.getY()
+                                    <= loc.getY()
+                                    && lp.firstPos.getZ()
+                                    <= loc.getZ()
+                                    && lp.lastPos.getX()
+                                    >= loc.getX()
+                                    && lp.lastPos.getY()
+                                    >= loc.getY()
+                                    && lp.lastPos.getZ()
+                                    >= loc.getZ()
+                                    && requirements
+                                    .rtv
+                                    .remove(lp))
+                            && requirements
+                            .rtv
+                            .isEmpty()))
+                        yield requirements;
+                    yield null;
+                }
+                case INTERACT -> {
+                    final ParticipantRequirements requirements;
+                    final Location loc;
+                    final String target;
+                    if (e instanceof final PlayerInteractEvent ev
+                            && ev.useInteractedBlock() != Event.Result.DENY) {
+                        final Player player;
+                        final AbstractParty party;
+                        if (!event.isActiveFor((party = Main
+                                .getMMOCoreAPI()
+                                .getPlayerData(player = ev.getPlayer())
+                                .getParty())
+                                != null
+                                ? party
+                                .getOnlineMembers()
+                                .stream()
+                                .map(SynchronizedDataHolder::getPlayer)
+                                .toArray(Player[]::new)
+                                : new Player[]{player}))
+                            yield null;
+                        requirements = participantRequirements.computeIfAbsent(
+                                party != null ? party : player,
+                                ParticipantRequirements::new);
+                        assert ev.getClickedBlock() != null;
+                        loc = ev.getClickedBlock()
+                                .getLocation();
+                        target = "";
+                    } else if (e instanceof final PlayerInteractAtEntityEvent ev
+                            && !ev.isCancelled()) {
+                        final Player player;
+                        final AbstractParty party;
+                        if (!event.isActiveFor((party = Main
+                                .getMMOCoreAPI()
+                                .getPlayerData(player = ev.getPlayer())
+                                .getParty())
+                                != null
+                                ? party
+                                .getOnlineMembers()
+                                .stream()
+                                .map(SynchronizedDataHolder::getPlayer)
+                                .toArray(Player[]::new)
+                                : new Player[]{player}))
+                            yield null;
+                        requirements = participantRequirements.computeIfAbsent(
+                                party != null ? party : player,
+                                ParticipantRequirements::new);
+                        loc = ev.getRightClicked()
+                                .getLocation()
+                                .toBlockLocation();
+                        final ActiveMob mythicMob;
+                        final Entity ent;
+                        target = (mythicMob = MythicBukkit
+                                .inst()
+                                .getMobManager()
+                                .getMythicMobInstance(ent = ev
+                                        .getRightClicked()))
+                                != null
+                                ? mythicMob.getMobType()
+                                : ent.getType().name();
+                    } else yield null;
+                    final AtomicBoolean present = new AtomicBoolean();
+                    if (requirements.interactions.computeIfPresent(
+                            loc,
+                            (_, v) -> {
+                                present.setPlain(true);
+                                if (target.equalsIgnoreCase(v))
+                                    return null;
+                                return v;
+                            }) != null
+                            || !present.getPlain()
+                            || !requirements.interactions.isEmpty())
+                        yield null;
+                    yield requirements;
+                }
+                case ITEM -> {
+                    final ParticipantRequirements requirements;
+                    final String displayName;
+                    if (e instanceof final EntityPickupItemEvent ev
+                            && !ev.isCancelled()
+                            && ev.getEntity()
+                            instanceof final Player player) {
+                        final AbstractParty party;
+                        if (!event.isActiveFor((party = Main
+                                .getMMOCoreAPI()
+                                .getPlayerData(player)
+                                .getParty())
+                                != null
+                                ? party
+                                .getOnlineMembers()
+                                .stream()
+                                .map(SynchronizedDataHolder::getPlayer)
+                                .toArray(Player[]::new)
+                                : new Player[]{player}))
+                            yield null;
+                        requirements = participantRequirements.computeIfAbsent(
+                                party != null ? party : player,
+                                ParticipantRequirements::new);
+                        displayName = ((TextComponent) (ev
+                                .getItem()
+                                .getItemStack()
+                                .displayName()))
+                                .content();
+                    } else yield null;
+                    final AtomicBoolean present = new AtomicBoolean();
+                    if (requirements.itemRequirements.computeIfPresent(
+                            displayName,
+                            (_, v) -> {
+                                present.setPlain(true);
+                                if (++v.current != v.objective)
+                                    return v;
+                                return null;
+                            }) != null
+                            || !present.getPlain()
+                            || !requirements.itemRequirements.isEmpty())
+                        yield null;
+                    yield requirements;
+                }
+            }) != null
+                    && req
+                    .completed
+                    .compareAndSet(false, true)) {
+                final Player[] players;
+                event.checkpointToUnlock().unlockFor(players
+                        = req
+                        .key
+                        instanceof final AbstractParty party
+                        ? party
+                        .getOnlineMembers()
+                        .stream()
+                        .map(SynchronizedDataHolder::getPlayer)
+                        .toArray(Player[]::new)
+                        : new Player[]{(Player) req.key});
+                event.bossRoomToUnlock().join(players);
+                event.executeCommandsFor(players);
+            }
+        });
     }
 
     public void close () {

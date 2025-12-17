@@ -42,4 +42,6 @@ public interface Checkpoint extends Listener {
      *
      * */
     List<String> onDeathCommands ();
+
+    void unlockFor (final Player... players);
 }

@@ -1,6 +1,7 @@
 package com.littlesquad.dungeon.api.status;
 
 import com.littlesquad.dungeon.api.boss.BossRoom;
+import com.littlesquad.dungeon.api.session.DungeonSessionManager;
 import net.Indyuce.mmocore.party.AbstractParty;
 import org.bukkit.event.Listener;
 
@@ -66,6 +67,12 @@ public interface Status extends Listener {
      * @author LittleSquad
      * */
     List<BossRoom> bossRooms();
+
+    /**
+     *
+     *
+     * */
+    DungeonSessionManager sessionManager();
 
     /**
      * Calculates how long the player has stayed in the dungeon

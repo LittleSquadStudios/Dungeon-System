@@ -4,6 +4,7 @@ import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.checkpoint.Checkpoint;
 import com.littlesquad.dungeon.api.entrance.Entrance;
 import com.littlesquad.dungeon.api.entrance.EntryResponse;
+import com.littlesquad.dungeon.api.session.DungeonSessionManager;
 import com.littlesquad.dungeon.api.status.Status;
 import com.littlesquad.dungeon.internal.file.DungeonParser;
 import com.littlesquad.dungeon.placeholder.PlaceholderFormatter;

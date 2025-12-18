@@ -112,34 +112,68 @@ public final class RequirementsParser {
                                     try {
                                         mobNumber = Integer.parseInt(words[1]);
                                     } catch (final NumberFormatException _) {
-                                        return failingRequirement();
-                                    }
-                                    final EntityType entityType;
-                                    try {
-                                        entityType = EntityType.valueOf(words[2]);
-                                    } catch (final IllegalArgumentException _) {
-
-
-                                        //TODO: Check if it's a MythicMob instead!
-
+                                        Main.getDungeonLogger().warning(Main
+                                                .getMessageProvider()
+                                                .getConsolePrefix()
+                                                + Main
+                                                .getMessageProvider()
+                                                .getMessage("config.dungeon.number_format_error")
+                                                + '\''
+                                                + requirement
+                                                + '\''
+                                                + " in "
+                                                + event.getDungeon().id());
                                         return;
                                     }
-
-
+                                    try {
+                                        EntityType.valueOf(words[2]);
+                                    } catch (final IllegalArgumentException _) {
+                                        if (MythicBukkit
+                                                .inst()
+                                                .getMobManager()
+                                                .getMythicMob(words[2])
+                                                .isEmpty()) {
+                                            Main.getDungeonLogger().warning(Main
+                                                    .getMessageProvider()
+                                                    .getConsolePrefix()
+                                                    + Main
+                                                    .getMessageProvider()
+                                                    .getMessage("config.dungeon.invalid_mob")
+                                                    + '\''
+                                                    + requirement
+                                                    + '\''
+                                                    + " in "
+                                                    + event.getDungeon().id());
+                                            return;
+                                        }
+                                    }
+                                    baseSlayRequirements.put(words[2], new VariableRequirement(mobNumber));
+                                    return;
+                                case "item":
 
                                     return;
                             }
+                            break;
+                        case 4:
+
+                            break;
+                        case 5:
+
+                            break;
+                        case 7:
+
+                            break;
                     }
                     Main.getDungeonLogger().warning(Main
                             .getMessageProvider()
-                            .getPrefix()
+                            .getConsolePrefix()
                             + Main
                             .getMessageProvider()
                             .getMessage("config.dungeon.requirement_parsing_error")
                             + '\''
                             + requirement
                             + '\''
-                            + " for "
+                            + " in "
                             + event.getDungeon().id());
                 });
         return config.getString("events."

@@ -2,4 +2,6 @@ prefix: "§7[§bAzure§fMC§7] §8>> §r"
 
 config:
   dungeon:
-    requirement_parsing_error: "Cannot parse correctly the requirement: "
+    requirement_parsing_error: "Cannot parse correctly the requirement "
+    number_format_error: "Error during number conversion in "
+    invalid_mob: "Invalid Mob/MythicMob found in "

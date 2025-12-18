@@ -13,4 +13,10 @@ public final class MessageProvider {
     public String getPrefix () {
         return null;
     }
+    public String getConsolePrefix () {
+        return null;
+    }
+    private static String removeColors (final String s) {
+        return s.replaceAll("§[a-fA-F0-9]", "");
+    }
 }

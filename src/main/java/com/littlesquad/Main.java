@@ -1,6 +1,7 @@
 package com.littlesquad;
 
 import com.littlesquad.dungeon.database.MySQLConnector;
+import com.littlesquad.dungeon.internal.event.TimedEventImpl;
 import com.littlesquad.dungeon.internal.file.FileManager;
 import com.littlesquad.dungeon.internal.utils.MessageProvider;
 import net.Indyuce.mmocore.api.MMOCoreAPI;
@@ -38,6 +39,7 @@ public final class Main extends JavaPlugin {
     @Override
     public void onDisable () {
         FileManager.close();
+        TimedEventImpl.close();
     }
 
     public static Main getInstance () {

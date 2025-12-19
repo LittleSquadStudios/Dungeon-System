@@ -34,6 +34,7 @@ public abstract non-sealed class ObjectiveEvent implements Event {
     //Done like this for giving the possibility to handle additional
     //operations like deactivating the event for the player/party!
     public abstract void executeCommandsFor (final Player... players);
+    public abstract void deActiveFor (final Player... players);
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public final void onEntityDeath (final EntityDeathEvent e) {

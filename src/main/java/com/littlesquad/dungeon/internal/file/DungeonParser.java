@@ -9,6 +9,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("ClassCanBeRecord")
@@ -109,6 +110,7 @@ public final class DungeonParser {
 
                         return null;
                     })
+                    .filter(Objects::nonNull)
                     .toArray(Event[]::new);
         } else return new Event[0];
     }

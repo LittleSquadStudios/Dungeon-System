@@ -1,16 +1,20 @@
 package com.littlesquad;
 
+import com.littlesquad.dungeon.database.MySQLConnector;
 import com.littlesquad.dungeon.internal.file.FileManager;
 import com.littlesquad.dungeon.internal.utils.MessageProvider;
 import net.Indyuce.mmocore.api.MMOCoreAPI;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.logging.Logger;
 
 public final class Main extends JavaPlugin {
     private static Main instance;
     private static MMOCoreAPI mmoCoreAPI;
     static MessageProvider messageProvider;
+    private static MySQLConnector connector;
 
     @Override
     public void onEnable () {
@@ -21,6 +25,14 @@ public final class Main extends JavaPlugin {
                     //TODO: Register all the services
 
                 });
+
+        connector = new MySQLConnector("dungeon-system-db",
+                "127.0.0.1",
+                3306,
+                "root",
+                "",
+                Executors.newCachedThreadPool());
+
     }
 
     @Override
@@ -39,7 +51,13 @@ public final class Main extends JavaPlugin {
     public static Logger getDungeonLogger () {
         return instance.getLogger();
     }
+
     public static MessageProvider getMessageProvider () {
         return messageProvider;
     }
+
+    public static MySQLConnector getConnector() {
+        return connector;
+    }
+
 }

@@ -1,5 +1,7 @@
 package com.littlesquad.dungeon.api.session;
 
+import java.time.Instant;
+import java.util.Date;
 import java.util.UUID;
 
 /**
@@ -22,6 +24,8 @@ import java.util.UUID;
  */
 public interface DungeonSession {
 
+    DungeonSessionManager associatedDSM();
+
     /**
      * Returns the unique identifier of the player associated with this session.
      *
@@ -31,6 +35,21 @@ public interface DungeonSession {
      * @author LittleSquad
      */
     UUID playerId();
+
+    /**
+     * Returns the identifier of the dungeon run associated with this session.
+     * <p>
+     * The run ID can be used to group multiple player sessions
+     * that belong to the same dungeon instance.
+     *
+     * @return the dungeon run ID, or {@code null} if not assigned
+     *
+     * @since 1.0.0
+     * @author LittleSquad
+     */
+    Long runId();
+
+    boolean isDead();
 
     /**
      * Called when the session starts.
@@ -74,25 +93,16 @@ public interface DungeonSession {
      * since {@link #onStart()} was called.
      * If the session has ended, it represents the total duration of the session.
      *
-     * @return the time spent in the dungeon, in milliseconds
+     * @return the time spent in the dungeon, in the time unit specified
      *
      * @since 1.0.0
      * @author LittleSquad
      */
     long timeIn();
 
-    /**
-     * Returns the identifier of the dungeon run associated with this session.
-     * <p>
-     * The run ID can be used to group multiple player sessions
-     * that belong to the same dungeon instance.
-     *
-     * @return the dungeon run ID, or {@code null} if not assigned
-     *
-     * @since 1.0.0
-     * @author LittleSquad
-     */
-    Long runId();
+    Instant enterTime();
+
+    Instant exitTime();
 
     /**
      * Returns the total number of kills made by the player
@@ -125,6 +135,8 @@ public interface DungeonSession {
      * @author LittleSquad
      */
     void addKill(final int kill);
+
+    void setDead();
 
     /**
      * Adds the specified amount of damage to the total damage dealt.

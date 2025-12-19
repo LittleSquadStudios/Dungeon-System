@@ -1,5 +1,6 @@
 package com.littlesquad.dungeon.api.status;
 
+import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.boss.BossRoom;
 import com.littlesquad.dungeon.api.session.DungeonSessionManager;
 import net.Indyuce.mmocore.party.AbstractParty;
@@ -7,6 +8,7 @@ import org.bukkit.event.Listener;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * This class represents the status of the dungeon
@@ -27,6 +29,8 @@ import java.util.UUID;
  * @author LittleSquad
  * */
 public interface Status extends Listener {
+
+    Dungeon associatedDungeon();
 
     /**
      * @return {@link Boolean} if pvp is allowed in this dungeon
@@ -55,11 +59,6 @@ public interface Status extends Listener {
     int partyKills(AbstractParty party);
     int totalKills();
 
-    int playerDeaths(UUID player);
-    int totalDeaths();
-
-    int remainingEnemies();
-
     /**
      * It returns a list of fixed bossrooms defined in the config section <code>boss-rooms</code>
      * @return {@link List} of {@link BossRoom BossRooms}
@@ -74,24 +73,6 @@ public interface Status extends Listener {
      * */
     DungeonSessionManager sessionManager();
 
-    /**
-     * Calculates how long the player has stayed in the dungeon
-     * since the first join event, which is fired when the player executes the command:
-     * <br><code>/dungeon join 'dungeon_id'</code>.
-     * The tracking starts at this point. If the dungeon is timed and the player
-     * stays longer than the allowed time, the recorded time will be capped
-     * to the maximum configured duration.
-     * Possible return values:
-     * <ul>
-     *     <li>-1 -> You know that the player is not in the dungeon</li>
-     *     <li>0 -> Time tracking isn't working or is disabled</li>
-     * </ul>
-     *
-     * @return {@link Long} seconds
-     * @since 1.0.0
-     * @author LittleSquad
-     * */
-    long playerTimeInDungeon(final UUID uuid);
 
 
 }

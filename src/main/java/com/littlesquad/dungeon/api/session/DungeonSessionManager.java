@@ -1,5 +1,9 @@
 package com.littlesquad.dungeon.api.session;
 
+import com.littlesquad.dungeon.api.entrance.ExitReason;
+import com.littlesquad.dungeon.api.status.Status;
+
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -7,14 +11,21 @@ import java.util.function.Consumer;
 
 public interface DungeonSessionManager {
 
-    void startSession(UUID playerId,
+    Status associatedStatus();
+
+    void startTimedSession(UUID playerId,
                       long duration,
                       TimeUnit unit,
                       Consumer<UUID> onExpire);
 
-    void endSession(UUID playerId, String exitReason);
+    void startSession(UUID playerId,
+                           TimeUnit unit);
 
-    CompletableFuture<DungeonSession> getSession(UUID playerId);
+    void endSession(UUID playerId, ExitReason exitReason);
+
+    DungeonSession getSession(UUID playerId);
+
+    List<DungeonSession> getSessions();
 
     void shutdown();
 

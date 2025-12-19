@@ -206,11 +206,6 @@ public abstract class AbstractDungeon implements Dungeon {
     }
 
     @Override
-    public Checkpoint getCheckPoint(String checkPointId) {
-        return null;
-    }
-
-    @Override
     public void triggerEvent(String eventId, Player triggerer) {
 
     }

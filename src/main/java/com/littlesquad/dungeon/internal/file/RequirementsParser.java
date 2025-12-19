@@ -150,18 +150,151 @@ public final class RequirementsParser {
                                     baseSlayRequirements.put(words[2], new VariableRequirement(mobNumber));
                                     return;
                                 case "item":
-
+                                    final int itemNumber;
+                                    try {
+                                        itemNumber = Integer.parseInt(words[2]);
+                                    } catch (final NumberFormatException _) {
+                                        Main.getDungeonLogger().warning(Main
+                                                .getMessageProvider()
+                                                .getConsolePrefix()
+                                                + Main
+                                                .getMessageProvider()
+                                                .getMessage("config.dungeon.number_format_error")
+                                                + '\''
+                                                + requirement
+                                                + '\''
+                                                + " in "
+                                                + event.getDungeon().id());
+                                        return;
+                                    }
+                                    baseItemRequirements.put(words[1], new VariableRequirement(itemNumber));
                                     return;
                             }
                             break;
                         case 4:
-
+                            if (words[0].equals("interact")) {
+                                final double x, y, z;
+                                try {
+                                    x = Double.parseDouble(words[1]);
+                                    y = Double.parseDouble(words[2]);
+                                    z = Double.parseDouble(words[3]);
+                                } catch (final NumberFormatException _) {
+                                    Main.getDungeonLogger().warning(Main
+                                            .getMessageProvider()
+                                            .getConsolePrefix()
+                                            + Main
+                                            .getMessageProvider()
+                                            .getMessage("config.dungeon.number_format_error")
+                                            + '\''
+                                            + requirement
+                                            + '\''
+                                            + " in "
+                                            + event.getDungeon().id());
+                                    return;
+                                }
+                                baseInteractions.put(new Location(event.getDungeon().getWorld(), x, y, z), "");
+                                return;
+                            }
                             break;
                         case 5:
-
+                            switch (words[0]) {
+                                case "interact":
+                                    final double x, y, z;
+                                    try {
+                                        x = Double.parseDouble(words[1]);
+                                        y = Double.parseDouble(words[2]);
+                                        z = Double.parseDouble(words[3]);
+                                    } catch (final NumberFormatException _) {
+                                        Main.getDungeonLogger().warning(Main
+                                                .getMessageProvider()
+                                                .getConsolePrefix()
+                                                + Main
+                                                .getMessageProvider()
+                                                .getMessage("config.dungeon.number_format_error")
+                                                + '\''
+                                                + requirement
+                                                + '\''
+                                                + " in "
+                                                + event.getDungeon().id());
+                                        return;
+                                    }
+                                    try {
+                                        EntityType.valueOf(words[4]);
+                                    } catch (final IllegalArgumentException _) {
+                                        if (MythicBukkit
+                                                .inst()
+                                                .getMobManager()
+                                                .getMythicMob(words[4])
+                                                .isEmpty()) {
+                                            Main.getDungeonLogger().warning(Main
+                                                    .getMessageProvider()
+                                                    .getConsolePrefix()
+                                                    + Main
+                                                    .getMessageProvider()
+                                                    .getMessage("config.dungeon.invalid_mob")
+                                                    + '\''
+                                                    + requirement
+                                                    + '\''
+                                                    + " in "
+                                                    + event.getDungeon().id());
+                                            return;
+                                        }
+                                    }
+                                    baseInteractions.put(new Location(event.getDungeon().getWorld(), x, y, z), words[4]);
+                                    return;
+                                case "near":
+                                    final double x0, y0, z0;
+                                    final double radius;
+                                    try {
+                                        x0 = Double.parseDouble(words[1]);
+                                        y0 = Double.parseDouble(words[2]);
+                                        z0 = Double.parseDouble(words[3]);
+                                        radius = Double.parseDouble(words[4]);
+                                    } catch (final NumberFormatException _) {
+                                        Main.getDungeonLogger().warning(Main
+                                                .getMessageProvider()
+                                                .getConsolePrefix()
+                                                + Main
+                                                .getMessageProvider()
+                                                .getMessage("config.dungeon.number_format_error")
+                                                + '\''
+                                                + requirement
+                                                + '\''
+                                                + " in "
+                                                + event.getDungeon().id());
+                                        return;
+                                    }
+                                    baseLTV.add(new DistanceRequirement(new Location(event.getDungeon().getWorld(), x0, y0, z0), radius));
+                                    return;
+                            }
                             break;
                         case 7:
-
+                            if (words[0].equals("enter")) {
+                                final double x0, y0, z0, x1, y1, z1;
+                                try {
+                                    x0 = Double.parseDouble(words[1]);
+                                    y0 = Double.parseDouble(words[2]);
+                                    z0 = Double.parseDouble(words[3]);
+                                    x1 = Double.parseDouble(words[4]);
+                                    y1 = Double.parseDouble(words[5]);
+                                    z1 = Double.parseDouble(words[6]);
+                                } catch (final NumberFormatException _) {
+                                    Main.getDungeonLogger().warning(Main
+                                            .getMessageProvider()
+                                            .getConsolePrefix()
+                                            + Main
+                                            .getMessageProvider()
+                                            .getMessage("config.dungeon.number_format_error")
+                                            + '\''
+                                            + requirement
+                                            + '\''
+                                            + " in "
+                                            + event.getDungeon().id());
+                                    return;
+                                }
+                                baseRTV.add(new LocationPair(new Location(event.getDungeon().getWorld(), x0, y0, z0), new Location(event.getDungeon().getWorld(), x1, y1, z1)));
+                                return;
+                            }
                             break;
                     }
                     Main.getDungeonLogger().warning(Main

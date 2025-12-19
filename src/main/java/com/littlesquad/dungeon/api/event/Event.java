@@ -6,7 +6,7 @@ import org.bukkit.event.Listener;
 
 import java.util.List;
 
-public sealed interface Event extends Listener permits ObjectiveEvent {
+public sealed interface Event extends Listener permits ObjectiveEvent, StructuralEvent, TimedEvent {
 
     Dungeon getDungeon ();
     String getID ();

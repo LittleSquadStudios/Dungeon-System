@@ -24,6 +24,10 @@ public abstract non-sealed class ObjectiveEvent implements Event {
         Bukkit.getPluginManager().registerEvents(this, Main.getInstance());
     }
 
+    public final EventType getType () {
+        return EventType.OBJECTIVE;
+    }
+
     public abstract Checkpoint checkpointToUnlock ();
     public abstract BossRoom bossRoomToUnlock ();
 
@@ -36,19 +40,19 @@ public abstract non-sealed class ObjectiveEvent implements Event {
         requirements.updateRequirements(RequirementType.SLAY, e);
     }
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerMove (final PlayerMoveEvent e) {
+    public final void onPlayerMove (final PlayerMoveEvent e) {
         requirements.updateRequirements(RequirementType.MOVE, e);
     }
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerInteract (final PlayerInteractEvent e) {
+    public final void onPlayerInteract (final PlayerInteractEvent e) {
         requirements.updateRequirements(RequirementType.INTERACT, e);
     }
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerInteractAtEntity (final PlayerInteractAtEntityEvent e) {
+    public final void onPlayerInteractAtEntity (final PlayerInteractAtEntityEvent e) {
         requirements.updateRequirements(RequirementType.INTERACT, e);
     }
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onItemPickUp (final EntityPickupItemEvent e) {
+    public final void onItemPickUp (final EntityPickupItemEvent e) {
         requirements.updateRequirements(RequirementType.ITEM, e);
     }
 }

@@ -1,8 +1,11 @@
 package com.littlesquad.dungeon.internal.file;
 
+import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.entrance.Entrance;
+import com.littlesquad.dungeon.api.event.Event;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.List;
@@ -93,5 +96,20 @@ public final class DungeonParser {
 
     public RequirementsParser getRequirementParser () {
         return new RequirementsParser(config);
+    }
+
+    public Event[] getEvents (final Dungeon d) {
+        final ConfigurationSection cs;
+        if ((cs = config.getConfigurationSection("events")) != null) {
+            return cs.getKeys(false)
+                    .parallelStream()
+                    .map(key -> {
+
+
+
+                        return null;
+                    })
+                    .toArray(Event[]::new);
+        } else return new Event[0];
     }
 }

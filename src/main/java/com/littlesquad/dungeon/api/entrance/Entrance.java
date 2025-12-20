@@ -2,6 +2,11 @@ package com.littlesquad.dungeon.api.entrance;
 
 import java.util.List;
 
+/**
+ * This class represents a vital section of the files configuration
+ *
+ *
+ * */
 public interface Entrance {
 
     int maxSlots();

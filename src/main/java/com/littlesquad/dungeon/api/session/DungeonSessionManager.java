@@ -5,7 +5,6 @@ import com.littlesquad.dungeon.api.status.Status;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -30,5 +29,7 @@ public interface DungeonSessionManager {
     void shutdown();
 
     void recoverActiveSessions(Consumer<UUID> onExpire);
+
+    DungeonSession createSessionInstance(UUID playerId);
 
 }

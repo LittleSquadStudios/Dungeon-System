@@ -56,17 +56,14 @@ public abstract class AbstractDungeonSession implements DungeonSession {
         CompletableFuture.allOf(
                 ensurePlayerExists(),
                 ensureDungeonIdLoaded()
-        ).thenRunAsync(() -> {
-
-            startPeriodicSave();
-        }, executor).exceptionally(ex -> {
+        ).thenRunAsync(this::startPeriodicSave, executor).exceptionally(ex -> {
             ex.printStackTrace();
             return null;
         });
     }
 
     @Override
-    public void onEnd() {
+    public void stopSession() {
         active.set(false);
         endTime.set(Instant.now());
 
@@ -75,6 +72,7 @@ public abstract class AbstractDungeonSession implements DungeonSession {
         }
 
         updateRecord();
+        shutdownExecutors();
     }
 
     private CompletableFuture<Void> ensurePlayerExists() {
@@ -256,13 +254,17 @@ public abstract class AbstractDungeonSession implements DungeonSession {
         return dead.get();
     }
 
-    public void setDead(boolean isDead) {
-        dead.set(isDead);
-        if (isDead && active.get()) {
-            updateRecord();
-        }
+    @Override
+    public double damageTaken() {
+        return damageTaken.getPlain();
     }
 
+    @Override
+    public void setDead() {
+        dead.set(true); //remove update record since just after this methods get fired he will call stopSession
+    }
+
+    @Override
     public void addDamageTaken(double damage) {
         damageTaken.updateAndGet(current -> current + damage);
     }

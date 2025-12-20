@@ -27,14 +27,11 @@ public abstract class AbstractDungeon implements Dungeon {
     /*When someone fires this command we should add him to this set
     ONLY IF HE'S WITH A PARTY, AND IF HE JOINS WE SHOULD CHECK AGAIN AND EVENTUALLY SET INTO THIS SET*/
     private final Set<UUID> leaders = ConcurrentHashMap.newKeySet();
-
-    // Fundamental dungeon information
-    private final String dungeonId;
+    private final DungeonParser parser;
 
     //TODO: In the implementations, create a constructor that accept the parameters id (String) and parser (DungeonParser)
-
-    public AbstractDungeon(final String dungeonId) {
-        this.dungeonId = dungeonId;
+    public AbstractDungeon(final DungeonParser parser) {
+        this.parser = parser;
     }
 
     private static void dispatchCommands (final List<String> commands, final Player p) {
@@ -216,17 +213,11 @@ public abstract class AbstractDungeon implements Dungeon {
     }
 
     @Override
-    public Status status() {
-        return null;
-    }
-
-    @Override
     public void shutdown() {
 
     }
 
-    @Override
-    public String id() {
-        return dungeonId;
+    public DungeonParser getParser() {
+        return parser;
     }
 }

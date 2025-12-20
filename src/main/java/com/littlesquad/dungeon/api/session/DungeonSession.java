@@ -52,18 +52,6 @@ public interface DungeonSession {
     boolean isDead();
 
     /**
-     * Called when the session starts.
-     * <p>
-     * This method should initialize timers, internal counters and
-     * mark the session as active.
-     * It is typically invoked when the player enters the dungeon.
-     *
-     * @since 1.0.0
-     * @author LittleSquad
-     */
-    void onStart();
-
-    /**
      * Called when the session ends.
      * <p>
      * This method should stop timers, finalize statistics and
@@ -74,7 +62,7 @@ public interface DungeonSession {
      * @since 1.0.0
      * @author LittleSquad
      */
-    void onEnd();
+    void stopSession();
 
     /**
      * Indicates whether this session is currently active.
@@ -90,7 +78,7 @@ public interface DungeonSession {
      * Returns the amount of time the player has spent in the dungeon.
      * <p>
      * If the session is active, the returned value represents the elapsed time
-     * since {@link #onStart()} was called.
+     * since constructor was called.
      * If the session has ended, it represents the total duration of the session.
      *
      * @return the time spent in the dungeon, in the time unit specified
@@ -126,6 +114,8 @@ public interface DungeonSession {
      */
     double damageDealt();
 
+    double damageTaken();
+
     /**
      * Adds the specified amount of kills to the current kill counter.
      *
@@ -147,4 +137,6 @@ public interface DungeonSession {
      * @author LittleSquad
      */
     void addDamage(final double damage);
+
+    void addDamageTaken(double damage);
 }

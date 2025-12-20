@@ -7,16 +7,24 @@ import com.littlesquad.dungeon.api.checkpoint.Checkpoint;
 import com.littlesquad.dungeon.api.entrance.Entrance;
 import com.littlesquad.dungeon.api.entrance.ExitReason;
 import com.littlesquad.dungeon.api.event.Event;
+import com.littlesquad.dungeon.api.status.Status;
+import com.littlesquad.dungeon.internal.file.DungeonParser;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public final class DungeonImpl extends AbstractDungeon {
 
-    public DungeonImpl() {
-        super("TestDungeon");
+    public DungeonImpl(final DungeonParser parser) {
+        super(parser);
+    }
+
+    @Override
+    public String id() {
+        return "";
     }
 
     @Override
@@ -26,9 +34,19 @@ public final class DungeonImpl extends AbstractDungeon {
 
     @Override
     public Set<TypeFlag> typeFlags() {
-        return Set.of(TypeFlag.TIMED,
-                TypeFlag.HAS_BOSSROOM,
-                TypeFlag.PVP_ENABLED);
+        final Set<TypeFlag> flags = new HashSet<>(3);
+
+        if (getParser().isTimeLimited()) {
+            flags.add(TypeFlag.TIMED);
+        }
+
+        if (getParser().isPvP()) {
+            flags.add(TypeFlag.PVP_ENABLED);
+        }
+
+        // if (getParser().getBossRoom()) TODO: Not implemented yet, muvt draky
+
+        return flags;
     }
 
     @Override
@@ -38,7 +56,7 @@ public final class DungeonImpl extends AbstractDungeon {
 
     @Override
     public Entrance getEntrance() {
-        return null;
+        return getParser().getEntrance();
     }
 
     @Override
@@ -58,6 +76,11 @@ public final class DungeonImpl extends AbstractDungeon {
 
     @Override
     public ExitReason forceExit(Player player) {
+        return null;
+    }
+
+    @Override
+    public Status status() {
         return null;
     }
 

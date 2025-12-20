@@ -1,27 +1,27 @@
 package com.littlesquad.dungeon.api.status;
 
 import com.littlesquad.dungeon.api.session.DungeonSession;
+import io.lumine.mythic.lib.data.SynchronizedDataHolder;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.party.AbstractParty;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AbstractStatus implements Status {
 
     private final boolean isPvp;
 
+    private final ConcurrentHashMap<UUID, Integer> playerDeaths;
+
     public AbstractStatus(boolean isPvp) {
         this.isPvp = isPvp;
+        playerDeaths = new ConcurrentHashMap<>();
     }
 
     @EventHandler
@@ -41,6 +41,10 @@ public abstract class AbstractStatus implements Status {
                 sessionManager()
                         .getSession(damager.getUniqueId())
                         .addDamage(e.getDamage());
+
+                sessionManager()
+                        .getSession(damaged.getUniqueId())
+                        .addDamageTaken(damaged.getLastDamage());
 
             } else e.setCancelled(true);
 
@@ -74,27 +78,29 @@ public abstract class AbstractStatus implements Status {
 
     @EventHandler
     public void onEntityDeath(final EntityDeathEvent e) {
-
+        // TODO: Stop session if player dies
         final LivingEntity entity = e.getEntity();
 
         if (entity instanceof Player player) {
             if (isPlayerInDungeon(player.getUniqueId())) {
-                DungeonSession session = sessionManager().getSession(player.getUniqueId());
-                if (session != null) {
-                    session.setDead();
-                }
+
+                final DungeonSession session = sessionManager().getSession(player.getUniqueId());
+
+
+                session.setDead();
+                session.stopSession();
             }
             return;
         }
 
         final Player killer = entity.getKiller();
-        if (killer != null && isPlayerInDungeon(killer.getUniqueId())) {
 
+        if (killer != null && isPlayerInDungeon(killer.getUniqueId()))
             sessionManager()
-                    .getSession
-                            (killer.getUniqueId()).addKill(1);
+                    .getSession(killer.getUniqueId())
+                    .addKill(1);
 
-        }
+
 
     }
 
@@ -104,7 +110,7 @@ public abstract class AbstractStatus implements Status {
         return sessionManager().getSessions().size();
     }
 
-    @Override //TODO: Cerca tra le session e se trovi null allora non esiste
+    @Override
     public boolean isPlayerInDungeon(UUID player) {
         return sessionManager().getSession(player) != null;
     }
@@ -118,6 +124,7 @@ public abstract class AbstractStatus implements Status {
 
         return true;
     }
+
 
     /*@Override //TODO: Stessa cosa di sopra se quello vale per tutti i membri del party
     public CompletableFuture<Boolean> isPartyInDungeon(AbstractParty party) {
@@ -166,39 +173,37 @@ public abstract class AbstractStatus implements Status {
             return (boolean) AtomicBoolean.valueVar.getOpaque(result);
         });
     }*/
-
     @Override
     public int playerKills(UUID player) {
-        return sessionManager().getSession(player).kills();
+        return sessionManager()
+                .getSession(player)
+                .kills();
     }
 
     @Override
     public int partyKills(AbstractParty party) {
-
-        int kills = 0;
-
-        for (PlayerData onlineMember : party.getOnlineMembers()) {
-            kills += sessionManager()
-                    .getSession(onlineMember
-                            .getUniqueId())
-                    .kills();
-        }
-
-        return kills;
-
+       return party.getOnlineMembers()
+               .stream()
+               .map(SynchronizedDataHolder::getUniqueId)
+               .mapToInt
+                       (uniqueId -> sessionManager()
+                       .getSession(uniqueId)
+                       .kills())
+               .sum();
     }
 
     @Override
     public int totalKills() {
+        return sessionManager()
+                .getSessions()
+                .stream()
+                .mapToInt(DungeonSession::kills)
+                .sum();
+    }
 
-        int kills = 0;
-
-        for (final DungeonSession session : sessionManager().getSessions()) {
-            kills += session.kills();
-        }
-
-        return kills;
-
+    @Override
+    public int playerDeaths(UUID uuid) {
+        return playerDeaths.get(uuid);
     }
 
     @Override

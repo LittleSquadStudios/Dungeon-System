@@ -14,7 +14,9 @@ public sealed interface Event extends Listener permits ObjectiveEvent, Structura
     EventType getType ();
 
     //Remember that events are not active since creation!
+    //The argument of this method will be ignored in StructuralEventImpl since it will be activated for everyone!
     void triggerActivation (final Player... players);
+    //This method will always return true in StructuralEventImpl since that is active for everyone!
     boolean isActiveFor (final Player... players);
 
     //Remember that events deactivate right before executing commands!

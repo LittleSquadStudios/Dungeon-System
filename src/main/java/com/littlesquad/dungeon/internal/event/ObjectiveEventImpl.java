@@ -5,19 +5,27 @@ import com.littlesquad.dungeon.api.boss.BossRoom;
 import com.littlesquad.dungeon.api.checkpoint.Checkpoint;
 import com.littlesquad.dungeon.api.event.ObjectiveEvent;
 import com.littlesquad.dungeon.internal.file.RequirementsParser;
+import com.littlesquad.dungeon.placeholder.PlaceholderFormatter;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class ObjectiveEventImpl extends ObjectiveEvent {
     private final Dungeon dungeon;
     private final String id;
     private final List<String> commands;
 
+    //Lazy loading for avoiding initialization order mess!
     private final String checkpoint;
     private Checkpoint rCheckpoint;
     private final String boosRoom;
     private BossRoom rBossRoom;
+
+    private final Set<Player> players;
 
     public ObjectiveEventImpl (final Dungeon dungeon,
                                final String id,
@@ -30,6 +38,7 @@ public final class ObjectiveEventImpl extends ObjectiveEvent {
         this.commands = commands;
         this.checkpoint = checkpoint;
         this.boosRoom = boosRoom;
+        players = ConcurrentHashMap.newKeySet();
         super(parser);
     }
 
@@ -40,13 +49,21 @@ public final class ObjectiveEventImpl extends ObjectiveEvent {
         return rBossRoom != null ? rBossRoom : (rBossRoom = null); //TODO: get boss room from string!
     }
 
-    @Override
     public void executeCommandsFor (final Player... players) {
-
+        Arrays.stream(players)
+                .parallel()
+                .filter(this.players::remove)
+                .forEach(player -> {
+                    for (final String command : commands)
+                        Bukkit.dispatchCommand(
+                                Bukkit.getConsoleSender(),
+                                PlaceholderFormatter.formatPerPlayer(command, player));
+                });
     }
-    @Override
     public void deActiveFor (final Player... players) {
-
+        Arrays.stream(players)
+                .parallel()
+                .forEach(this.players::remove);
     }
 
     public Dungeon getDungeon () {
@@ -60,13 +77,14 @@ public final class ObjectiveEventImpl extends ObjectiveEvent {
         return commands;
     }
 
-    @Override
-    public void triggerActivation(Player... players) {
-
+    public void triggerActivation (final Player... players) {
+        Arrays.stream(players)
+                .parallel()
+                .forEach(this.players::add);
     }
-
-    @Override
-    public boolean isActiveFor(Player... players) {
-        return false;
+    public boolean isActiveFor (final Player... players) {
+        return Arrays.stream(players)
+                .parallel()
+                .allMatch(this.players::contains);
     }
 }

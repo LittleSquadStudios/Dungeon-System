@@ -69,8 +69,11 @@ public final class TimedEventImpl extends TimedEvent {
                 .parallel()
                 .forEach(player -> {
                     this.players.computeIfAbsent(player, _ -> scheduler.schedule(() -> {
-                        for (final String command : commands)
-                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), PlaceholderFormatter.formatPerPlayer(command, player));
+                        if (this.players.remove(player) != null)
+                            for (final String command : commands)
+                                Bukkit.dispatchCommand(
+                                        Bukkit.getConsoleSender(),
+                                        PlaceholderFormatter.formatPerPlayer(command, player));
                             },
                             isFixed ? timeAmount : new Random(System.nanoTime()).nextLong(timeUnit.toMillis(timeAmount)),
                             isFixed ? timeUnit : TimeUnit.MILLISECONDS));

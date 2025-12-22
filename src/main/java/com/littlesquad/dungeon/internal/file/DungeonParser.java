@@ -6,6 +6,7 @@ import com.littlesquad.dungeon.api.entrance.Entrance;
 import com.littlesquad.dungeon.api.event.Event;
 import com.littlesquad.dungeon.api.event.EventType;
 import com.littlesquad.dungeon.api.event.structural.EnvironmentEvent;
+import com.littlesquad.dungeon.internal.checkpoint.CheckPointImpl;
 import com.littlesquad.dungeon.internal.event.ObjectiveEventImpl;
 import com.littlesquad.dungeon.internal.event.StructuralEventImpl;
 import com.littlesquad.dungeon.internal.event.TimedEventImpl;
@@ -159,10 +160,10 @@ public final class DungeonParser {
                                                 environmentEvent,
                                                 mArray,
                                                 new Location(
-                                                        getWorld(),
-                                                        Long.parseLong(loc.substring(0, i = loc.indexOf(' ', 1))),
-                                                        Long.parseLong(loc.substring(i + 1, i = loc.indexOf(' ', i + 2))),
-                                                        Long.parseLong(loc.substring(i + 3))),
+                                                        d.getWorld(),
+                                                        Double.parseDouble(loc.substring(0, i = loc.indexOf(' ', 1))),
+                                                        Double.parseDouble(loc.substring(i + 1, i = loc.indexOf(' ', i + 2))),
+                                                        Double.parseDouble(loc.substring(i + 3))),
                                                 config.getStringList("events." + key + ".conditioned_by")
                                                         .stream()
                                                         .parallel()
@@ -182,8 +183,29 @@ public final class DungeonParser {
     }
 
     public Checkpoint[] getCheckpoints (final Dungeon d) {
-
-
-
+        final ConfigurationSection cs;
+        if ((cs = config.getConfigurationSection("checkpoints")) != null) {
+            return cs.getKeys(false)
+                    .parallelStream()
+                    .map(key -> {
+                        try {
+                            final String loc = config.getString("checkpoints." + key + ".location", "0 0 0");
+                            int i;
+                            return new CheckPointImpl(
+                                    key,
+                                    new Location(
+                                            d.getWorld(),
+                                            Double.parseDouble(loc.substring(0, i = loc.indexOf(' ', 1))),
+                                            Double.parseDouble(loc.substring(i + 1, i = loc.indexOf(' ', i + 2))),
+                                            Double.parseDouble(loc.substring(i + 3))),
+                                    config.getString("checkpoints." + key + ".respawn_at_checkpoint", key),
+                                    config.getStringList("checkpoints." + key + ".on_death_commands"));
+                        } catch (final Throwable _) {
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .toArray(Checkpoint[]::new);
+        } else return new Checkpoint[0];
     }
 }

@@ -1,7 +1,7 @@
 # Is PvP enabled?
 pvp: false
 
-# World in which is defined the dungeon
+# World in which is defined the dungeon (all the locations will refer to this world!)
 world: "World"
 
 time:
@@ -133,6 +133,7 @@ events:
 #       'commands' section of the OBJECTIVE event
 checkpoints:
   # Name of the checkpoint used in the 'checkpoint' section of the OBJECTIVE event
+  # Each checkpoint should have a different name even across different files!
   example:
     location: "-40 66 -16"
     # May be specified a precedent checkpoint too if this is only a 'technical' checkpoint

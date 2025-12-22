@@ -56,4 +56,12 @@ public abstract non-sealed class ObjectiveEvent implements Event {
     public final void onItemPickUp (final EntityPickupItemEvent e) {
         requirements.updateRequirements(RequirementType.ITEM, e);
     }
+
+    public void close () {
+        EntityDeathEvent.getHandlerList().unregister(this);
+        PlayerMoveEvent.getHandlerList().unregister(this);
+        PlayerInteractEvent.getHandlerList().unregister(this);
+        PlayerInteractAtEntityEvent.getHandlerList().unregister(this);
+        EntityPickupItemEvent.getHandlerList().unregister(this);
+    }
 }

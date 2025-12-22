@@ -5,3 +5,4 @@ config:
     requirement_parsing_error: "Cannot parse correctly the requirement "
     number_format_error: "Error during number conversion in "
     invalid_mob: "Invalid Mob/MythicMob found in "
+    already_existing_checkpoint: "Invalid checkpoint ID, this ID has been already registered: "

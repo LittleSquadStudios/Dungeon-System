@@ -7,25 +7,21 @@ import org.bukkit.event.Listener;
 import java.util.List;
 
 /**
- * This class represents a checkpoint.
- * This one allows the user to define what happens when you
- * reach a checkpoint, a checkpoint can be differentiated by:
- * <ul>
- * <li>Location</li>
- * <li>Interaction</li>
- * <li>Region</li>
- * </ul>
- * Each has to be defined when gets triggered, for example
- * in the config you should put the location of the block
- * you have to interact with. <br><br>
+ * This class represents a checkpoint. <br>
+ * A checkpoint is a sort of save-point that activates once
+ * triggered. <br>
+ * It defines actions on players' death and respawn to the
+ * given checkpoint the player if needed. <br>
+ * In fact, it is possible to create <b>technical</b> checkpoints
+ * that simply manage deaths differently from the others but that
+ * still respawn at another checkpoint. <br><br>
  * <b>Any checkpoint has to be triggered by an OBJECTIVE event!</b>
  * @since 1.0.0
  * @author LittleSquad
  * */
 public interface Checkpoint extends Listener {
 
-    //TODO: Create a dummy checkpoint for the id "" that does nothing (don't register players to it, empty commands list ecc...)!
-    //TODO: Same for the BossRoom!
+    String getID ();
 
     /**
      * @return {@link Location} the location where the checkpoint is set
@@ -40,6 +36,8 @@ public interface Checkpoint extends Listener {
      * @author LittleSquad
      * */
     void respawnAtCheckpoint (final Player player);
+
+    Checkpoint getRespawnCheckpoint ();
 
     /**
      *

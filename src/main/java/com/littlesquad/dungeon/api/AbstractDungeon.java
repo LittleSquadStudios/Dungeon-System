@@ -4,6 +4,7 @@ import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.checkpoint.Checkpoint;
 import com.littlesquad.dungeon.api.entrance.Entrance;
 import com.littlesquad.dungeon.api.entrance.EntryResponse;
+import com.littlesquad.dungeon.api.event.Event;
 import com.littlesquad.dungeon.api.session.DungeonSessionManager;
 import com.littlesquad.dungeon.api.status.Status;
 import com.littlesquad.dungeon.internal.file.DungeonParser;
@@ -13,14 +14,13 @@ import net.Indyuce.mmocore.api.MMOCoreAPI;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.party.AbstractParty;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class AbstractDungeon implements Dungeon {
 
@@ -111,7 +111,6 @@ public abstract class AbstractDungeon implements Dungeon {
         if (leader.getLevel() < getEntrance().playerMinimumLevel())
             return EntryResponse.FAILURE_PER_LEVEL;
 
-        enterSolo(leader);
         return EntryResponse.SUCCESS;
     }
 
@@ -194,22 +193,38 @@ public abstract class AbstractDungeon implements Dungeon {
 
     @Override
     public void onExit(Player player) {
-
+        status().sessionManager()
+                .getSession(player.getUniqueId())
+                .stopSession();
     }
 
     @Override
     public void onExit(Player... players) {
-
+        Arrays.stream(players)
+                .map(Entity::getUniqueId)
+                .toList()
+                .forEach(player ->
+                    status().sessionManager()
+                            .getSession(player)
+                            .stopSession());
     }
 
     @Override
     public void triggerEvent(String eventId, Player triggerer) {
+        Arrays.stream(getEvents())
+                .filter(event -> event.getID().equals(eventId))
+                .findFirst()
+                .ifPresent(ev -> ev.triggerActivation(triggerer));
 
     }
 
     @Override
     public CompletableFuture<Void> triggerEventAsync(String eventId, Player triggerer) {
-        return null;
+        return CompletableFuture.runAsync(() ->
+                Arrays.stream(getEvents())
+                    .filter(event -> event.getID().equals(eventId))
+                    .findFirst()
+                    .ifPresent(ev -> ev.triggerActivation(triggerer)));
     }
 
     @Override

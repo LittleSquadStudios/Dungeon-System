@@ -7,13 +7,16 @@ import com.littlesquad.dungeon.api.checkpoint.Checkpoint;
 import com.littlesquad.dungeon.api.entrance.Entrance;
 import com.littlesquad.dungeon.api.entrance.ExitReason;
 import com.littlesquad.dungeon.api.event.Event;
+import com.littlesquad.dungeon.api.rewards.Reward;
 import com.littlesquad.dungeon.api.status.Status;
 import com.littlesquad.dungeon.internal.file.DungeonParser;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public final class DungeonImpl extends AbstractDungeon {
@@ -74,6 +77,11 @@ public final class DungeonImpl extends AbstractDungeon {
     @Override
     public Event[] getEvents() {
         return getParser().getEvents(this);
+    }
+
+    @Override
+    public List<Reward> rewards() {
+        return List.of();
     }
 
     @Override

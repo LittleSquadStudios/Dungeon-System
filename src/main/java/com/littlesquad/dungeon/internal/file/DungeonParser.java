@@ -1,23 +1,41 @@
 package com.littlesquad.dungeon.internal.file;
 
 import com.littlesquad.dungeon.api.Dungeon;
+import com.littlesquad.dungeon.api.checkpoint.Checkpoint;
 import com.littlesquad.dungeon.api.entrance.Entrance;
 import com.littlesquad.dungeon.api.event.Event;
+import com.littlesquad.dungeon.api.event.EventType;
+import com.littlesquad.dungeon.api.event.structural.EnvironmentEvent;
+import com.littlesquad.dungeon.internal.event.ObjectiveEventImpl;
+import com.littlesquad.dungeon.internal.event.StructuralEventImpl;
+import com.littlesquad.dungeon.internal.event.TimedEventImpl;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
-@SuppressWarnings("ClassCanBeRecord")
 public final class DungeonParser {
+    private final String id;
     private final FileConfiguration config;
+    private final RequirementsParser requirementsParser;
 
-    DungeonParser (final FileConfiguration config) {
+    DungeonParser (final String id,
+                   final FileConfiguration config) {
+        this.id = id;
         this.config = config;
+        requirementsParser = new RequirementsParser(config);
+    }
+
+    public String getId () {
+        return id;
     }
 
     public World getWorld () {
@@ -95,23 +113,77 @@ public final class DungeonParser {
         };
     }
 
-    public RequirementsParser getRequirementParser () {
-        return new RequirementsParser(config);
-    }
-
     public Event[] getEvents (final Dungeon d) {
         final ConfigurationSection cs;
         if ((cs = config.getConfigurationSection("events")) != null) {
             return cs.getKeys(false)
                     .parallelStream()
                     .map(key -> {
-
-
-
-                        return null;
+                        try {
+                            final EventType type = EventType.valueOf(config.getString("events." + key + ".type"));
+                            return switch (type) {
+                                case TIMED -> {
+                                    try {
+                                        final TimeUnit unit = TimeUnit.valueOf(config.getString("events." + key + ".time.unit"));
+                                        yield new TimedEventImpl(
+                                                d,
+                                                key,
+                                                config.getStringList("events." + key + ".commands"),
+                                                config.getBoolean("events." + key + ".is_fixed", true),
+                                                config.getLong("events." + key + ".time.amount", 0L),
+                                                unit);
+                                    } catch (final Throwable _) {
+                                        yield null;
+                                    }
+                                }
+                                case OBJECTIVE -> new ObjectiveEventImpl(
+                                        d,
+                                        key,
+                                        config.getStringList("events." + key + ".commands"),
+                                        config.getString("events." + key + ".checkpoint", ""),
+                                        config.getString("events." + key + ".boss-room", ""),
+                                        requirementsParser);
+                                case STRUCTURAL -> {
+                                    try {
+                                        final EnvironmentEvent environmentEvent = EnvironmentEvent.valueOf(config.getString("events." + key + ".environment_event"));
+                                        final List<String> materialStrings = config.getStringList("events." + key + ".block_types");
+                                        final Material[] mArray = new Material[materialStrings.size()];
+                                        for (int i = 0; i < mArray.length; ++i)
+                                            mArray[i] = Material.valueOf(materialStrings.get(i));
+                                        final String loc = config.getString("events." + key + ".location", "0 0 0");
+                                        int i;
+                                        yield new StructuralEventImpl(
+                                                d,
+                                                key,
+                                                config.getStringList("events." + key + ".commands"),
+                                                environmentEvent,
+                                                mArray,
+                                                new Location(
+                                                        getWorld(),
+                                                        Long.parseLong(loc.substring(0, i = loc.indexOf(' ', 1))),
+                                                        Long.parseLong(loc.substring(i + 1, i = loc.indexOf(' ', i + 2))),
+                                                        Long.parseLong(loc.substring(i + 3))),
+                                                config.getStringList("events." + key + ".conditioned_by")
+                                                        .stream()
+                                                        .parallel()
+                                                        .collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
+                                    } catch (final Throwable _) {
+                                        yield null;
+                                    }
+                                }
+                            };
+                        } catch (final Throwable _) {
+                            return null;
+                        }
                     })
                     .filter(Objects::nonNull)
                     .toArray(Event[]::new);
         } else return new Event[0];
+    }
+
+    public Checkpoint[] getCheckpoints (final Dungeon d) {
+
+
+
     }
 }

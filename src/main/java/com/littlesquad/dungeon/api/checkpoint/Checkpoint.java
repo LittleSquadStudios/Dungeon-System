@@ -24,6 +24,9 @@ import java.util.List;
  * */
 public interface Checkpoint extends Listener {
 
+    //TODO: Create a dummy checkpoint for the id "" that does nothing (don't register players to it, empty commands list ecc...)!
+    //TODO: Same for the BossRoom!
+
     /**
      * @return {@link Location} the location where the checkpoint is set
      * @since 1.0.0

@@ -79,10 +79,13 @@ public final class FileManager {
             dungeons.clear();
             for (int i = 0; i < dungeonFiles.length; i++) {
                 final int finalI = i;
-                futures.add(CompletableFuture.runAsync(() -> dungeons.put(
-                        dungeonFiles[finalI].getName().substring(0, dungeonFiles[finalI].getName().lastIndexOf('.')),
-                                new DungeonParser(YamlConfiguration.loadConfiguration(dungeonFiles[finalI]))),
-                        executor));
+                futures.add(CompletableFuture.runAsync(() -> {
+                    final String fileName = dungeonFiles[finalI].getName();
+                    final String name;
+                    dungeons.put(
+                            name = fileName.substring(0, fileName.lastIndexOf('.')),
+                            new DungeonParser(name, YamlConfiguration.loadConfiguration(dungeonFiles[finalI])));
+                    }, executor));
             }
         }
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));

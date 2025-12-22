@@ -20,10 +20,10 @@ public abstract class AbstractDungeonSession implements DungeonSession {
     private final Instant startTime;
     private final AtomicReference<Instant> endTime;
     private final AtomicBoolean active;
-    private final AtomicBoolean dead;
     private final AtomicInteger totalKills;
     private final AtomicReference<Double> damageDealt;
     private final AtomicReference<Double> damageTaken;
+    private final AtomicInteger deaths;
 
     private static final ScheduledExecutorService scheduler;
     private static final ExecutorService executor;
@@ -46,20 +46,23 @@ public abstract class AbstractDungeonSession implements DungeonSession {
         this.startTime = Instant.now();
         this.endTime = new AtomicReference<>(null);
         this.active = new AtomicBoolean(false);
-        this.dead = new AtomicBoolean(false);
         this.totalKills = new AtomicInteger(0);
         this.damageDealt = new AtomicReference<>(0.0);
         this.damageTaken = new AtomicReference<>(0.0);
+        this.deaths = new AtomicInteger(0);
 
         active.set(true);
 
         CompletableFuture.allOf(
                 ensurePlayerExists(),
                 ensureDungeonIdLoaded()
-        ).thenRunAsync(this::startPeriodicSave, executor).exceptionally(ex -> {
-            ex.printStackTrace();
+        ).thenRunAsync(this::startPeriodicSave, executor)
+        .handleAsync((_, ex) -> {
+            if (ex != null) {
+                ex.printStackTrace();
+            }
             return null;
-        });
+        }, executor);
     }
 
     @Override
@@ -105,7 +108,7 @@ public abstract class AbstractDungeonSession implements DungeonSession {
                 String select = "SELECT dungeon_id FROM dungeon WHERE dungeon_name = ?";
                 try (PreparedStatement stmt = conn.prepareStatement(select)) {
                     stmt.setString(1, dungeonName);
-                    ResultSet rs = stmt.executeQuery();
+                    final ResultSet rs = stmt.executeQuery();
                     if (rs.next()) {
                         cachedDungeonId = rs.getInt("dungeon_id");
                     } else {
@@ -132,11 +135,11 @@ public abstract class AbstractDungeonSession implements DungeonSession {
             throw new IllegalStateException("Player ID o Dungeon ID non inizializzati");
         }
 
-        final String sql = "INSERT INTO player_runs (dungeon_id, player_id, dead_during_dungeon, " +
+        final String sql = "INSERT INTO player_runs (dungeon_id, player_id, deaths, " +
                 "enter_time, exit_time, total_kills, damage_dealt, damage_taken) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
                 "ON DUPLICATE KEY UPDATE " +
-                "dead_during_dungeon = VALUES(dead_during_dungeon), " +
+                "deaths = VALUES(deaths), " +
                 "enter_time = VALUES(enter_time), " +
                 "exit_time = VALUES(exit_time), " +
                 "total_kills = VALUES(total_kills), " +
@@ -149,7 +152,7 @@ public abstract class AbstractDungeonSession implements DungeonSession {
                     try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
                         stmt.setInt(1, cachedDungeonId);
                         stmt.setInt(2, cachedPlayerId);
-                        stmt.setBoolean(3, dead.get());
+                        stmt.setInt(3, deaths.get());
                         stmt.setTimestamp(4, Timestamp.from(startTime));
                         stmt.setTimestamp(5, Timestamp.from(Instant.now()));
                         stmt.setInt(6, totalKills.get());
@@ -171,13 +174,13 @@ public abstract class AbstractDungeonSession implements DungeonSession {
             return;
         }
 
-        final String sql = "UPDATE player_runs SET dead_during_dungeon = ?, exit_time = ?, " +
+        final String sql = "UPDATE player_runs SET deaths = ?, exit_time = ?, " +
                 "total_kills = ?, damage_dealt = ?, damage_taken = ? " +
                 "WHERE dungeon_id = ? AND player_id = ?";
 
         Main.getConnector().getConnection(10).thenAcceptAsync(conn -> {
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setBoolean(1, dead.get());
+                stmt.setInt(1, deaths.get());
                 stmt.setTimestamp(2, Timestamp.from(endTime.get() != null ? endTime.get() : Instant.now()));
                 stmt.setInt(3, totalKills.get());
                 stmt.setDouble(4, damageDealt.get());
@@ -250,18 +253,18 @@ public abstract class AbstractDungeonSession implements DungeonSession {
     }
 
     @Override
-    public boolean isDead() {
-        return dead.get();
-    }
-
-    @Override
     public double damageTaken() {
         return damageTaken.getPlain();
     }
 
     @Override
-    public void setDead() {
-        dead.set(true); //remove update record since just after this methods get fired he will call stopSession
+    public void addDeath() {
+        deaths.incrementAndGet();
+    }
+
+    @Override
+    public int deaths() {
+        return deaths.get();
     }
 
     @Override

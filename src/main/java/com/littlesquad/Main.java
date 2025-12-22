@@ -1,6 +1,7 @@
 package com.littlesquad;
 
 import com.littlesquad.dungeon.database.MySQLConnector;
+import com.littlesquad.dungeon.internal.DungeonManager;
 import com.littlesquad.dungeon.internal.event.TimedEventImpl;
 import com.littlesquad.dungeon.internal.file.FileManager;
 import com.littlesquad.dungeon.internal.utils.MessageProvider;
@@ -24,6 +25,7 @@ public final class Main extends JavaPlugin {
                 .thenRunAsync(() -> {
 
                     //TODO: Register all the services
+                    DungeonManager.getDungeonManager().initDungeons();
 
                 });
 

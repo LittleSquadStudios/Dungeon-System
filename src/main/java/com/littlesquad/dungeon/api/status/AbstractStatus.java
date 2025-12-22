@@ -33,8 +33,7 @@ public abstract class AbstractStatus implements Status {
 
         if (isPlayerInDungeon
                 (damager.getUniqueId()) &&
-                isPlayerInDungeon
-                        (damaged.getUniqueId())) {
+                isPlayerInDungeon(damaged.getUniqueId())) {
 
             if (isPvp) {
 
@@ -65,10 +64,8 @@ public abstract class AbstractStatus implements Status {
             if (e.getEntity() instanceof LivingEntity) {
 
                 sessionManager()
-                        .getSession
-                                (damager.getUniqueId())
-                        .addDamage
-                                (e.getFinalDamage());
+                        .getSession(damager.getUniqueId())
+                        .addDamage(e.getFinalDamage());
 
             }
 
@@ -86,9 +83,8 @@ public abstract class AbstractStatus implements Status {
 
                 final DungeonSession session = sessionManager().getSession(player.getUniqueId());
 
+                session.addDeath();
 
-                session.setDead();
-                session.stopSession();
             }
             return;
         }

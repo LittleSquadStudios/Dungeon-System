@@ -28,6 +28,8 @@ public interface DungeonSessionManager {
 
     void shutdown();
 
+    void onReload();
+
     void recoverActiveSessions(Consumer<UUID> onExpire);
 
     DungeonSession createSessionInstance(UUID playerId);

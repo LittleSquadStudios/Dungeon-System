@@ -8,16 +8,13 @@ import org.bukkit.Bukkit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 public abstract class AbstractSessionManager implements DungeonSessionManager {
 
     private final ConcurrentHashMap<UUID, DungeonSession> sessions = new ConcurrentHashMap<>();
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
 
     @Override
     public void startSession(UUID playerId, TimeUnit unit) {
@@ -40,6 +37,7 @@ public abstract class AbstractSessionManager implements DungeonSessionManager {
                 endSession(playerId, ExitReason.TIME_EXPIRED);
             }
         }, duration, unit);
+
     }
 
     @Override
@@ -49,6 +47,7 @@ public abstract class AbstractSessionManager implements DungeonSessionManager {
         if (session != null) {
             session.stopSession();
         }
+
     }
 
     @Override

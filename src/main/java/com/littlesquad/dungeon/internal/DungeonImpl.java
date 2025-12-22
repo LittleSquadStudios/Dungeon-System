@@ -18,23 +18,15 @@ import java.util.Set;
 
 public final class DungeonImpl extends AbstractDungeon {
 
+    private final String id;
+
+    private final Set<TypeFlag> flags;
+    private final Status status;
+
     public DungeonImpl(final DungeonParser parser) {
         super(parser);
-    }
 
-    @Override
-    public String id() {
-        return "";
-    }
-
-    @Override
-    public String displayName() {
-        return "TestDungeon";
-    }
-
-    @Override
-    public Set<TypeFlag> typeFlags() {
-        final Set<TypeFlag> flags = new HashSet<>(3);
+        flags = new HashSet<>(3);
 
         if (getParser().isTimeLimited()) {
             flags.add(TypeFlag.TIMED);
@@ -44,14 +36,34 @@ public final class DungeonImpl extends AbstractDungeon {
             flags.add(TypeFlag.PVP_ENABLED);
         }
 
-        // if (getParser().getBossRoom()) TODO: Not implemented yet, muvt draky
+        if (typeFlags().contains(TypeFlag.PVP_ENABLED))
+            status = new StatusImpl(true, this);
+        else status = new StatusImpl(false, this);
 
+        id = null;
+
+
+
+    }
+
+    @Override
+    public String id() {
+        return null;
+    }
+
+    @Override
+    public String displayName() {
+        return "TestDungeon";
+    }
+
+    @Override
+    public Set<TypeFlag> typeFlags() {
         return flags;
     }
 
     @Override
     public World getWorld() {
-        return Bukkit.getWorld("world");
+        return getParser().getWorld();
     }
 
     @Override
@@ -61,7 +73,7 @@ public final class DungeonImpl extends AbstractDungeon {
 
     @Override
     public Event[] getEvents() {
-        return new Event[0];
+        return getParser().getEvents(this);
     }
 
     @Override
@@ -81,7 +93,7 @@ public final class DungeonImpl extends AbstractDungeon {
 
     @Override
     public Status status() {
-        return null;
+        return status;
     }
 
     @Override

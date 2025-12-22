@@ -49,8 +49,6 @@ public interface DungeonSession {
      */
     Long runId();
 
-    boolean isDead();
-
     /**
      * Called when the session ends.
      * <p>
@@ -126,7 +124,9 @@ public interface DungeonSession {
      */
     void addKill(final int kill);
 
-    void setDead();
+    void addDeath();
+
+    int deaths();
 
     /**
      * Adds the specified amount of damage to the total damage dealt.

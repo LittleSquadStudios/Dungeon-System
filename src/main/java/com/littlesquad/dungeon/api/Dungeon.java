@@ -6,10 +6,12 @@ import com.littlesquad.dungeon.api.entrance.Entrance;
 import com.littlesquad.dungeon.api.entrance.EntryResponse;
 import com.littlesquad.dungeon.api.entrance.ExitReason;
 import com.littlesquad.dungeon.api.event.Event;
+import com.littlesquad.dungeon.api.rewards.Reward;
 import com.littlesquad.dungeon.api.status.Status;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -60,6 +62,8 @@ public interface Dungeon {
     Entrance getEntrance();
 
     Event[] getEvents();
+
+    List<Reward> rewards();
 
     Checkpoint[] getCheckpoints();
 

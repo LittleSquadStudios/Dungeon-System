@@ -5,6 +5,7 @@ import com.littlesquad.dungeon.internal.DungeonManager;
 import com.littlesquad.dungeon.internal.event.TimedEventImpl;
 import com.littlesquad.dungeon.internal.file.FileManager;
 import com.littlesquad.dungeon.internal.utils.MessageProvider;
+import com.littlesquad.dungeon.placeholder.PlaceholderHook;
 import net.Indyuce.mmocore.api.MMOCoreAPI;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -27,6 +28,7 @@ public final class Main extends JavaPlugin {
                     //TODO: Register all the services
                     DungeonManager.getDungeonManager().initDungeons();
 
+                    new PlaceholderHook().register();
                 });
 
         connector = new MySQLConnector("dungeon-system-db",

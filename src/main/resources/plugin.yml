@@ -6,3 +6,4 @@ commands:
     description: "Command Used To Create the dungeon"
     aliases:
       - cd
+depend: [PlaceholderAPI]

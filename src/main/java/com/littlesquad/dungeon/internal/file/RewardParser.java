@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+@SuppressWarnings("ClassCanBeRecord")
 public final class RewardParser {
 
     private final FileConfiguration dungeonConf;
@@ -34,7 +35,8 @@ public final class RewardParser {
                 rewards = new Reward[subSections.size()];
 
                 int i = 0;
-                for (final String sub : subSections) {
+                for (final String s : subSections) {
+                    final String sub = "rewards." + s;
 
                     ItemReward[] itemsR = new ItemReward[0];
                     final ConfigurationSection itemSec = section.getConfigurationSection(sub + ".items");

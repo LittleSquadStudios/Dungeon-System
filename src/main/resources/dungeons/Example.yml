@@ -165,6 +165,7 @@ boss-rooms:
       name: "BOSS"
     rewards:
       # Here you can link the id of each reward you want to give
+      - "completion_reward"
 
 rewards: # Default section for every reward
   completion_reward:

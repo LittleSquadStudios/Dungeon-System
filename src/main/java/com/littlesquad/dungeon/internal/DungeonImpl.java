@@ -10,6 +10,7 @@ import com.littlesquad.dungeon.api.event.Event;
 import com.littlesquad.dungeon.api.rewards.Reward;
 import com.littlesquad.dungeon.api.status.Status;
 import com.littlesquad.dungeon.internal.file.DungeonParser;
+import com.littlesquad.dungeon.internal.file.RewardParser;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -25,6 +26,7 @@ public final class DungeonImpl extends AbstractDungeon {
 
     private final Set<TypeFlag> flags;
     private final Status status;
+    private final List<Reward> rewards;
 
     public DungeonImpl(final DungeonParser parser) {
         super(parser);
@@ -45,6 +47,7 @@ public final class DungeonImpl extends AbstractDungeon {
 
         id = null;
 
+        rewards = parser.getRewards();
 
 
     }
@@ -81,7 +84,7 @@ public final class DungeonImpl extends AbstractDungeon {
 
     @Override
     public List<Reward> rewards() {
-        return List.of();
+        return rewards;
     }
 
     @Override

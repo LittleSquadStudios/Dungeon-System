@@ -6,6 +6,7 @@ import com.littlesquad.dungeon.api.entrance.Entrance;
 import com.littlesquad.dungeon.api.event.Event;
 import com.littlesquad.dungeon.api.event.EventType;
 import com.littlesquad.dungeon.api.event.structural.EnvironmentEvent;
+import com.littlesquad.dungeon.api.rewards.Reward;
 import com.littlesquad.dungeon.internal.checkpoint.CheckPointImpl;
 import com.littlesquad.dungeon.internal.event.ObjectiveEventImpl;
 import com.littlesquad.dungeon.internal.event.StructuralEventImpl;
@@ -27,11 +28,13 @@ public final class DungeonParser {
     private final String id;
     private final FileConfiguration config;
     private final RequirementsParser requirementsParser;
+    private final RewardParser rewardParser;
 
     DungeonParser (final String id,
                    final FileConfiguration config) {
         this.id = id;
         this.config = config;
+        rewardParser = new RewardParser(config);
         requirementsParser = new RequirementsParser(config);
     }
 
@@ -62,6 +65,10 @@ public final class DungeonParser {
         } catch (final Throwable _) {
             return null;
         }
+    }
+
+    public List<Reward> getRewards() {
+        return rewardParser.parse();
     }
 
     public Entrance getEntrance () {

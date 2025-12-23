@@ -164,37 +164,38 @@ boss-rooms:
       # Mythic mob boss name
       name: "BOSS"
     rewards:
-      # Configure like in 'completion_reward', indeed that will have the same parser
+      # Here you can link the id of each reward you want to give
 
-completion_reward:
-  items:
-    # This might be named as you want, the only requirement is to make it different from the others
-    Example_item:
-      is_mythic_item: true
-      # Ignored if 'is_mythic_item' is false
-      mythic_item_name: "AAA"
-      # Ignored if 'is_mythic_item' is true
-      type: SNOWBALL
-      amount: 16
-      is_glowing: false
-      # Supported enchants: [PROTECTION, FIRE_PROTECTION, FEATHER_FALLING, BLAST_PROTECTION,
-      #                      PROJECTILE_PROTECTION, RESPIRATION, AQUA_AFFINITY, THORNS, DEPTH_STRIDER,
-      #                      FROST_WALKER, BINDING_CURSE, SHARPNESS, SMITE, BANE_OF_ARTHROPODS,
-      #                      KNOCKBACK, FIRE_ASPECT, LOOTING, SWEEPING_EDGE, EFFICIENCY, SILK_TOUCH,
-      #                      UNBREAKING, FORTUNE, POWER, PUNCH, FLAME, INFINITY, LUCK_OF_THE_SEA, LURE,
-      #                      LOYALTY, IMPALING, RIPTIDE, CHANNELING, MULTISHOT, QUICK_CHARGE, PIERCING,
-      #                      DENSITY, BREACH, WIND_BURST, MENDING, VANISHING_CURSE, SOUL_SPEED, SWIFT_SNEAK]
-      enchants:
-        - "PROTECTION"
-      display_name: "abc"
-      lore:
-        - "def"
-  experience: 1000
-  loot_chest:
-    # This might be named as you want, the only requirement is to make it different from the others
-    loot_chest_example:
-      location: "-30 70 -28"
-      loot:
-      # Configure like in 'items', indeed that will have the same parser
-  commands:
-    - "/say BRAVO %player%!"
+rewards: # Default section for every reward
+  completion_reward:
+    items:
+      # This might be named as you want, the only requirement is to make it different from the others
+      Example_item:
+        is_mythic_item: true
+        # Ignored if 'is_mythic_item' is false
+        mythic_item_name: "AAA"
+        # Ignored if 'is_mythic_item' is true
+        type: SNOWBALL
+        amount: 16
+        is_glowing: false
+        # Supported enchants: [PROTECTION, FIRE_PROTECTION, FEATHER_FALLING, BLAST_PROTECTION,
+        #                      PROJECTILE_PROTECTION, RESPIRATION, AQUA_AFFINITY, THORNS, DEPTH_STRIDER,
+        #                      FROST_WALKER, BINDING_CURSE, SHARPNESS, SMITE, BANE_OF_ARTHROPODS,
+        #                      KNOCKBACK, FIRE_ASPECT, LOOTING, SWEEPING_EDGE, EFFICIENCY, SILK_TOUCH,
+        #                      UNBREAKING, FORTUNE, POWER, PUNCH, FLAME, INFINITY, LUCK_OF_THE_SEA, LURE,
+        #                      LOYALTY, IMPALING, RIPTIDE, CHANNELING, MULTISHOT, QUICK_CHARGE, PIERCING,
+        #                      DENSITY, BREACH, WIND_BURST, MENDING, VANISHING_CURSE, SOUL_SPEED, SWIFT_SNEAK]
+        enchants:
+          - "PROTECTION"
+        display_name: "abc" # Ignored if mythic_item is true since every MMOItem has its own displayname
+        lore:
+          - "def"
+    experience: 1000
+    loot_chest:
+      # This might be named as you want, the only requirement is to make it different from the others
+      loot_chest_example:
+        location: "-30 70 -28"
+        loot:
+        # Configure like in 'items', indeed that will have the same parser
+    commands:
+      - "/say BRAVO %player%!"

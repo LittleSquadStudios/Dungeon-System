@@ -12,68 +12,41 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public abstract class AbstractReward implements Reward {
+
+    private final Map<String, ItemStack> cachedItems = new HashMap<>();
+
+    public AbstractReward() {
+        cacheItemsRewards();
+    }
 
     public void give(final Player player) {
         final UUID pu = player.getUniqueId();
         final PlayerData data = PlayerData.get(pu);
 
-        // Experience
         data.giveExperience(experience(), EXPSource.SOURCE);
 
-        // Commands
         commands().forEach(cmd ->
                 Bukkit.dispatchCommand(
-                    Bukkit.getConsoleSender(),
-                    PlaceholderFormatter.formatPerPlayer(cmd, player)
+                        Bukkit.getConsoleSender(),
+                        PlaceholderFormatter.formatPerPlayer(cmd, player)
                 )
         );
 
-        for (final ItemReward reward : rewards()) { // TODO: Migrate to caching system of rewards
-
-            if (reward.isMythicItem()) {
-
-                player.give(new MMOItem
-                        (
-                            Type.get
-                                    (reward.type().orElseThrow()),
-                            reward.mythicItemName()
-                                    .orElseThrow()
-                        )
-                        .newBuilder()
-                        .getItemStack());
-
-            } else {
-
-                final Material material = Material.getMaterial(reward.type().orElse("STONE"));
-                ItemStack is;
-
-                if (material != null) {
-                    is = new ItemStack(material, reward.amount());
-
-                    final ItemMeta meta = is.getItemMeta();
-
-                    meta.lore()
-                            .addAll(reward.lore()
-                                    .stream()
-                                    .map(Component::text)
-                                    .toList());
-
-
-
-                }
-
-            }
-
+        for (ItemStack item : cachedItems.values()) {
+            player.getInventory().addItem(item.clone());
         }
-
     }
 
     public void give(final Player... players) {
@@ -82,8 +55,63 @@ public abstract class AbstractReward implements Reward {
         }
     }
 
-    private void cacheRewards() {
+    private void cacheItemsRewards() {
+        int itemIndex = 0;
+        for (final ItemReward reward : rewards()) {
 
+            if (reward.isMythicItem()) {
+
+                ItemStack mythicItem = new MMOItem(
+                        Type.get(reward.type().orElseThrow()),
+                        reward.mythicItemName().orElseThrow()
+                ).newBuilder().getItemStack();
+
+                cachedItems.put("mythic_" + itemIndex, mythicItem);
+
+            } else {
+
+                final Material material = Material.getMaterial(reward.type().orElse("STONE"));
+
+                if (material != null) {
+                    ItemStack is = new ItemStack(material, reward.amount());
+                    final ItemMeta meta = is.getItemMeta();
+
+                    if (meta != null) {
+                        if (reward.displayName() != null && !reward.displayName().isEmpty()) {
+                            meta.displayName(Component.text(reward.displayName()));
+                        }
+
+                        if (!reward.lore().isEmpty()) {
+                            List<Component> loreComponents = new ArrayList<>();
+                            for (String loreLine : reward.lore()) {
+                                loreComponents.add(Component.text(loreLine));
+                            }
+                            meta.lore(loreComponents);
+                        }
+
+                        for (String enchantStr : reward.enchantments()) {
+                            try {
+                                Enchantment enchant = Enchantment.getByName(enchantStr);
+                                if (enchant != null) {
+                                    meta.addEnchant(enchant, 1, true);
+                                }
+                            } catch (Exception e) {
+                            }
+                        }
+
+                        if (reward.isGlowing() && reward.enchantments().isEmpty()) {
+                            meta.addEnchant(Enchantment.LURE, 1, true);
+                            meta.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
+                        }
+
+                        is.setItemMeta(meta);
+                    }
+
+                    cachedItems.put("item_" + itemIndex, is);
+                }
+            }
+
+            itemIndex++;
+        }
     }
-
 }

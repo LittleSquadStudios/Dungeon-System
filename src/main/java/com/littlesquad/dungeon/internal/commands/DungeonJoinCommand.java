@@ -8,6 +8,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.security.SecureRandom;
 import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -15,17 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 public final class DungeonJoinCommand implements CommandExecutor {
 
-    private Random random = new Random();
-
-    public DungeonJoinCommand() {
-        final ScheduledExecutorService sex = Executors.newSingleThreadScheduledExecutor();
-
-        sex.scheduleAtFixedRate(() -> random = new Random(
-                System.currentTimeMillis()),
-                0,
-                5,
-                TimeUnit.HOURS);
-    }
+    private final SecureRandom random = new SecureRandom();
 
     @Override
     public boolean onCommand(@NotNull final CommandSender sender,

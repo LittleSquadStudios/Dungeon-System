@@ -11,9 +11,4 @@ public final class SessionImpl extends AbstractDungeonSession {
     public SessionImpl(UUID playerUUID, Dungeon dungeon) {
         super(playerUUID, dungeon);
     }
-
-    @Override
-    public DungeonSessionManager associatedDSM() {
-        return null;
-    }
 }

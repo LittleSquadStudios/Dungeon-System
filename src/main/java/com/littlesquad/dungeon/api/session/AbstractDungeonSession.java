@@ -39,9 +39,13 @@ public abstract class AbstractDungeonSession implements DungeonSession {
     private Integer cachedPlayerId;
     private Integer cachedDungeonId;
 
+    private final Dungeon dungeon;
+
     public AbstractDungeonSession(final UUID playerUUID, final Dungeon dungeon) {
         this.playerUUID = playerUUID;
         this.dungeonName = dungeon.id();
+
+        this.dungeon = dungeon;
 
         this.startTime = Instant.now();
         this.endTime = new AtomicReference<>(null);
@@ -199,6 +203,10 @@ public abstract class AbstractDungeonSession implements DungeonSession {
             ex.printStackTrace();
             return null;
         });
+    }
+
+    public Dungeon getDungeon() {
+        return dungeon;
     }
 
     @Override

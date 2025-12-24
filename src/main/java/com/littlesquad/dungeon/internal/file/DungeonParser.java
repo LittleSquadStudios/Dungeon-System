@@ -43,7 +43,9 @@ public final class DungeonParser {
     }
 
     public String displayName () {
-        return config.getString("display_name");
+        return config
+                .getString("display_name", "")
+                .replaceAll("&", "§");
     }
 
     public World getWorld () {

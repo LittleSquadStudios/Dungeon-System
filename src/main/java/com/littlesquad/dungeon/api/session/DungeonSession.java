@@ -1,5 +1,7 @@
 package com.littlesquad.dungeon.api.session;
 
+import com.littlesquad.dungeon.api.Dungeon;
+
 import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
@@ -24,7 +26,7 @@ import java.util.UUID;
  */
 public interface DungeonSession {
 
-    DungeonSessionManager associatedDSM();
+    Dungeon getDungeon ();
 
     /**
      * Returns the unique identifier of the player associated with this session.

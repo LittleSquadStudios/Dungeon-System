@@ -8,12 +8,16 @@ import com.littlesquad.dungeon.api.status.Status;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-public final class SessionManagerImpl extends AbstractSessionManager {
+public final class SessionManager extends AbstractSessionManager {
 
     private final Dungeon dungeonRef;
 
-    public SessionManagerImpl(final Dungeon dungeon) {
+    public SessionManager(final Dungeon dungeon) {
         this.dungeonRef = dungeon;
+    }
+
+    public static DungeonSession getDungeonSession(final UUID playerId) {
+        return sessions.get(playerId);
     }
 
     @Override

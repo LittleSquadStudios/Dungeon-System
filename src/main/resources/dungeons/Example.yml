@@ -4,7 +4,7 @@ pvp: false
 # World in which is defined the dungeon (all the locations will refer to this world!)
 world: "World"
 
-display_name: "Cazzo"
+display_name: "&6&k---&bExample&6&k---&r"
 
 time:
   # Has the dungeon a per-party/per-player time limit?

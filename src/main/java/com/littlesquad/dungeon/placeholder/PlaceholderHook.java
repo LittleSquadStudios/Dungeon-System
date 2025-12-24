@@ -1,6 +1,7 @@
 package com.littlesquad.dungeon.placeholder;
 
 import com.littlesquad.dungeon.internal.DungeonManager;
+import com.littlesquad.dungeon.internal.SessionManager;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 
@@ -25,8 +26,13 @@ public final class PlaceholderHook extends PlaceholderExpansion {
 
     @Override
     public String onRequest (OfflinePlayer player, String params) {
+        if (player == null)
+            return null;
         return switch (params.toLowerCase()) {
-            case "dungeon" -> null;
+            case "dungeon" -> SessionManager
+                    .getDungeonSession(player.getUniqueId())
+                    .getDungeon()
+                    .displayName();
             default -> null;
         };
     }

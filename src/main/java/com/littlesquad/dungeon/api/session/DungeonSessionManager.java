@@ -17,8 +17,7 @@ public interface DungeonSessionManager {
                       TimeUnit unit,
                       Consumer<UUID> onExpire);
 
-    void startSession(UUID playerId,
-                           TimeUnit unit);
+    void startSession(UUID playerId);
 
     void endSession(UUID playerId, ExitReason exitReason);
 

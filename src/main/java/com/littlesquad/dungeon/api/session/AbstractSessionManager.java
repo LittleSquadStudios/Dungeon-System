@@ -1,11 +1,7 @@
 package com.littlesquad.dungeon.api.session;
 
-import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.entrance.ExitReason;
-import com.littlesquad.dungeon.api.status.Status;
-import org.bukkit.Bukkit;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.*;
@@ -13,11 +9,11 @@ import java.util.function.Consumer;
 
 public abstract class AbstractSessionManager implements DungeonSessionManager {
 
-    private final ConcurrentHashMap<UUID, DungeonSession> sessions = new ConcurrentHashMap<>();
+    protected static final ConcurrentHashMap<UUID, DungeonSession> sessions = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
 
     @Override
-    public void startSession(UUID playerId, TimeUnit unit) {
+    public void startSession(UUID playerId) {
         final DungeonSession session = createSessionInstance(playerId);
         sessions.put(playerId, session);
     }

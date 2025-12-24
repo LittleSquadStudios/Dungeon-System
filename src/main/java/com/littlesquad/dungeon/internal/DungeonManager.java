@@ -70,15 +70,11 @@ public final class DungeonManager {
     }
 
     public boolean registerDungeon(String dungeonId, Dungeon dungeon) {
-       return false; // TODO: Implementare logica di load a runtime
+       return dungeons.putIfAbsent(dungeonId, dungeon) == null;
     }
 
     public boolean unregisterDungeon(String dungeonId) {
-        return false;
-    }
-
-    public CompletableFuture<Boolean> reloadDungeon(String dungeonId) {
-        return null;
+        return dungeons.remove(dungeonId) != null;
     }
 
     public boolean isInitialized() {

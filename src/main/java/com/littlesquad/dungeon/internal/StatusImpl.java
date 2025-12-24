@@ -28,6 +28,6 @@ public final class StatusImpl extends AbstractStatus {
 
     @Override
     public DungeonSessionManager sessionManager() {
-        return new SessionManagerImpl(dungeonRef);
+        return new SessionManager(dungeonRef);
     }
 }

@@ -20,28 +20,46 @@ public final class RewardParser {
         this.dungeonConf = dungeonConf;
     }
 
+    /**
+     * This method is used to parse a list of rewards starting from a dungeon config
+     * he takes first the items then build them up and cache it all
+     *
+     * @since 1.0.0
+     * @author LittleSquad
+     *
+     * */
     public List<Reward> parse() {
 
-
+        // Initializing array of rewards
         Reward[] rewards = new Reward[0];
 
+        // Taking from parser the dungeon section about rewards
         final ConfigurationSection section = dungeonConf.getConfigurationSection("rewards");
 
+        // Checking if configuration has this section
         if (section != null) {
 
+            // Taking subsections of rewards so each reward
             final Set<String> subSections = section.getKeys(false);
 
+            // Check if there's some rewards registered
             if (!subSections.isEmpty()) {
+
+                // Initializing rewards to reward final size taken from amount of rewards present in the config
                 rewards = new Reward[subSections.size()];
 
                 int i = 0;
+                // Iterating along all subsections
                 for (final String s : subSections) {
+
                     final String sub = "rewards." + s;
 
+                    // Initializing items rewards array
                     ItemReward[] itemsR = new ItemReward[0];
                     final ConfigurationSection itemSec = section.getConfigurationSection(sub + ".items");
                     // Item parsing
 
+                    // Checking if there's some items in this reward
                     if (itemSec != null) {
                         final Set<String> items = itemSec.getKeys(false);
 
@@ -51,6 +69,7 @@ public final class RewardParser {
                             int ia = 0;
                             for (final String item : items) {
 
+                                // Building up the items
                                 itemsR[ia++] = new ItemReward() {
                                     @Override
                                     public boolean isMythicItem() {
@@ -97,7 +116,10 @@ public final class RewardParser {
                     }
 
 
+                    // Putting items into a copy array
                     ItemReward[] finalItemsR = itemsR;
+
+                    // Building the reward with the abstract class
                     rewards[i] = new AbstractReward() {
 
                         private final String id = sub;

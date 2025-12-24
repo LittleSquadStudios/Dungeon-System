@@ -42,6 +42,10 @@ public final class DungeonParser {
         return id;
     }
 
+    public String displayName () {
+        return config.getString("display_name");
+    }
+
     public World getWorld () {
         final String worldName;
         return (worldName = config.getString("world")) != null

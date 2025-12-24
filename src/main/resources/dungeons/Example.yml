@@ -4,6 +4,8 @@ pvp: false
 # World in which is defined the dungeon (all the locations will refer to this world!)
 world: "World"
 
+display_name: "Cazzo"
+
 time:
   # Has the dungeon a per-party/per-player time limit?
   limited: true
@@ -49,7 +51,7 @@ entrance:
       - "/kill %player%"
   # Commands to execute in case the player successfully enters the dungeon
   successful_entrance_commands:
-    - "/tp %player% %player%"
+    - "/tp %player% 127 180 900"
 
 events:
   # Any event in this section defines its identifier that will be used in commands

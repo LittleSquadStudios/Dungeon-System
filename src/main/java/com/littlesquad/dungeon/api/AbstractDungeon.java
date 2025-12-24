@@ -27,7 +27,7 @@ public abstract class AbstractDungeon implements Dungeon {
     /*When someone fires this command we should add him to this set
     ONLY IF HE'S WITH A PARTY, AND IF HE JOINS WE SHOULD CHECK AGAIN AND EVENTUALLY SET INTO THIS SET*/
     private final Set<UUID> leaders = ConcurrentHashMap.newKeySet();
-    private final DungeonParser parser;
+    private DungeonParser parser;
 
     //TODO: In the implementations, create a constructor that accept the parameters id (String) and parser (DungeonParser)
     public AbstractDungeon(final DungeonParser parser) {
@@ -174,8 +174,6 @@ public abstract class AbstractDungeon implements Dungeon {
         onEnter(leader);
     }
 
-
-
     @Override
     public CompletableFuture<EntryResponse> tryEnterAsync(Player p) {
         // TODO: Lascio l'onere a draky, saprei come farlo ma non voglio urla addosso ;)
@@ -229,7 +227,8 @@ public abstract class AbstractDungeon implements Dungeon {
 
     @Override
     public void shutdown() {
-
+        leaders.clear();
+        parser = null;
     }
 
     public DungeonParser getParser() {

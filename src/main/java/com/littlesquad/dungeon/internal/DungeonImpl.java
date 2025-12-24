@@ -10,91 +10,92 @@ import com.littlesquad.dungeon.api.event.Event;
 import com.littlesquad.dungeon.api.rewards.Reward;
 import com.littlesquad.dungeon.api.status.Status;
 import com.littlesquad.dungeon.internal.file.DungeonParser;
-import com.littlesquad.dungeon.internal.file.RewardParser;
-import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public final class DungeonImpl extends AbstractDungeon {
 
     private final String id;
+    private final String displayName;
+    private final World world;
+    private final Entrance entrance;
 
     private final Set<TypeFlag> flags;
     private final Status status;
     private final List<Reward> rewards;
+    private final Event[] events;
+    private final Checkpoint[] checkpoints;
 
     public DungeonImpl(final DungeonParser parser) {
         super(parser);
 
-        flags = new HashSet<>(3);
+        this.id = parser.getId();
+        this.displayName = parser.displayName();
+        this.world = parser.getWorld();
+        this.entrance = parser.getEntrance();
 
-        if (getParser().isTimeLimited()) {
+        this.flags = new HashSet<>(3);
+
+        if (parser.isTimeLimited()) {
             flags.add(TypeFlag.TIMED);
         }
 
-        if (getParser().isPvP()) {
+        if (parser.isPvP()) {
             flags.add(TypeFlag.PVP_ENABLED);
         }
 
-        if (typeFlags().contains(TypeFlag.PVP_ENABLED))
-            status = new StatusImpl(true, this);
-        else status = new StatusImpl(false, this);
-
-        id = null;
-
-        rewards = parser.getRewards();
-
+        this.status = new StatusImpl(flags.contains(TypeFlag.PVP_ENABLED), this);
+        this.rewards = parser.getRewards();
+        this.events = parser.getEvents(this);
+        this.checkpoints = parser.getCheckpoints(this);
 
     }
 
     @Override
     public String id() {
-        return null;
+        return id;
     }
 
     @Override
     public String displayName() {
-        return "TestDungeon";
+        return displayName;
     }
 
     @Override
     public Set<TypeFlag> typeFlags() {
-        return flags;
+        return Collections.unmodifiableSet(flags);
     }
 
     @Override
     public World getWorld() {
-        return getParser().getWorld();
+        return world;
     }
 
     @Override
     public Entrance getEntrance() {
-        return getParser().getEntrance();
+        return entrance;
     }
 
     @Override
     public Event[] getEvents() {
-        return getParser().getEvents(this);
+        return events;
     }
 
     @Override
     public List<Reward> rewards() {
-        return rewards;
+        return Collections.unmodifiableList(rewards);
     }
 
     @Override
     public Checkpoint[] getCheckpoints() {
-        return new Checkpoint[0];
+        return checkpoints;
     }
 
     @Override
     public BossRoom[] getBossRooms() {
-        return new BossRoom[0];
+        return null;
     }
 
     @Override

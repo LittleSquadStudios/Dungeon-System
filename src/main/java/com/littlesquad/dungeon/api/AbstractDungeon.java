@@ -1,16 +1,11 @@
 package com.littlesquad.dungeon.api;
 
 import com.littlesquad.Main;
-import com.littlesquad.dungeon.api.checkpoint.Checkpoint;
-import com.littlesquad.dungeon.api.entrance.Entrance;
 import com.littlesquad.dungeon.api.entrance.EntryResponse;
-import com.littlesquad.dungeon.api.event.Event;
-import com.littlesquad.dungeon.api.session.DungeonSessionManager;
-import com.littlesquad.dungeon.api.status.Status;
+import com.littlesquad.dungeon.internal.SessionManager;
 import com.littlesquad.dungeon.internal.file.DungeonParser;
 import com.littlesquad.dungeon.placeholder.PlaceholderFormatter;
 import io.lumine.mythic.lib.data.SynchronizedDataHolder;
-import net.Indyuce.mmocore.api.MMOCoreAPI;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.party.AbstractParty;
 import org.bukkit.Bukkit;
@@ -20,7 +15,6 @@ import org.bukkit.entity.Player;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class AbstractDungeon implements Dungeon {
 
@@ -191,7 +185,7 @@ public abstract class AbstractDungeon implements Dungeon {
 
     @Override
     public void onExit(Player player) {
-        status().sessionManager()
+        SessionManager.getInstance()
                 .getSession(player.getUniqueId())
                 .stopSession();
     }
@@ -202,7 +196,7 @@ public abstract class AbstractDungeon implements Dungeon {
                 .map(Entity::getUniqueId)
                 .toList()
                 .forEach(player ->
-                    status().sessionManager()
+                        SessionManager.getInstance()
                             .getSession(player)
                             .stopSession());
     }

@@ -2,13 +2,11 @@ package com.littlesquad.dungeon.api.status;
 
 import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.boss.BossRoom;
-import com.littlesquad.dungeon.api.session.DungeonSessionManager;
 import net.Indyuce.mmocore.party.AbstractParty;
 import org.bukkit.event.Listener;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * This class represents the status of the dungeon
@@ -68,13 +66,4 @@ public interface Status extends Listener {
      * @author LittleSquad
      * */
     List<BossRoom> bossRooms();
-
-    /**
-     *
-     *
-     * */
-    DungeonSessionManager sessionManager();
-
-
-
 }

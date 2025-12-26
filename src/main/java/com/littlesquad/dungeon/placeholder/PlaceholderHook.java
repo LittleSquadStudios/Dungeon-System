@@ -30,7 +30,8 @@ public final class PlaceholderHook extends PlaceholderExpansion {
             return null;
         return switch (params.toLowerCase()) {
             case "dungeon" -> SessionManager
-                    .getDungeonSession(player.getUniqueId())
+                    .getInstance()
+                    .getSession(player.getUniqueId())
                     .getDungeon()
                     .displayName();
             default -> null;

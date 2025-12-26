@@ -2,18 +2,13 @@ package com.littlesquad.dungeon.internal;
 
 import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.boss.BossRoom;
-import com.littlesquad.dungeon.api.session.DungeonSessionManager;
 import com.littlesquad.dungeon.api.status.AbstractStatus;
 
 import java.util.List;
 
 public final class StatusImpl extends AbstractStatus {
-
-    private final Dungeon dungeonRef;
-
     public StatusImpl(boolean isPvp, final Dungeon dungeon) {
-        super(isPvp);
-        this.dungeonRef = dungeon;
+        super(isPvp, dungeon);
     }
 
     @Override
@@ -24,10 +19,5 @@ public final class StatusImpl extends AbstractStatus {
     @Override
     public List<BossRoom> bossRooms() {
         return List.of();
-    }
-
-    @Override
-    public DungeonSessionManager sessionManager() {
-        return new SessionManager(dungeonRef);
     }
 }

@@ -1,6 +1,8 @@
 package com.littlesquad.dungeon.api.status;
 
+import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.session.DungeonSession;
+import com.littlesquad.dungeon.internal.SessionManager;
 import io.lumine.mythic.lib.data.SynchronizedDataHolder;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.party.AbstractParty;
@@ -16,11 +18,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class AbstractStatus implements Status {
 
     private final boolean isPvp;
+    private final Dungeon dungeon;
 
     private final ConcurrentHashMap<UUID, Integer> playerDeaths;
 
-    public AbstractStatus(boolean isPvp) {
+    public AbstractStatus(boolean isPvp, final Dungeon dungeon) {
         this.isPvp = isPvp;
+        this.dungeon = dungeon;
         playerDeaths = new ConcurrentHashMap<>();
     }
 
@@ -37,11 +41,11 @@ public abstract class AbstractStatus implements Status {
 
             if (isPvp) {
 
-                sessionManager()
+                SessionManager.getInstance()
                         .getSession(damager.getUniqueId())
                         .addDamage(e.getDamage());
 
-                sessionManager()
+                SessionManager.getInstance()
                         .getSession(damaged.getUniqueId())
                         .addDamageTaken(damaged.getLastDamage());
 
@@ -63,7 +67,7 @@ public abstract class AbstractStatus implements Status {
 
             if (e.getEntity() instanceof LivingEntity) {
 
-                sessionManager()
+                SessionManager.getInstance()
                         .getSession(damager.getUniqueId())
                         .addDamage(e.getFinalDamage());
 
@@ -81,7 +85,7 @@ public abstract class AbstractStatus implements Status {
         if (entity instanceof Player player) {
             if (isPlayerInDungeon(player.getUniqueId())) {
 
-                final DungeonSession session = sessionManager().getSession(player.getUniqueId());
+                final DungeonSession session = SessionManager.getInstance().getSession(player.getUniqueId());
 
                 session.addDeath();
 
@@ -92,7 +96,7 @@ public abstract class AbstractStatus implements Status {
         final Player killer = entity.getKiller();
 
         if (killer != null && isPlayerInDungeon(killer.getUniqueId()))
-            sessionManager()
+            SessionManager.getInstance()
                     .getSession(killer.getUniqueId())
                     .addKill(1);
 
@@ -103,12 +107,14 @@ public abstract class AbstractStatus implements Status {
 
     @Override
     public int currentPlayers() {
-        return sessionManager().getSessions().size();
+        return SessionManager.getInstance().getDungeonSessions(dungeon).size();
     }
 
     @Override
     public boolean isPlayerInDungeon(UUID player) {
-        return sessionManager().getSession(player) != null;
+        final DungeonSession session;
+        return (session = SessionManager.getInstance().getSession(player)) != null
+                && session.getDungeon() == dungeon;
     }
 
     @Override
@@ -171,7 +177,7 @@ public abstract class AbstractStatus implements Status {
     }*/
     @Override
     public int playerKills(UUID player) {
-        return sessionManager()
+        return SessionManager.getInstance()
                 .getSession(player)
                 .kills();
     }
@@ -182,7 +188,7 @@ public abstract class AbstractStatus implements Status {
                .stream()
                .map(SynchronizedDataHolder::getUniqueId)
                .mapToInt
-                       (uniqueId -> sessionManager()
+                       (uniqueId -> SessionManager.getInstance()
                        .getSession(uniqueId)
                        .kills())
                .sum();
@@ -190,7 +196,7 @@ public abstract class AbstractStatus implements Status {
 
     @Override
     public int totalKills() {
-        return sessionManager()
+        return SessionManager.getInstance()
                 .getSessions()
                 .stream()
                 .mapToInt(DungeonSession::kills)

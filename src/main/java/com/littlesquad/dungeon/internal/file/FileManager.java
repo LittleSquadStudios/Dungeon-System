@@ -35,7 +35,7 @@ public final class FileManager {
                 try (final InputStream stream = FileManager.class.getResourceAsStream("/config.yml");
                      final FileOutputStream out = new FileOutputStream(f)) {
                     if (stream != null)
-                        out.write(stream.read());
+                        out.write(stream.readAllBytes());
                     out.flush();
                 } catch (final IOException e) {
                     throw new RuntimeException(e);
@@ -44,7 +44,7 @@ public final class FileManager {
                 try (final InputStream stream = FileManager.class.getResourceAsStream("/messages.yml");
                      final FileOutputStream out = new FileOutputStream(f)) {
                     if (stream != null)
-                        out.write(stream.read());
+                        out.write(stream.readAllBytes());
                     out.flush();
                 } catch (final IOException e) {
                     throw new RuntimeException(e);
@@ -55,7 +55,7 @@ public final class FileManager {
                 try (final InputStream stream = FileManager.class.getResourceAsStream("/dungeons/Example.yml");
                      final FileOutputStream out = new FileOutputStream(f)) {
                     if (stream != null)
-                        out.write(stream.read());
+                        out.write(stream.readAllBytes());
                     out.flush();
                 } catch (final IOException e) {
                     throw new RuntimeException(e);

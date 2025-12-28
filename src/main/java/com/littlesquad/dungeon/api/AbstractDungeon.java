@@ -23,7 +23,6 @@ public abstract class AbstractDungeon implements Dungeon {
     private final Set<UUID> leaders = ConcurrentHashMap.newKeySet();
     private DungeonParser parser;
 
-    //TODO: In the implementations, create a constructor that accept the parameters id (String) and parser (DungeonParser)
     public AbstractDungeon(final DungeonParser parser) {
         this.parser = parser;
     }

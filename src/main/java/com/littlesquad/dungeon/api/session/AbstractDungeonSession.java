@@ -2,6 +2,7 @@ package com.littlesquad.dungeon.api.session;
 
 import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.Dungeon;
+import com.littlesquad.dungeon.internal.checkpoint.CheckPointManager;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -79,6 +80,7 @@ public abstract class AbstractDungeonSession implements DungeonSession {
         }
 
         updateRecord();
+        CheckPointManager.removeCheckPointFor(playerUUID);
         shutdownExecutors();
     }
 

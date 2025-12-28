@@ -79,7 +79,6 @@ public abstract class AbstractStatus implements Status {
 
     @EventHandler
     public void onEntityDeath(final EntityDeathEvent e) {
-        // TODO: Stop session if player dies
         final LivingEntity entity = e.getEntity();
 
         if (entity instanceof Player player) {

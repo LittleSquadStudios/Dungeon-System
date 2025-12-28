@@ -68,9 +68,12 @@ public final class CheckPointManager {
                                          final Checkpoint checkpoint) {
         playerCheckpoints.put(player.getUniqueId(), checkpoint);
     }
-    //TODO: Called at the end of the session!
+
     public static void removeCheckPointFor (final Player player) {
         playerCheckpoints.remove(player.getUniqueId());
+    }
+    public static void removeCheckPointFor (final UUID id) {
+        playerCheckpoints.remove(id);
     }
 
     //No need of a 'reload' method!

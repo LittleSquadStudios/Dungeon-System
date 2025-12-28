@@ -71,6 +71,4 @@ public enum EntryResponse {
 
     SUCCESS,
     FAILURE
-
-    //TODO: Swape, mi sono reso conto che non era necessario il sistema qua dentro, per ulteriori chiarimenti chiamami
 }

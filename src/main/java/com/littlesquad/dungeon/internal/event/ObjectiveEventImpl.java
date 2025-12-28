@@ -4,6 +4,7 @@ import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.boss.BossRoom;
 import com.littlesquad.dungeon.api.checkpoint.Checkpoint;
 import com.littlesquad.dungeon.api.event.ObjectiveEvent;
+import com.littlesquad.dungeon.internal.checkpoint.CheckPointManager;
 import com.littlesquad.dungeon.internal.file.RequirementsParser;
 import com.littlesquad.dungeon.placeholder.PlaceholderFormatter;
 import org.bukkit.Bukkit;
@@ -43,7 +44,7 @@ public final class ObjectiveEventImpl extends ObjectiveEvent {
     }
 
     public Checkpoint checkpointToUnlock () {
-        return rCheckpoint != null ? rCheckpoint : (rCheckpoint = null); //TODO: get checkpoint from string!
+        return rCheckpoint != null ? rCheckpoint : (rCheckpoint = CheckPointManager.get(checkpoint));
     }
     public BossRoom bossRoomToUnlock () {
         return rBossRoom != null ? rBossRoom : (rBossRoom = null); //TODO: get boss room from string!

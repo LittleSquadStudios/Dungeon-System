@@ -56,7 +56,7 @@ public final class DungeonJoinCommand implements CommandExecutor {
                                         .get(random.nextInt(0,
                                                         DungeonManager
                                                         .getDungeonManager()
-                                                        .getDungeonCount()) // TODO: To create a standard random
+                                                        .getDungeonCount())
                                         ));
 
                         if (!dungeonName.equals(dungeonToJoin.id())) { // If dungeon is another so the one chosen by player does not exist then handle this

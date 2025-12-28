@@ -12,6 +12,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,8 +26,172 @@ public abstract class AbstractDungeon implements Dungeon {
     private final Set<UUID> leaders = ConcurrentHashMap.newKeySet();
     private DungeonParser parser;
 
+    private static final String[] CREATE_TABLES = {
+            // Dungeon table
+            """
+        CREATE TABLE IF NOT EXISTS dungeon(
+            dungeon_id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+            dungeon_name VARCHAR(30) NOT NULL UNIQUE,
+            is_pvp BOOLEAN DEFAULT false
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """,
+
+            // Player table
+            """
+        CREATE TABLE IF NOT EXISTS player(
+            player_id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+            uuid CHAR(36) NOT NULL UNIQUE,
+            INDEX idx_uuid (uuid)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """,
+
+            // Bossroom table
+            """
+        CREATE TABLE IF NOT EXISTS bossroom(
+            bossroom_id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+            bossroom_name VARCHAR(30) NOT NULL,
+            is_timed BOOLEAN DEFAULT false,
+            boss_name VARCHAR(30) NOT NULL,
+            dungeon_id INT NOT NULL,
+            FOREIGN KEY (dungeon_id) REFERENCES dungeon(dungeon_id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """,
+
+            // Objective table
+            """
+        CREATE TABLE IF NOT EXISTS objective(
+            objective_id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+            objective_name VARCHAR(30),
+            dungeon_id INT NOT NULL,
+            FOREIGN KEY (dungeon_id) REFERENCES dungeon(dungeon_id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """,
+
+            // Time restrictions table
+            """
+        CREATE TABLE IF NOT EXISTS time_restrictions(
+            restriction_id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+            max_complete_time BIGINT NOT NULL,
+            unit_type VARCHAR(10) NOT NULL,
+            dungeon_id INT NOT NULL UNIQUE,
+            FOREIGN KEY (dungeon_id) REFERENCES dungeon(dungeon_id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """,
+
+            // Player runs table
+            """
+        CREATE TABLE IF NOT EXISTS player_runs(
+            dungeon_id INT NOT NULL,
+            player_id INT NOT NULL,
+            deaths INT DEFAULT 0 NOT NULL,
+            enter_time DATETIME NOT NULL,
+            exit_time DATETIME,
+            total_kills INT DEFAULT 0,
+            damage_dealt DOUBLE DEFAULT 0,
+            damage_taken DOUBLE DEFAULT 0,
+            PRIMARY KEY(dungeon_id, player_id),
+            FOREIGN KEY (dungeon_id) REFERENCES dungeon(dungeon_id) ON DELETE CASCADE,
+            FOREIGN KEY (player_id) REFERENCES player(player_id) ON DELETE CASCADE,
+            INDEX idx_enter_time (enter_time),
+            INDEX idx_player_id (player_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """,
+
+            // Player bossroom defeat table
+            """
+        CREATE TABLE IF NOT EXISTS player_bossroom_defeat(
+            player_id INT NOT NULL,
+            bossroom_id INT NOT NULL,
+            complete_date DATETIME NOT NULL,
+            damage_dealt DOUBLE DEFAULT 0,
+            damage_taken DOUBLE DEFAULT 0,
+            PRIMARY KEY (player_id, bossroom_id),
+            CONSTRAINT fk_defeat_player
+                FOREIGN KEY (player_id)
+                REFERENCES player(player_id)
+                ON DELETE CASCADE,
+            CONSTRAINT fk_defeat_bossroom
+                FOREIGN KEY (bossroom_id)
+                REFERENCES bossroom(bossroom_id)
+                ON DELETE CASCADE,
+            INDEX idx_complete_date (complete_date)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """,
+
+            // Player objective complete table
+            """
+        CREATE TABLE IF NOT EXISTS player_objective_complete(
+            player_id INT NOT NULL,
+            objective_id INT NOT NULL,
+            complete_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (player_id, objective_id),
+            CONSTRAINT fk_complete_player
+                FOREIGN KEY (player_id)
+                REFERENCES player(player_id)
+                ON DELETE CASCADE,
+            CONSTRAINT fk_complete_objective
+                FOREIGN KEY (objective_id)
+                REFERENCES objective(objective_id)
+                ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """
+    };
+
     public AbstractDungeon(final DungeonParser parser) {
         this.parser = parser;
+
+        // Inizializza le tabelle e poi inserisci il dungeon
+        initializeTables()
+                .thenCompose(v -> insertDungeonIfNotExists())
+                .exceptionally(ex -> {
+                    Main.getInstance().getLogger().severe("Error initializing dungeon: " + ex.getMessage());
+                    ex.printStackTrace();
+                    return null;
+                });
+    }
+
+    public static CompletableFuture<Void> initializeTables() {
+        return Main.getConnector().getConnection(10).thenAcceptAsync(conn -> {
+            try {
+                conn.setAutoCommit(false);
+
+                try (Statement stmt = conn.createStatement()) {
+                    for (String sql : CREATE_TABLES) {
+                        stmt.executeUpdate(sql);
+                        Main.getInstance().getLogger().info("Executed: " +
+                                sql.substring(0, 50) + "...");
+                    }
+
+                    conn.commit();
+                    Main.getInstance().getLogger().info("✓ All database tables created successfully!");
+
+                } catch (SQLException e) {
+                    conn.rollback();
+                    throw e;
+                }
+
+            } catch (SQLException e) {
+                Main.getInstance().getLogger().severe("✗ Error creating database tables: " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private CompletableFuture<Void> insertDungeonIfNotExists() {
+        return Main.getConnector().getConnection(10).thenAcceptAsync(conn -> {
+            String sql = "INSERT INTO dungeon (dungeon_name, is_pvp) VALUES (?, ?) " +
+                    "ON DUPLICATE KEY UPDATE is_pvp = VALUES(is_pvp)";
+
+            try (var stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, id());
+                stmt.setBoolean(2, typeFlags().contains(TypeFlag.PVP_ENABLED));
+                stmt.executeUpdate();
+
+                Main.getInstance().getLogger().info("Dungeon '" + id() + "' registered in database");
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private static void dispatchCommands (final List<String> commands, final Player p) {
@@ -183,8 +349,8 @@ public abstract class AbstractDungeon implements Dungeon {
         if (isTimed()) {
             SessionManager.getInstance().startTimedSession(this,
                     player.getUniqueId(),
-                    1,
-                    TimeUnit.MINUTES,
+                    10,
+                    TimeUnit.SECONDS,
                     s -> {
                 final Player p = Bukkit.getPlayer(s);
                 p.sendMessage("ciao");

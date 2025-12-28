@@ -29,6 +29,13 @@ public final class Main extends JavaPlugin {
 
         mmoCoreAPI = new MMOCoreAPI(this);
 
+        connector = new MySQLConnector("s395033_azurecore",
+                "127.0.0.1",
+                3307,
+                "u395033_ZfMHLJMVpW",
+                "Fa003O25QaNrHfIRDKNGF4MJ",
+                Executors.newCachedThreadPool());
+
         FileManager.loadAll(getDataFolder())
                 .thenRunAsync(() -> {
 
@@ -38,12 +45,6 @@ public final class Main extends JavaPlugin {
                     new PlaceholderHook().register();
                 });
 
-        connector = new MySQLConnector("s395033_azurecore",
-                "127.0.0.1",
-                3307,
-                "u395033_ZfMHLJMVpW",
-                "Fa003O25QaNrHfIRDKNGF4MJ",
-                Executors.newCachedThreadPool());
 
 
 

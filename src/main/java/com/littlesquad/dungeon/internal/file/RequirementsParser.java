@@ -564,8 +564,8 @@ public final class RequirementsParser {
                         .map(SynchronizedDataHolder::getPlayer)
                         .toArray(Player[]::new)
                         : new Player[]{(Player) req.key});
-                event.bossRoomToUnlock().join(players);
                 event.executeCommandsFor(players);
+                event.bossRoomToUnlock().join(players);
             }
         }) : (type, e) -> ex.execute(() -> {
             final ParticipantRequirements req;
@@ -822,8 +822,8 @@ public final class RequirementsParser {
                         .map(SynchronizedDataHolder::getPlayer)
                         .toArray(Player[]::new)
                         : new Player[]{(Player) req.key});
-                event.bossRoomToUnlock().join(players);
                 event.executeCommandsFor(players);
+                event.bossRoomToUnlock().join(players);
             }
         });
     }

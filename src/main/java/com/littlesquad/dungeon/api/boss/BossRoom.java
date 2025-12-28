@@ -1,5 +1,6 @@
 package com.littlesquad.dungeon.api.boss;
 
+import com.littlesquad.dungeon.api.rewards.Reward;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -65,6 +66,18 @@ public interface BossRoom {
      */
     boolean join(UUID playerId);
 
+    /**
+     * Enforces the join of the given players. <br>
+     * This method differs from {@link BossRoom#join(UUID)}
+     * from the fact that this handles the failure or the
+     * success by itself, for this reason it should be called
+     * on failure. <br> <br>
+     * If the party or player is eligible for joining but
+     * the capacity don't allow it, a way to handle this
+     * failure is through queueing the players
+     * until the {@link BossRoom} becomes available.
+     * @param players an array of players
+     */
     void join(final Player... players);
 
     /**
@@ -83,8 +96,6 @@ public interface BossRoom {
      */
     boolean onePartyOnly();
 
-    Location spawnLocation();
-
     /**
      * Returns a list of commands to be executed if a player or party
      * is denied access to the boss room.
@@ -94,7 +105,13 @@ public interface BossRoom {
      */
     List<String> accessDeniedCommands();
 
+    BossRoom fallback();
+
+    List<String> enqueuingCommands();
+
     Boss getBoss ();
 
-    List<String> rewards ();
+    List<Reward> rewards ();
+
+    Player[] getPlayersIn ();
 }

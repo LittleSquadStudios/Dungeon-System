@@ -8,10 +8,15 @@ public final class MessageProvider {
     private final String prefix;
     private final String consolePrefix;
 
+    private final String enqueuedForBossRoom;
+
     public MessageProvider (final FileConfiguration messageConfig) {
         this.messageConfig = messageConfig;
         prefix = messageConfig.getString("prefix", "");
         consolePrefix = removeColors(prefix);
+        enqueuedForBossRoom = messageConfig
+                .getString("boss.enqueued", "")
+                .replaceAll("&", "§");
     }
 
     //Cache only the important messages (don't waste memory and fields on errors that shouldn't happen)!
@@ -28,5 +33,9 @@ public final class MessageProvider {
     }
     private static String removeColors (final String s) {
         return s.replaceAll("§[a-fA-F0-9]", "");
+    }
+
+    public String getEnqueuedForBossRoom () {
+        return enqueuedForBossRoom;
     }
 }

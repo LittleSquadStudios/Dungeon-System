@@ -151,13 +151,18 @@ boss-rooms:
     max_one_party_at_a_time: true
     access_denied_commands:
       - "/say NO!"
+    # If not empty, the player will try to enter the given boss room in case of failure
+    fallback_boss_room: ""
+    # If the players can't immediately join this boss room and the 'fallback_boss_room'
+    # option is empty, then the player will be enqueued until the other players get
+    # kicked, so when the players will finally be allowed to access the boss room
+    # the sequent commands will be executed!
+    enqueuing_commands:
+      - "/say NOW YES!"
     # Configuration of the boss residing in the boss room
     boss:
       base_level: 50
-      location:
-        x: 100
-        y: 100
-        z: 100
+      location: "30 70 -40"
       # For example a party of 2 players at level 45 or 3 players at level 30
       # If a player is not in party, then his level is considered the party level
       party_level: 90

@@ -1,6 +1,7 @@
 package com.littlesquad.dungeon.api.boss;
 
 import io.lumine.mythic.api.mobs.MythicMob;
+import org.bukkit.Location;
 
 import java.util.Optional;
 import java.util.Set;
@@ -24,9 +25,7 @@ public interface Boss {
 
     /**
      * This main method handles the spawning
-     * logic of the boss, location, level, how much
-     * damage sum he will deal or how much damage he takes
-     * will be decided here.
+     * logic of the boss.
      *
      * @since 1.0.0
      * @author LittleSquad
@@ -75,5 +74,5 @@ public interface Boss {
      * */
     Set<UUID> getParticipants();
 
-
+    Location getSpawnLocation();
 }

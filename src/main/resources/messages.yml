@@ -6,3 +6,6 @@ config:
     number_format_error: "Error during number conversion in "
     invalid_mob: "Invalid Mob/MythicMob found in "
     already_existing_checkpoint: "Invalid checkpoint ID, this ID has been already registered: "
+
+boss:
+  enqueued: "&eThe boss room is full, you have been enqueued, wait until it becomes available. &6You will receive an alert right before it happens!"

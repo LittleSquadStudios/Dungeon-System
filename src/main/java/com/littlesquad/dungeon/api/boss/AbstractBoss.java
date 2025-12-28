@@ -1,6 +1,7 @@
 package com.littlesquad.dungeon.api.boss;
 
 import com.littlesquad.Main;
+import com.littlesquad.dungeon.api.rewards.Reward;
 import io.lumine.mythic.api.MythicProvider;
 import io.lumine.mythic.api.mobs.MythicMob;
 import io.lumine.mythic.api.mobs.entities.SpawnReason;
@@ -36,8 +37,6 @@ public abstract class AbstractBoss implements Boss, Listener {
 
         // Register this as a listener
         Bukkit.getPluginManager().registerEvents(this, Main.getInstance());
-
-        spawn();
     }
 
     @Override
@@ -63,10 +62,17 @@ public abstract class AbstractBoss implements Boss, Listener {
             bossEntity = mythicMobOptional.get();
 
             // Calculate the boss level
-            final double calculatedLevel = calculateBossLevel(partyLevel());
+            final double calculatedLevel = calculateBossLevel(Arrays.stream(room
+                    .getPlayersIn())
+                    .parallel()
+                    .mapToInt(p -> Main
+                            .getMMOCoreAPI()
+                            .getPlayerData(p)
+                            .getLevel())
+                    .sum());
 
             // Get spawn location
-            final Location spawnLocation = room.spawnLocation();
+            final Location spawnLocation = getSpawnLocation();
             if (spawnLocation == null) {
                 state = BossState.NOT_SPAWNED;
                 System.err.println("[BossSpawn] Invalid spawn location for boss room");
@@ -109,15 +115,15 @@ public abstract class AbstractBoss implements Boss, Listener {
             return;
         }
 
-        final List<String> rewardIds = room.rewards();
-        if (rewardIds == null || rewardIds.isEmpty()) {
+        final List<Reward> rewards = room.rewards();
+        if (rewards == null || rewards.isEmpty()) {
             return;
         }
 
         for (final UUID participantId : participants) {
             final Player player = Bukkit.getPlayer(participantId);
             if (player != null && player.isOnline()) {
-                for (final String rewardId : rewardIds) {
+                for (final Reward reward : rewards) {
                     //reward give logic
                 }
             }
@@ -126,6 +132,9 @@ public abstract class AbstractBoss implements Boss, Listener {
         state = BossState.DEAD;
         onDeath();
 
+        //set a timer for taking the rewards, then expel from the dungeon
+        //TODO: When kicking the partecipants from the bossroom, shift the player in waiting list and make them enter,
+        //      if any, otherwise clear (the replace action must be done inside a 'synchronize' block)
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -135,7 +144,7 @@ public abstract class AbstractBoss implements Boss, Listener {
         }
 
         if (state == BossState.ALIVE) {
-            despawn();
+            //No reason to despawn the mob since this method is signaling that it has been despawned!
             state = BossState.DESPAWNED;
             onDespawn();
         }
@@ -166,6 +175,12 @@ public abstract class AbstractBoss implements Boss, Listener {
         if (damager != null) {
             participants.add(damager.getUniqueId());
         }
+    }
+
+    public void close () {
+        EntityDamageByEntityEvent.getHandlerList().unregister(this);
+        MythicMobDespawnEvent.getHandlerList().unregister(this);
+        MythicMobDeathEvent.getHandlerList().unregister(this);
     }
 
     private boolean isBossEvent(String mobTypeName, UUID entityUUID) {
@@ -205,16 +220,6 @@ public abstract class AbstractBoss implements Boss, Listener {
 
     public Optional<ActiveMob> getActiveMob() {
         return Optional.ofNullable(activeMob);
-    }
-
-    public void despawn() {
-        if (activeMob != null && isAlive()) {
-            Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
-                activeMob.remove();
-                state = BossState.DESPAWNED;
-                onDespawn();
-            });
-        }
     }
 
     /**

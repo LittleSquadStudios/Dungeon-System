@@ -2,11 +2,15 @@ package com.littlesquad;
 
 import com.littlesquad.dungeon.database.MySQLConnector;
 import com.littlesquad.dungeon.internal.DungeonManager;
+import com.littlesquad.dungeon.internal.commands.DungeonJoinCommand;
 import com.littlesquad.dungeon.internal.event.TimedEventImpl;
 import com.littlesquad.dungeon.internal.file.FileManager;
 import com.littlesquad.dungeon.internal.utils.MessageProvider;
 import com.littlesquad.dungeon.placeholder.PlaceholderHook;
 import net.Indyuce.mmocore.api.MMOCoreAPI;
+import org.bukkit.Bukkit;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.concurrent.Executors;
@@ -22,6 +26,9 @@ public final class Main extends JavaPlugin {
     @Override
     public void onEnable () {
         instance = this;
+
+        mmoCoreAPI = new MMOCoreAPI(this);
+
         FileManager.loadAll(getDataFolder())
                 .thenRunAsync(() -> {
 
@@ -31,12 +38,22 @@ public final class Main extends JavaPlugin {
                     new PlaceholderHook().register();
                 });
 
-        connector = new MySQLConnector("dungeon-system-db",
+        connector = new MySQLConnector("s395033_azurecore",
                 "127.0.0.1",
-                3306,
-                "root",
-                "",
+                3307,
+                "u395033_ZfMHLJMVpW",
+                "Fa003O25QaNrHfIRDKNGF4MJ",
                 Executors.newCachedThreadPool());
+
+
+
+        final PluginCommand mainCommand = Bukkit.getPluginCommand("dungeon");
+        final DungeonJoinCommand exTabCompleter = new DungeonJoinCommand(DungeonManager.getDungeonManager());
+
+        if (mainCommand != null) {
+            mainCommand.setExecutor(exTabCompleter);
+            mainCommand.setTabCompleter(exTabCompleter);
+        } else System.out.println("Command doesn't exists in plugin.yml");
 
     }
 

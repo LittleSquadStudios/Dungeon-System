@@ -27,11 +27,13 @@ public abstract class AbstractReward implements Reward {
 
     private final Map<String, ItemStack> cachedItems = new HashMap<>();
 
-    public AbstractReward() {
-        cacheItemsRewards();
-    }
 
     public void give(final Player player) {
+
+        if (cachedItems.isEmpty()) {
+            cacheItemsRewards();
+        }
+
         final UUID pu = player.getUniqueId();
         final PlayerData data = PlayerData.get(pu);
 

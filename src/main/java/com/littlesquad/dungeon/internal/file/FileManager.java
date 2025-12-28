@@ -25,7 +25,7 @@ public final class FileManager {
 
     private FileManager () {}
 
-    public static CompletableFuture<Void> loadAll (final File dir) {
+    public static CompletableFuture<Void> loadAll (final File dir) { // TODO: TRY AND CATCH DI TUTTI I SINGOLI LOAD
         if (pluginFolder == null) {
             //noinspection ResultOfMethodCallIgnored
             (pluginFolder = dir).mkdirs();
@@ -58,7 +58,7 @@ public final class FileManager {
                         out.write(stream.readAllBytes());
                     out.flush();
                 } catch (final IOException e) {
-                    throw new RuntimeException(e);
+                    System.out.println();
                 }
         }
         //Load in parallel the configurations and let the caller wait on it...

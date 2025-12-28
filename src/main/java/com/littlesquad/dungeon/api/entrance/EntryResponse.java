@@ -69,6 +69,7 @@ public enum EntryResponse {
 
     FAILURE_PER_DUNGEON_BLOCKED,
 
-    SUCCESS,
+    SUCCESS_SOLO,
+    SUCCESS_PARTY,
     FAILURE
 }

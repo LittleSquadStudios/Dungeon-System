@@ -1,9 +1,13 @@
 name: DungeonSystem
 main: com.littlesquad.Main
+api-version: 1.21.7
 version: 1.0
 commands:
-  createdungeon:
-    description: "Command Used To Create the dungeon"
-    aliases:
-      - cd
-depend: [PlaceholderAPI]
+  dungeon:
+    description: a
+    aliases: dg
+depend:
+  - PlaceholderAPI
+  - MMOCore
+  - MMOItems
+  - MythicLib

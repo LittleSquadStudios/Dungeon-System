@@ -34,13 +34,13 @@ public final class ObjectiveEventImpl extends ObjectiveEvent {
                                final String checkpoint,
                                final String boosRoom,
                                final RequirementsParser parser) {
+        super(parser);
         this.dungeon = dungeon;
         this.id = id;
         this.commands = commands;
         this.checkpoint = checkpoint;
         this.boosRoom = boosRoom;
         players = ConcurrentHashMap.newKeySet();
-        super(parser);
     }
 
     public Checkpoint checkpointToUnlock () {

@@ -51,7 +51,7 @@ entrance:
       - "/kill %player%"
   # Commands to execute in case the player successfully enters the dungeon
   successful_entrance_commands:
-    - "/tp %player% 127 180 900"
+    - "tp %player_name% 127 180 900"
 
 events:
   # Any event in this section defines its identifier that will be used in commands
@@ -154,6 +154,10 @@ boss-rooms:
     # Configuration of the boss residing in the boss room
     boss:
       base_level: 50
+      location:
+        x: 100
+        y: 100
+        z: 100
       # For example a party of 2 players at level 45 or 3 players at level 30
       # If a player is not in party, then his level is considered the party level
       party_level: 90

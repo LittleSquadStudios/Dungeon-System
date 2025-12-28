@@ -4,7 +4,7 @@ database:
   enabled: true
 
   # The name of the database
-  name: "AzureDungeon"
+  name: "s395033_azurecore"
 
   # Optional, leave empty if you use the fields below
   url: ""
@@ -12,9 +12,9 @@ database:
   # Database credentials
   ip-address: '127.0.0.1'
   port: 3306
-  username: "db_user"
-  password: "db_password"
-  ssl: true
+  username: "u395033_ZfMHLJMVpW"
+  password: "Fa003O25QaNrHfIRDKNGF4MJ"
+  ssl: false
 
   # Connection pool size
   maximum-pool_size: 20   # Maximum number of connections in the pool

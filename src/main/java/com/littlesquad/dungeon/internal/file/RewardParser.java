@@ -56,7 +56,7 @@ public final class RewardParser {
 
                     // Initializing items rewards array
                     ItemReward[] itemsR = new ItemReward[0];
-                    final ConfigurationSection itemSec = section.getConfigurationSection(sub + ".items");
+                    final ConfigurationSection itemSec = section.getConfigurationSection(s + ".items");
                     // Item parsing
 
                     // Checking if there's some items in this reward
@@ -120,12 +120,12 @@ public final class RewardParser {
                     ItemReward[] finalItemsR = itemsR;
 
                     // Building the reward with the abstract class
-                    rewards[i] = new AbstractReward() {
+                    AbstractReward reward = new AbstractReward() {
 
                         private final String id = sub;
                         private final ItemReward[] itemsRewards = finalItemsR;
-                        private final double experience = section.getDouble(sub + ".experience");
-                        private final List<String> commands = section.getStringList(sub + ".commands");
+                        private final double experience = section.getDouble(s + ".experience");
+                        private final List<String> commands = section.getStringList(s + ".commands");
 
                         @Override
                         public String id() {
@@ -147,6 +147,9 @@ public final class RewardParser {
                             return commands;
                         }
                     };
+
+
+                    rewards[i] = reward;
 
                     i++;
                 }

@@ -6,25 +6,29 @@ import com.littlesquad.dungeon.internal.DungeonManager;
 import com.littlesquad.dungeon.placeholder.PlaceholderFormatter;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.party.AbstractParty;
-import net.Indyuce.mmocore.party.provided.Party;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Random;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
-public final class DungeonJoinCommand implements CommandExecutor {
+public final class DungeonJoinCommand implements CommandExecutor, TabCompleter {
 
     private final SecureRandom random = new SecureRandom();
+    private final DungeonManager dungeonManager;
+
+    public DungeonJoinCommand(DungeonManager dungeonManager) {
+        this.dungeonManager = dungeonManager;
+    }
+
 
     @Override
     public boolean onCommand(@NotNull final CommandSender sender,
@@ -93,14 +97,14 @@ public final class DungeonJoinCommand implements CommandExecutor {
                                                 Bukkit.getConsoleSender(),
                                                 PlaceholderFormatter.formatPerPlayer(cmd, p)));
                             }
-                            case SUCCESS -> {
+                            case SUCCESS_PARTY -> {
 
                                 final AbstractParty playerParty = Main.getMMOCoreAPI()
                                         .getPlayerData(p)
                                         .getParty();
 
                                 if (playerParty == null) {
-                                    p.sendMessage("You should be in a dungeon in order to join this dungeon!");
+                                    p.sendMessage("You should be in a party in order to join this dungeon!");
                                     return false;
                                 }
 
@@ -117,6 +121,10 @@ public final class DungeonJoinCommand implements CommandExecutor {
                                 dungeonToJoin.onEnter(partyMembers);
 
                             }
+                            case SUCCESS_SOLO -> {
+                                p.sendMessage("test");
+                                dungeonToJoin.onEnter(p);
+                            }
                         }
 
                     }
@@ -128,4 +136,45 @@ public final class DungeonJoinCommand implements CommandExecutor {
         return false;
     }
 
+    @Override
+    public @Nullable List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] args) {
+        final List<String> completions = new ArrayList<>();
+
+        if (args.length == 1) {
+            completions.add("join");
+            completions.add("leave");
+            completions.add("list");
+            completions.add("info");
+            completions.add("trigger");
+
+            return completions.stream()
+                    .filter(completion -> completion.toLowerCase().startsWith(args[0].toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        if (args.length == 2) {
+            switch (args[0].toLowerCase()) {
+                case "join":
+                case "info":
+                    return dungeonManager.getAllDungeons().stream()
+                            .map(Dungeon::id)
+                            .filter(id -> id.toLowerCase().startsWith(args[1].toLowerCase()))
+                            .collect(Collectors.toList());
+
+                case "trigger":
+                    completions.add("first_event");
+                    completions.add("objective_event");
+                    completions.add("structural_event_A");
+                    return completions.stream()
+                            .filter(completion -> completion.toLowerCase().startsWith(args[1].toLowerCase()))
+                            .collect(Collectors.toList());
+            }
+        }
+
+        if (args.length == 3 && args[0].equalsIgnoreCase("trigger")) {
+            return null;
+        }
+
+        return completions;
+    }
 }

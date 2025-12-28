@@ -28,9 +28,16 @@ public abstract class AbstractDungeon implements Dungeon {
     }
 
     private static void dispatchCommands (final List<String> commands, final Player p) {
-        if (p != null)
-            commands.forEach(s -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), PlaceholderFormatter.formatPerPlayer(s, p)));
-        else throw new RuntimeException("Player is offline");
+        if (p == null) {
+            throw new RuntimeException("Player is offline");
+        }
+
+        commands.stream()
+                .filter(s -> s != null && !s.trim().isEmpty())
+                .map(String::trim)
+                .map(s -> s.startsWith("/") ? s.substring(1) : s)
+                .map(s -> PlaceholderFormatter.formatPerPlayer(s, p))
+                .forEach(cmd -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd));
     }
 
     @Override
@@ -72,8 +79,7 @@ public abstract class AbstractDungeon implements Dungeon {
                 return EntryResponse.FAILURE_PER_LEVEL;
             }
 
-            enterParty(party);
-            return EntryResponse.SUCCESS;
+            return EntryResponse.SUCCESS_PARTY;
         }
 
         if (hasParty) {
@@ -93,9 +99,7 @@ public abstract class AbstractDungeon implements Dungeon {
                 return EntryResponse.FAILURE_PER_LEVEL;
             }
 
-            enterParty(party);
-            return EntryResponse.SUCCESS;
-
+            return EntryResponse.SUCCESS_PARTY;
         }
 
         if (!hasEnoughSlots(1, leader))
@@ -104,7 +108,7 @@ public abstract class AbstractDungeon implements Dungeon {
         if (leader.getLevel() < getEntrance().playerMinimumLevel())
             return EntryResponse.FAILURE_PER_LEVEL;
 
-        return EntryResponse.SUCCESS;
+        return EntryResponse.SUCCESS_SOLO;
     }
 
     private boolean isPartyAlreadyProcessing(AbstractParty party) {
@@ -174,6 +178,7 @@ public abstract class AbstractDungeon implements Dungeon {
     }
 
     public void onEnter(Player player) {
+        player.sendMessage("test 2");
         dispatchCommands(getEntrance().onEnterCommands(), player);
     }
 

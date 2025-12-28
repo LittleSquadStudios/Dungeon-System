@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractDungeon implements Dungeon {
 
@@ -179,6 +180,21 @@ public abstract class AbstractDungeon implements Dungeon {
 
     public void onEnter(Player player) {
         player.sendMessage("test 2");
+        if (isTimed()) {
+            SessionManager.getInstance().startTimedSession(this,
+                    player.getUniqueId(),
+                    1,
+                    TimeUnit.MINUTES,
+                    s -> {
+                final Player p = Bukkit.getPlayer(s);
+                p.sendMessage("ciao");
+            });
+
+        } else
+            SessionManager.getInstance()
+                    .startSession(this,
+                            player.getUniqueId());
+
         dispatchCommands(getEntrance().onEnterCommands(), player);
     }
 
@@ -227,6 +243,10 @@ public abstract class AbstractDungeon implements Dungeon {
     public void shutdown() {
         leaders.clear();
         parser = null;
+    }
+
+    private boolean isTimed() {
+        return typeFlags().contains(TypeFlag.TIMED);
     }
 
     public DungeonParser getParser() {

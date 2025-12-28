@@ -1,59 +1,12 @@
 package com.littlesquad.dungeon.api.boss;
 
-public abstract class Boss {
+import io.lumine.mythic.api.mobs.MythicMob;
 
-    /**
-     * Calculates the level of the boss based on party information
-     * and configuration parameters. In our basic implementation
-     * {@link Boss}, we strictly follow what's defined in
-     * <code>dungeon.yml</code> under the section <code>boss-rooms</code>.
-     *
-     * <p>
-     * The formula used to calculate the final boss level is:
-     * </p>
-     *
-     * <pre>{@code
-     * final_level = Max(
-     *     max_level,
-     *     Min(
-     *         base_level,
-     *         ((base_level + (real_party_level - party_level)) * multiplier) ^ exponent
-     *     )
-     * )
-     * }</pre>
-     *
-     * <p>
-     * Where:
-     * <ul>
-     *   <li><b>base_level</b> – the default level of the boss.</li>
-     *   <li><b>party_level</b> – the reference party level defined in the YAML.</li>
-     *   <li><b>real_party_level</b> – the sum of the actual levels of the players in the party.</li>
-     *   <li><b>multiplier</b> – scaling factor for the level adjustment.</li>
-     *   <li><b>exponent</b> – exponent for non-linear scaling.</li>
-     *   <li><b>max_level</b> – the maximum allowed level of the boss.</li>
-     * </ul>
-     * </p>
-     *
-     * <p>
-     * The formula works as follows:
-     * <ol>
-     *   <li>Compute the difference between the real party level and the reference party level:
-     *       <code>delta = real_party_level - party_level</code>.</li>
-     *   <li>Add this difference to the base level and apply the multiplier:
-     *       <code>adjusted = (base_level + delta) * multiplier</code>.</li>
-     *   <li>Raise to the exponent to allow non-linear scaling:
-     *       <code>scaled = adjusted ^ exponent</code>.</li>
-     *   <li>Take the minimum between the base level and the scaled value, ensuring the boss does not drop below the base level.</li>
-     *   <li>Finally, take the maximum between <code>max_level</code> and the previous result to ensure the boss does not exceed the maximum allowed level.</li>
-     * </ol>
-     * </p>
-     *
-     * @return {@link Integer} representing the final boss level
-     * @since 1.0.0
-     */
-    public double calculateBossLevel (final double actualPartyLevel) {
-        return Math.max(maxLevel(), Math.min(baseLevel(), Math.pow(baseLevel() + (actualPartyLevel - partyLevel()) * multiplier(), exponent())));
-    }
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
+public interface Boss {
 
     /**
      * Returns the boss name in this boss room.
@@ -61,35 +14,66 @@ public abstract class Boss {
      * @return {@link String} representing the boss name
      * @since 1.0.0
      */
-    public abstract String bossName();
+    String bossName();
 
     /**
      * Returns the base level of the boss.
      * @return base level
      */
-    public abstract int baseLevel();
+    int baseLevel();
 
     /**
-     * Returns the reference party level for scaling.
-     * @return party level
-     */
-    public abstract int partyLevel();
+     * This main method handles the spawning
+     * logic of the boss, location, level, how much
+     * damage sum he will deal or how much damage he takes
+     * will be decided here.
+     *
+     * @since 1.0.0
+     * @author LittleSquad
+     * */
+    void spawn();
 
     /**
-     * Returns the multiplier for the boss level calculation.
-     * @return multiplier
+     * Returns the current state of the boss.
+     * <p>
+     * The boss state represents the current lifecycle phase of the boss
+     * (for example: not spawned, alive, dead, or despawned).
+     * </p>
+     *
+     * <p>
+     * This information is especially useful for managing the lifecycle of
+     * a {@link BossRoom}, such as determining when the room should be reset.
+     * For instance, after the boss is slain, the plugin can check the boss
+     * state to safely restore the boss room and prepare it for the next run.
+     * </p>
+     *
+     * @return the current {@link BossState} of the boss
+     * @since 1.0.0
+     * @author LittleSquad
      */
-    public abstract int multiplier();
+    BossState getState();
+
+
+    boolean isAlive();
+
+    Optional<MythicMob> getSpawnedEntity();
+
+    void onSpawn();
+    void onDeath();
+    void onDespawn();
 
     /**
-     * Returns the exponent for non-linear scaling in boss level calculation.
-     * @return exponent
-     */
-    public abstract int exponent();
+     * This method will return the players who have participated in the fight
+     * <p>
+     * A player is considered a participant if they have successfully inflicted
+     * at least one hit to the boss during the encounter
+     * </p>
+     *
+     * @return A {@link Set} of {@link UUID} who hit the boss
+     * @since 1.0.0
+     * @author LittleSquad
+     * */
+    Set<UUID> getParticipants();
 
-    /**
-     * Returns the maximum level the boss can reach.
-     * @return max level
-     */
-    public abstract int maxLevel();
+
 }

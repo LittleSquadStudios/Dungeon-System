@@ -1,5 +1,6 @@
 package com.littlesquad.dungeon.api.boss;
 
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -14,7 +15,7 @@ import java.util.UUID;
  *     <li>The maximum number of players allowed inside the boss room at a time.</li>
  *     <li>Whether only one party is allowed at a time, enforcing exclusive access.</li>
  *     <li>Access restrictions, including commands to execute when entry is denied.</li>
- *     <li>The boss scaling parameters (base level, party level, multiplier, exponent, max level), which are read from the <code>boss-rooms</code> section in <code>dungeon.yml</code> and used to calculate the final boss level. Better defined in {@link Boss} we don't put here that params since you may need to create an implementation that doesn't need any of those params</li>
+ *     <li>The boss scaling parameters (base level, party level, multiplier, exponent, max level), which are read from the <code>boss-rooms</code> section in <code>dungeon.yml</code> and used to calculate the final boss level. Better defined in {@link AbstractBoss} we don't put here that params since you may need to create an implementation that doesn't need any of those params</li>
  *     <li>Rewards for players upon defeating the boss, which may include items, experience points, loot chests, or custom commands.</li>
  *     <li>The location of the boss room, which is used to spawn the boss, teleport players, or trigger environmental effects.</li>
  * </ul>
@@ -47,7 +48,7 @@ public interface BossRoom {
      * <b>Important:</b> This method differs from
      * {@link com.littlesquad.dungeon.api.Dungeon#tryEnter(Player)} in that it does
      * <i>not</i> automatically enforce party-related checks. In contrast, the
-     * {@link Boss} implementation is more strict and evaluates party
+     * {@link AbstractBoss} implementation is more strict and evaluates party
      * membership and party-level requirements before allowing entry.
      * </p>
      *
@@ -81,6 +82,8 @@ public interface BossRoom {
      * @since 1.0.0
      */
     boolean onePartyOnly();
+
+    Location spawnLocation();
 
     /**
      * Returns a list of commands to be executed if a player or party

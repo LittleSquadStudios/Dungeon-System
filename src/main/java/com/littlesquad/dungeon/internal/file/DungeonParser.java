@@ -1,12 +1,14 @@
 package com.littlesquad.dungeon.internal.file;
 
 import com.littlesquad.dungeon.api.Dungeon;
+import com.littlesquad.dungeon.api.boss.BossRoom;
 import com.littlesquad.dungeon.api.checkpoint.Checkpoint;
 import com.littlesquad.dungeon.api.entrance.Entrance;
 import com.littlesquad.dungeon.api.event.Event;
 import com.littlesquad.dungeon.api.event.EventType;
 import com.littlesquad.dungeon.api.event.structural.EnvironmentEvent;
 import com.littlesquad.dungeon.api.rewards.Reward;
+import com.littlesquad.dungeon.internal.boss.BossRoomImpl;
 import com.littlesquad.dungeon.internal.checkpoint.CheckPointImpl;
 import com.littlesquad.dungeon.internal.event.ObjectiveEventImpl;
 import com.littlesquad.dungeon.internal.event.StructuralEventImpl;
@@ -220,5 +222,50 @@ public final class DungeonParser {
                     .filter(Objects::nonNull)
                     .toArray(Checkpoint[]::new);
         } else return new Checkpoint[0];
+    }
+
+    public BossRoom[] getBossRooms (final Dungeon d) {
+        final ConfigurationSection cs;
+        if ((cs = config.getConfigurationSection("boss_rooms")) != null) {
+            return cs.getKeys(false)
+                    .parallelStream()
+                    .map(key -> {
+                        try {
+                            final String loc = config.getString("boss_rooms." + key + ".boss.location", "0 0 0");
+                            int i;
+                            final List<Reward> allRewards = getRewards();
+                            return new BossRoomImpl(
+                                    key,
+                                    config.getInt("boss_rooms." + key + ".max_players_in", 0),
+                                    config.getBoolean("boss_rooms." + key + ".max_one_party_at_a_time", false),
+                                    config.getStringList("boss_rooms." + key + ".access_denied_commands"),
+                                    config.getString("boss_rooms." + key + ".fallback_boss_room", ""),
+                                    config.getStringList("boss_rooms." + key + ".enqueuing_commands"),
+                                    config.getInt("boss_rooms." + key + ".boss.party_level"),
+                                    config.getInt("boss_rooms." + key + ".boss.multiplier"),
+                                    config.getInt("boss_rooms." + key + ".boss.exponent"),
+                                    config.getInt("boss_rooms." + key + ".boss.max_level"),
+                                    config.getInt("boss_rooms." + key + ".boss.base_level"),
+                                    config.getString("boss_rooms." + key + ".boss.name", ""),
+                                    new Location(d.getWorld(),
+                                            Double.parseDouble(loc.substring(0, i = loc.indexOf(' ', 1))),
+                                            Double.parseDouble(loc.substring(i + 1, i = loc.indexOf(' ', i + 2))),
+                                            Double.parseDouble(loc.substring(i + 3))),
+                                    config.getStringList("boss_rooms." + key + ".rewards")
+                                            .parallelStream()
+                                            .map(id -> allRewards
+                                                    .parallelStream()
+                                                    .filter(r -> r.id().equals(id))
+                                                    .findAny()
+                                                    .orElse(null))
+                                            .filter(Objects::nonNull)
+                                            .toList());
+                        } catch (final Throwable _) {
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .toArray(BossRoom[]::new);
+        } else return new BossRoom[0];
     }
 }

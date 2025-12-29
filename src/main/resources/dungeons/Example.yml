@@ -143,7 +143,7 @@ checkpoints:
     on_death_commands:
       - "/say MORTO!"
 
-boss-rooms:
+boss_rooms:
   # This might be named as you want, the only requirement is to make it different from the others
   main_boss_room:
     # Limit the number of players in the boss room

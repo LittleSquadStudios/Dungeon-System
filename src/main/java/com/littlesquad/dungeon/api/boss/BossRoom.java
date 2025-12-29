@@ -33,6 +33,8 @@ import java.util.UUID;
  */
 public interface BossRoom {
 
+    String getID ();
+
     /**
      * Attempts to allow a player (or their party) to join this boss room.
      * <p>

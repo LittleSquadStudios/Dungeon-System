@@ -58,6 +58,8 @@ public interface Status extends Listener {
     int totalKills();
 
     int playerDeaths(final UUID uuid);
+    int partyDeaths(AbstractParty party);
+    int totalDeaths();
 
     /**
      * It returns a list of fixed bossrooms defined in the config section <code>boss-rooms</code>

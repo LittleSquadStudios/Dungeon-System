@@ -1,8 +1,9 @@
 package com.littlesquad.dungeon.placeholder;
 
-import com.littlesquad.dungeon.internal.DungeonManager;
+import com.littlesquad.Main;
 import com.littlesquad.dungeon.internal.SessionManager;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import net.Indyuce.mmocore.party.AbstractParty;
 import org.bukkit.OfflinePlayer;
 
 @SuppressWarnings("NullableProblems")
@@ -29,11 +30,95 @@ public final class PlaceholderHook extends PlaceholderExpansion {
         if (player == null)
             return null;
         return switch (params.toLowerCase()) {
-            case "dungeon" -> SessionManager
+            case "name" -> SessionManager
                     .getInstance()
                     .getSession(player.getUniqueId())
                     .getDungeon()
                     .displayName();
+            case "pvp" -> SessionManager
+                    .getInstance()
+                    .getSession(player.getUniqueId())
+                    .getDungeon()
+                    .status()
+                    .isPvp()
+                    ? "§aEnabled"
+                    : "§cDisabile";
+            case "globalkills" -> String.valueOf(SessionManager
+                    .getInstance()
+                    .getSession(player.getUniqueId())
+                    .getDungeon()
+                    .status()
+                    .totalKills());
+            case "partykills" -> {
+                final AbstractParty party;
+                yield String.valueOf((party = Main
+                        .getMMOCoreAPI()
+                        .getPlayerData(player)
+                        .getParty()) != null
+                        ? SessionManager
+                        .getInstance()
+                        .getSession(player.getUniqueId())
+                        .getDungeon()
+                        .status()
+                        .partyKills(party)
+                        : SessionManager
+                        .getInstance()
+                        .getSession(player.getUniqueId())
+                        .getDungeon()
+                        .status()
+                        .playerKills(player.getUniqueId()));
+            }
+            case "personalkills" -> String.valueOf(SessionManager
+                    .getInstance()
+                    .getSession(player.getUniqueId())
+                    .getDungeon()
+                    .status()
+                    .playerKills(player.getUniqueId()));
+            case "sessionkills" -> String.valueOf(SessionManager
+                    .getInstance()
+                    .getSession(player.getUniqueId())
+                    .kills());
+            case "globaldeaths" -> String.valueOf(SessionManager
+                    .getInstance()
+                    .getSession(player.getUniqueId())
+                    .getDungeon()
+                    .status()
+                    .totalDeaths());
+            case "partydeaths" -> {
+                final AbstractParty party;
+                yield String.valueOf((party = Main
+                        .getMMOCoreAPI()
+                        .getPlayerData(player)
+                        .getParty()) != null
+                        ? SessionManager
+                        .getInstance()
+                        .getSession(player.getUniqueId())
+                        .getDungeon()
+                        .status()
+                        .partyDeaths(party)
+                        : SessionManager
+                        .getInstance()
+                        .getSession(player.getUniqueId())
+                        .getDungeon()
+                        .status()
+                        .playerDeaths(player.getUniqueId()));
+            }
+            case "personaldeaths" -> String.valueOf(SessionManager
+                    .getInstance()
+                    .getSession(player.getUniqueId())
+                    .getDungeon()
+                    .status()
+                    .playerDeaths(player.getUniqueId()));
+            case "sessiondeaths" -> String.valueOf(SessionManager
+                    .getInstance()
+                    .getSession(player.getUniqueId())
+                    .deaths());
+            case "players" -> String.valueOf(SessionManager
+                    .getInstance()
+                    .getSession(player.getUniqueId())
+                    .getDungeon()
+                    .status()
+                    .currentPlayers());
             default -> null;
         };
     }

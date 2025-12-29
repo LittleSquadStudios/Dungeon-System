@@ -28,6 +28,8 @@ public abstract class AbstractStatus implements Status {
         playerDeaths = new ConcurrentHashMap<>();
     }
 
+    //TODO: Rewrite the Status for better Diagnostics!
+
     @EventHandler
     public void onPvp(final EntityDamageByEntityEvent e) {
 
@@ -43,17 +45,19 @@ public abstract class AbstractStatus implements Status {
 
                 SessionManager.getInstance()
                         .getSession(damager.getUniqueId())
-                        .addDamage(e.getDamage());
+                        .addDamage(e.getFinalDamage());
 
                 SessionManager.getInstance()
                         .getSession(damaged.getUniqueId())
-                        .addDamageTaken(damaged.getLastDamage());
+                        .addDamageTaken(e.getFinalDamage());
 
             } else e.setCancelled(true);
 
         }
 
     }
+
+    //TODO: Registrare solo una volta l'evento e al suo interno delegare a due metodi: uno per il pve e uno per il pvp!
 
     @EventHandler
     public void onPve(final EntityDamageByEntityEvent e) {

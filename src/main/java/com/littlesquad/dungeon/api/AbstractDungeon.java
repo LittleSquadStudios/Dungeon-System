@@ -2,13 +2,17 @@ package com.littlesquad.dungeon.api;
 
 import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.entrance.EntryResponse;
+import com.littlesquad.dungeon.api.session.DungeonSession;
+import com.littlesquad.dungeon.internal.DungeonManager;
 import com.littlesquad.dungeon.internal.SessionManager;
 import com.littlesquad.dungeon.internal.file.DungeonParser;
 import com.littlesquad.dungeon.placeholder.PlaceholderFormatter;
 import io.lumine.mythic.lib.data.SynchronizedDataHolder;
+import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.party.AbstractParty;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
@@ -24,6 +28,7 @@ public abstract class AbstractDungeon implements Dungeon {
     /*When someone fires this command we should add him to this set
     ONLY IF HE'S WITH A PARTY, AND IF HE JOINS WE SHOULD CHECK AGAIN AND EVENTUALLY SET INTO THIS SET*/
     private final Set<UUID> leaders = ConcurrentHashMap.newKeySet();
+    private final ConcurrentHashMap<UUID, Location> joinPoints = new ConcurrentHashMap<>();
     private DungeonParser parser;
 
     private static final String[] CREATE_TABLES = {
@@ -213,19 +218,51 @@ public abstract class AbstractDungeon implements Dungeon {
         final PlayerData data = Main.getMMOCoreAPI().getPlayerData(leader);
         final AbstractParty party = data.getParty();
 
-        if (getEntrance().maxSlots() == 0)
+        final boolean hasParty = party != null && getOnlinePartySize(party) > 1;
+
+        if (leader.hasPermission(getEntrance().adminPermission())) {
+            if (hasParty)
+                return EntryResponse.SUCCESS_PARTY;
+            else
+                return EntryResponse.SUCCESS_SOLO;
+        }
+
+        if (SessionManager.getInstance()
+                .getSession(leader.getUniqueId()) != null)
+            return EntryResponse.FAILURE_PER_SENDER_ALREADY_IN;
+
+        if (hasParty) {
+            for (final PlayerData onlineMember : party.getOnlineMembers()) {
+                final DungeonSession partyMemberSession = SessionManager
+                        .getInstance()
+                        .getSession(onlineMember.getUniqueId());
+
+                if (partyMemberSession != null) {
+                    if (partyMemberSession.getDungeon() == this)
+                        return EntryResponse.SUCCESS_SOLO;
+                    else
+                        return EntryResponse.FAILURE_PER_MEMBER_ALREADY_IN;
+                }
+
+            }
+        }
+
+
+        // New check: If the player has adminPermission he can join without any other check
+
+
+        if (getEntrance().maxSlots() == 0) {
             return EntryResponse.FAILURE_PER_DUNGEON_BLOCKED;
+        }
 
         // First check: Are the party required? Is the player alone?
 
-        final boolean hasParty = party != null && getOnlinePartySize(party) > 1;
 
         if (getEntrance().partyRequired()) {
 
             // Second check: Check if leader has a party if not, it will return FAILURE_PER_PARTY
 
             if (!hasParty) {
-                dispatchCommands(getEntrance().partyFallbackCommands(), leader); // TODO: Da togliere da qui
                 return EntryResponse.FAILURE_PER_PARTY;
             }
 
@@ -237,12 +274,10 @@ public abstract class AbstractDungeon implements Dungeon {
             final int partySize = getOnlinePartySize(party);
 
             if(!hasEnoughSlots(partySize, leader)) {
-                dispatchSlotFallback(party);
                 return EntryResponse.FAILURE_PER_SLOTS;
             }
 
             if (!hasPartyMinimumLevel(party)) {
-                dispatchLevelFallback(party);
                 return EntryResponse.FAILURE_PER_LEVEL;
             }
 
@@ -257,12 +292,10 @@ public abstract class AbstractDungeon implements Dungeon {
             final int partySize = getOnlinePartySize(party);
 
             if (!hasEnoughSlots(partySize, leader)) {
-                dispatchSlotFallback(party);
                 return EntryResponse.FAILURE_PER_SLOTS;
             }
 
             if (!hasPartyMinimumLevel(party)) {
-                dispatchLevelFallback(party);
                 return EntryResponse.FAILURE_PER_LEVEL;
             }
 
@@ -298,17 +331,7 @@ public abstract class AbstractDungeon implements Dungeon {
         if (status().currentPlayers() + incomingPlayers <= maxSlots)
             return true;
 
-        return leader.hasPermission(getEntrance().bypassPermission())
-                || leader.hasPermission(getEntrance().adminPermission());
-    }
-
-    private void dispatchSlotFallback(AbstractParty party) {
-        party.getOnlineMembers()
-                .stream()
-                .map(SynchronizedDataHolder::getPlayer)
-                .forEach(p ->
-                        dispatchCommands(
-                                getEntrance().maxSlotsFallbackCommands(), p));
+        return leader.hasPermission(getEntrance().bypassPermission());
     }
 
     private boolean hasPartyMinimumLevel(AbstractParty party) {
@@ -318,25 +341,6 @@ public abstract class AbstractDungeon implements Dungeon {
                 .sum() >= getEntrance().partyMinimumLevel();
     }
 
-    private void dispatchLevelFallback(AbstractParty party) {
-        party.getOnlineMembers()
-                .stream()
-                .map(SynchronizedDataHolder::getPlayer)
-                .forEach(p ->
-                        dispatchCommands(
-                                getEntrance().levelFallbackCommands(), p));
-    }
-
-    private void enterParty(AbstractParty party) {
-        onEnter(party.getOnlineMembers()
-                .stream()
-                .map(SynchronizedDataHolder::getPlayer)
-                .toArray(Player[]::new));
-    }
-
-    private void enterSolo(Player leader) {
-        onEnter(leader);
-    }
 
     @Override
     public CompletableFuture<EntryResponse> tryEnterAsync(Player p) {
@@ -344,16 +348,21 @@ public abstract class AbstractDungeon implements Dungeon {
         return null;
     }
 
-    public void onEnter(Player player) {
-        player.sendMessage("test 2");
+    public void onEnter(final Player player) {
+
+        if (player == null) return;
+
+        joinPoints.put(player.getUniqueId(), player.getLocation());
         if (isTimed()) {
+            System.out.println("Is timed: " + isTimed());
             SessionManager.getInstance().startTimedSession(this,
                     player.getUniqueId(),
-                    10,
-                    TimeUnit.SECONDS,
+                    getParser().getTimeAmount(),
+                    getParser().getTimeUnit(),
                     s -> {
                 final Player p = Bukkit.getPlayer(s);
                 p.sendMessage("ciao");
+                onExit(p);
             });
 
         } else
@@ -365,26 +374,25 @@ public abstract class AbstractDungeon implements Dungeon {
     }
 
     @Override
-    public void onEnter(Player... players) {
-        Arrays.stream(players).forEach(p -> dispatchCommands(getEntrance().onEnterCommands(), p));
+    public void onEnter(final Player... players) {
+        Arrays.stream(players).forEach(this::onEnter);
     }
 
     @Override
-    public void onExit(Player player) {
+    public void onExit(final Player player) {
+        if (player == null) return;
+
         SessionManager.getInstance()
                 .getSession(player.getUniqueId())
                 .stopSession();
+
+        player.teleportAsync(joinPoints.get(player.getUniqueId()));
     }
 
     @Override
-    public void onExit(Player... players) {
+    public void onExit(final Player... players) {
         Arrays.stream(players)
-                .map(Entity::getUniqueId)
-                .toList()
-                .forEach(player ->
-                        SessionManager.getInstance()
-                            .getSession(player)
-                            .stopSession());
+                .toList().forEach(this::onExit);
     }
 
     @Override

@@ -2,7 +2,10 @@ package com.littlesquad.dungeon.internal.commands;
 
 import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.Dungeon;
+import com.littlesquad.dungeon.api.entrance.ExitReason;
+import com.littlesquad.dungeon.api.session.DungeonSession;
 import com.littlesquad.dungeon.internal.DungeonManager;
+import com.littlesquad.dungeon.internal.SessionManager;
 import com.littlesquad.dungeon.placeholder.PlaceholderFormatter;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.party.AbstractParty;
@@ -44,7 +47,21 @@ public final class DungeonJoinCommand implements CommandExecutor, TabCompleter {
 
         switch (args.length) {
             case 0 -> p.sendMessage("Choose between subcommands");
-            case 1 -> p.sendMessage("Not enough commands");
+            case 1 -> {
+                final String argument = args[0];
+                switch (argument) {
+                    case "leave" -> {
+                        final DungeonSession session = SessionManager
+                                .getInstance()
+                                .getSession(p.getUniqueId());
+
+                        if (session != null) {
+                            session.getDungeon().onExit(p);
+                        } else p.sendMessage("You're not in a dungeon, what the fuck are you trying to do");
+                    }
+                    default -> p.sendMessage("Not a valid command");
+                }
+            }
             case 2 -> {
                 final String argument = args[0];
                 switch (argument) {
@@ -72,7 +89,7 @@ public final class DungeonJoinCommand implements CommandExecutor, TabCompleter {
 
                         } else switch (dungeonToJoin.tryEnter(p)) { // Else handle the response from tryEnter
                             case FAILURE_PER_LEVEL -> {
-                                p.sendMessage("You or your party don't have enough levels");
+                                p.sendMessage("Your level or your party level isn't enough");
 
                                 dungeonToJoin.getEntrance().levelFallbackCommands().forEach(cmd ->
                                         Bukkit.dispatchCommand(
@@ -97,6 +114,10 @@ public final class DungeonJoinCommand implements CommandExecutor, TabCompleter {
                                                 Bukkit.getConsoleSender(),
                                                 PlaceholderFormatter.formatPerPlayer(cmd, p)));
                             }
+                            case FAILURE_PER_SENDER_ALREADY_IN -> {
+                                p.sendMessage("You're already in a dungeon");
+                            }
+                            case FAILURE_PER_MEMBER_ALREADY_IN -> p.sendMessage("There's already a party member in");
                             case SUCCESS_PARTY -> {
 
                                 final AbstractParty playerParty = Main.getMMOCoreAPI()

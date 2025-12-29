@@ -48,7 +48,7 @@ entrance:
     party_minimum: 15
     # Commands to execute in case the player isn't allowed to enter for the 'level' limit
     fall_back_commands:
-      - "/kill %player%"
+      - "kill %player_name%"
   # Commands to execute in case the player successfully enters the dungeon
   successful_entrance_commands:
     - "tp %player_name% 127 180 900"

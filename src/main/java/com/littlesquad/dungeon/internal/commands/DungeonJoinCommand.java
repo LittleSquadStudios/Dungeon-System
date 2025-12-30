@@ -56,7 +56,12 @@ public final class DungeonJoinCommand implements CommandExecutor, TabCompleter {
                                 .getSession(p.getUniqueId());
 
                         if (session != null) {
-                            session.getDungeon().onExit(p);
+                            session.getDungeon()
+                                    .onExit(p);
+                            SessionManager
+                                    .getInstance()
+                                    .endSession(p.getUniqueId(),
+                                            ExitReason.QUIT);
                         } else p.sendMessage("You're not in a dungeon, what the fuck are you trying to do");
                     }
                     default -> p.sendMessage("Not a valid command");
@@ -114,9 +119,7 @@ public final class DungeonJoinCommand implements CommandExecutor, TabCompleter {
                                                 Bukkit.getConsoleSender(),
                                                 PlaceholderFormatter.formatPerPlayer(cmd, p)));
                             }
-                            case FAILURE_PER_SENDER_ALREADY_IN -> {
-                                p.sendMessage("You're already in a dungeon");
-                            }
+                            case FAILURE_PER_SENDER_ALREADY_IN -> p.sendMessage("You're already in a dungeon");
                             case FAILURE_PER_MEMBER_ALREADY_IN -> p.sendMessage("There's already a party member in");
                             case SUCCESS_PARTY -> {
 

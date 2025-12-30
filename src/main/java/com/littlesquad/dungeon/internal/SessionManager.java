@@ -46,7 +46,7 @@ public final class SessionManager {
                 onExpire.accept(playerId);
                 endSession(playerId, ExitReason.TIME_EXPIRED);
             }
-        }, duration, unit);
+        }, duration, unit); //TODO: Tener miglior traccia della task che si occupa di gestire la timed session, perché se viene trminata la session la task continua a esistere
 
     }
 

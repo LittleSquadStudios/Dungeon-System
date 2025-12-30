@@ -33,13 +33,13 @@ entrance:
     admin_permission: "azure_dungeon.admin"
     # Commands to execute in case the player isn't allowed to enter for the 'max_slots' limit
     fall_back_commands:
-      - "/kill %player%"
+      - "kill %player_name%"
   party:
     # Don't allow solo players to enter the dungeon if set to true
     required: false
     # Commands to execute in case the player isn't allowed to enter for the 'party' limit
     fall_back_commands:
-      - "/kill %player%"
+      - "kill %player_name%"
   level:
     # A solo player must have at least the specified level to enter the dungeon
     personal_minimum: 10

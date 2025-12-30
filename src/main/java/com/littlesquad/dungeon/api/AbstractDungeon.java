@@ -2,6 +2,7 @@ package com.littlesquad.dungeon.api;
 
 import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.entrance.EntryResponse;
+import com.littlesquad.dungeon.api.entrance.ExitReason;
 import com.littlesquad.dungeon.api.session.DungeonSession;
 import com.littlesquad.dungeon.internal.DungeonManager;
 import com.littlesquad.dungeon.internal.SessionManager;
@@ -227,6 +228,9 @@ public abstract class AbstractDungeon implements Dungeon {
                 return EntryResponse.SUCCESS_SOLO;
         }
 
+        System.out.println(SessionManager.getInstance()
+                .getSession(leader.getUniqueId()) != null);
+
         if (SessionManager.getInstance()
                 .getSession(leader.getUniqueId()) != null)
             return EntryResponse.FAILURE_PER_SENDER_ALREADY_IN;
@@ -328,6 +332,9 @@ public abstract class AbstractDungeon implements Dungeon {
         if (maxSlots == -1)
             return true;
 
+        System.out.println("Current players: " + status().currentPlayers());
+        System.out.println("Enough slots?: " + (status().currentPlayers() + incomingPlayers <= maxSlots));
+
         if (status().currentPlayers() + incomingPlayers <= maxSlots)
             return true;
 
@@ -383,8 +390,7 @@ public abstract class AbstractDungeon implements Dungeon {
         if (player == null) return;
 
         SessionManager.getInstance()
-                .getSession(player.getUniqueId())
-                .stopSession();
+                .endSession(player.getUniqueId(), ExitReason.QUIT);
 
         player.teleportAsync(joinPoints.get(player.getUniqueId()));
     }

@@ -28,6 +28,8 @@ public final class DungeonCommand implements CommandExecutor, TabCompleter {
     private final SecureRandom random = new SecureRandom();
     private final DungeonManager dungeonManager;
 
+    // TODO: migrare join features in un JoinCommandHandler
+
     public DungeonCommand(DungeonManager dungeonManager) {
         this.dungeonManager = dungeonManager;
     }
@@ -48,125 +50,14 @@ public final class DungeonCommand implements CommandExecutor, TabCompleter {
                     return EventCommandHandler.onTrigger(sender, args);
                 case "deactivate":
                     return EventCommandHandler.onDeactivate(sender, args);
+                case "join":
+                    return JoinCommandHandler.onJoin(sender, random, args);
+                case "leave":
+                    return JoinCommandHandler.onLeave(sender);
             }
         }
 
-        if (!(sender instanceof Player p))
-            return false;
-
-        switch (args.length) {
-            case 0 -> p.sendMessage("Choose between subcommands");
-            case 1 -> {
-                final String argument = args[0];
-                switch (argument) {
-                    case "leave" -> {
-                        final DungeonSession session = SessionManager
-                                .getInstance()
-                                .getSession(p.getUniqueId());
-
-                        if (session != null) {
-                            session.getDungeon()
-                                    .onExit(p);
-                            SessionManager
-                                    .getInstance()
-                                    .endSession(p.getUniqueId(),
-                                            ExitReason.QUIT);
-                        } else p.sendMessage("You're not in a dungeon, what the fuck are you trying to do");
-                    }
-                    default -> p.sendMessage("Not a valid command");
-                }
-            }
-            case 2 -> {
-                final String argument = args[0];
-                switch (argument) {
-                    case "join" -> {
-                        final String dungeonName = args[1];
-
-                        final Dungeon dungeonToJoin = DungeonManager
-                                .getDungeonManager()
-                                .getDungeon(dungeonName)
-                                .orElse(DungeonManager
-                                        .getDungeonManager()
-                                        .getAllDungeons()
-                                        .get(random.nextInt(0,
-                                                        DungeonManager
-                                                        .getDungeonManager()
-                                                        .getDungeonCount())
-                                        ));
-
-                        if (!dungeonName.equals(dungeonToJoin.id())) { // If dungeon is another so the one chosen by player does not exist then handle this
-
-                            p.sendMessage("This dungeon is not available, however you can try this out -> " +
-                                    dungeonToJoin.displayName() +
-                                    "with this id: " +
-                                    dungeonToJoin.id());
-
-                        } else switch (dungeonToJoin.tryEnter(p)) { // Else handle the response from tryEnter
-                            case FAILURE_PER_LEVEL -> {
-                                p.sendMessage("Your level or your party level isn't enough");
-
-                                dungeonToJoin.getEntrance().levelFallbackCommands().forEach(cmd ->
-                                        Bukkit.dispatchCommand(
-                                                Bukkit.getConsoleSender(),
-                                                PlaceholderFormatter.formatPerPlayer(cmd, p)));
-                            }
-                            case FAILURE_PER_DUNGEON_BLOCKED -> p.sendMessage("Dungeon is blocked");
-                            case FAILURE_PER_SLOTS -> {
-                                p.sendMessage("There's no space left");
-
-                                dungeonToJoin.getEntrance().maxSlotsFallbackCommands().forEach(cmd ->
-                                        Bukkit.dispatchCommand(
-                                                Bukkit.getConsoleSender(),
-                                                PlaceholderFormatter.formatPerPlayer(cmd, p)));
-                            }
-                            case FAILURE_PER_ALREADY_PROCESSING -> p.sendMessage("One of your teammate has already started dungeon join process");
-                            case FAILURE_PER_PARTY -> {
-                                p.sendMessage("Your party sucks");
-
-                                dungeonToJoin.getEntrance().partyFallbackCommands().forEach(cmd ->
-                                        Bukkit.dispatchCommand(
-                                                Bukkit.getConsoleSender(),
-                                                PlaceholderFormatter.formatPerPlayer(cmd, p)));
-                            }
-                            case FAILURE_PER_SENDER_ALREADY_IN -> p.sendMessage("You're already in a dungeon");
-                            case FAILURE_PER_MEMBER_ALREADY_IN -> p.sendMessage("There's already a party member in");
-                            case SUCCESS_PARTY -> {
-
-                                final AbstractParty playerParty = Main.getMMOCoreAPI()
-                                        .getPlayerData(p)
-                                        .getParty();
-
-                                if (playerParty == null) {
-                                    p.sendMessage("You should be in a party in order to join this dungeon!");
-                                    return false;
-                                }
-
-                                final Player[] partyMembers = playerParty.getOnlineMembers()
-                                        .stream()
-                                        .map(PlayerData::getPlayer)
-                                        .toArray(Player[]::new);
-
-                                if (partyMembers.length == 0) {
-                                    p.sendMessage("No party member is online!");
-                                    return false;
-                                }
-
-                                dungeonToJoin.onEnter(partyMembers);
-
-                            }
-                            case SUCCESS_SOLO -> {
-                                p.sendMessage("test");
-                                dungeonToJoin.onEnter(p);
-                            }
-                        }
-
-                    }
-                }
-            }
-            default -> System.out.println("Something");
-        }
-
-        return false;
+        return true;
     }
 
     @Override

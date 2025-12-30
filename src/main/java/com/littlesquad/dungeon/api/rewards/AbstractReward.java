@@ -40,10 +40,10 @@ public abstract class AbstractReward implements Reward {
         data.giveExperience(experience(), EXPSource.SOURCE);
 
         commands().forEach(cmd ->
-                Bukkit.dispatchCommand(
+                Bukkit.getScheduler().runTask(Main.getInstance(), () -> Bukkit.dispatchCommand(
                         Bukkit.getConsoleSender(),
                         PlaceholderFormatter.formatPerPlayer(cmd, player)
-                )
+                ))
         );
 
         for (ItemStack item : cachedItems.values()) {

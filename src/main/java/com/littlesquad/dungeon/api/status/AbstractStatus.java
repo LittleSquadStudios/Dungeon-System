@@ -32,79 +32,55 @@ public abstract class AbstractStatus implements Status {
 
     @EventHandler
     public void onPvp(final EntityDamageByEntityEvent e) {
-
         if (!(e.getDamager() instanceof Player damager) || !(e.getEntity() instanceof Player damaged)) {
             return;
         }
-
         if (isPlayerInDungeon
                 (damager.getUniqueId()) &&
                 isPlayerInDungeon(damaged.getUniqueId())) {
-
             if (isPvp) {
-
                 SessionManager.getInstance()
                         .getSession(damager.getUniqueId())
                         .addDamage(e.getFinalDamage());
-
                 SessionManager.getInstance()
                         .getSession(damaged.getUniqueId())
                         .addDamageTaken(e.getFinalDamage());
-
             } else e.setCancelled(true);
-
         }
-
     }
 
     //TODO: Registrare solo una volta l'evento e al suo interno delegare a due metodi: uno per il pve e uno per il pvp!
 
     @EventHandler
     public void onPve(final EntityDamageByEntityEvent e) {
-
         if (!(e.getDamager() instanceof Player damager)) {
             return;
         }
-
         if (isPlayerInDungeon
                 (damager.getUniqueId())) {
-
             if (e.getEntity() instanceof LivingEntity) {
-
                 SessionManager.getInstance()
                         .getSession(damager.getUniqueId())
                         .addDamage(e.getFinalDamage());
-
             }
-
         }
-
     }
 
     @EventHandler
     public void onEntityDeath(final EntityDeathEvent e) {
         final LivingEntity entity = e.getEntity();
-
         if (entity instanceof Player player) {
             if (isPlayerInDungeon(player.getUniqueId())) {
-
                 final DungeonSession session = SessionManager.getInstance().getSession(player.getUniqueId());
-
                 session.addDeath();
-
             }
             return;
         }
-
         final Player killer = entity.getKiller();
-
         if (killer != null && isPlayerInDungeon(killer.getUniqueId()))
             SessionManager.getInstance()
                     .getSession(killer.getUniqueId())
                     .addKill(1);
-
-
-
     }
 
 
@@ -122,11 +98,9 @@ public abstract class AbstractStatus implements Status {
 
     @Override
     public boolean isPartyInDungeon(AbstractParty party) {
-
         for (final PlayerData pd : party.getOnlineMembers())
             if (!isPlayerInDungeon(pd.getUniqueId()))
                 return false;
-
         return true;
     }
 
@@ -209,6 +183,27 @@ public abstract class AbstractStatus implements Status {
     @Override
     public int playerDeaths(UUID uuid) {
         return playerDeaths.get(uuid);
+    }
+
+    @Override
+    public int partyDeaths(AbstractParty party) {
+        return party.getOnlineMembers()
+                .stream()
+                .map(SynchronizedDataHolder::getUniqueId)
+                .mapToInt
+                        (uniqueId -> SessionManager.getInstance()
+                                .getSession(uniqueId)
+                                .deaths())
+                .sum();
+    }
+
+    @Override
+    public int totalDeaths() {
+        return SessionManager.getInstance()
+                .getSessions()
+                .stream()
+                .mapToInt(DungeonSession::deaths)
+                .sum();
     }
 
     @Override

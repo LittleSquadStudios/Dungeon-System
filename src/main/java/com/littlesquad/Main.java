@@ -35,8 +35,8 @@ public final class Main extends JavaPlugin {
                 Executors.newCachedThreadPool());
 
         FileManager.loadAll(getDataFolder())
-                .thenRunAsync(() -> {
-                    new PlaceholderHook().register();
+                .thenRun(() -> {
+                    System.out.println("Ciao bello");
                     messageProvider = new MessageProvider(FileManager.getMessages());
 
                     //TODO: Initialize main-config based services!
@@ -45,6 +45,10 @@ public final class Main extends JavaPlugin {
                     //      main-thread oppure rimane sul caller thread!!!
 
                     DungeonManager.getDungeonManager().initDungeons();
+
+                    if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+                        new PlaceholderHook().register();
+                    } else System.out.println("PlaceholderAPI not Hooked");
                 });
 
 

@@ -1,5 +1,6 @@
 package com.littlesquad.dungeon.internal.event;
 
+import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.boss.BossRoom;
 import com.littlesquad.dungeon.api.checkpoint.Checkpoint;
@@ -57,9 +58,10 @@ public final class ObjectiveEventImpl extends ObjectiveEvent {
                 .filter(this.players::remove)
                 .forEach(player -> {
                     for (final String command : commands)
-                        Bukkit.dispatchCommand(
+                        Bukkit.getScheduler().runTask(Main.getInstance(), () -> Bukkit.getScheduler().runTask(Main.getInstance(), () ->
+                                Bukkit.dispatchCommand(
                                 Bukkit.getConsoleSender(),
-                                PlaceholderFormatter.formatPerPlayer(command, player));
+                                PlaceholderFormatter.formatPerPlayer(command, player))));
                 });
     }
     public void deActiveFor (final Player... players) {

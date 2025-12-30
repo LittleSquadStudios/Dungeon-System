@@ -75,9 +75,9 @@ public abstract class AbstractBossRoom implements BossRoom {
         Arrays.stream(players)
                 .forEach(p -> accessDeniedCommands()
                         .parallelStream()
-                        .forEach(c -> Bukkit.dispatchCommand(
+                        .forEach(c -> Bukkit.getScheduler().runTask(Main.getInstance(), () -> Bukkit.dispatchCommand(
                                 Bukkit.getConsoleSender(),
-                                PlaceholderFormatter.formatPerPlayer(c, p))));
+                                PlaceholderFormatter.formatPerPlayer(c, p)))));
         waitingPlayers.addAll(l != null ? l : (l = Arrays.asList(players)));
         f: /* Check again for avoiding race conditions! */ {
             synchronized (playersIn) {
@@ -88,9 +88,9 @@ public abstract class AbstractBossRoom implements BossRoom {
                 Arrays.stream(players)
                         .forEach(p -> enqueuingCommands()
                                 .parallelStream()
-                                .forEach(c -> Bukkit.dispatchCommand(
+                                .forEach(c -> Bukkit.getScheduler().runTask(Main.getInstance(), () -> Bukkit.dispatchCommand(
                                         Bukkit.getConsoleSender(),
-                                        PlaceholderFormatter.formatPerPlayer(c, p))));
+                                        PlaceholderFormatter.formatPerPlayer(c, p)))));
                 getBoss().spawn();
             }
             return;

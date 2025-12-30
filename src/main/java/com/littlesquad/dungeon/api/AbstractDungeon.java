@@ -210,7 +210,7 @@ public abstract class AbstractDungeon implements Dungeon {
                 .map(String::trim)
                 .map(s -> s.startsWith("/") ? s.substring(1) : s)
                 .map(s -> PlaceholderFormatter.formatPerPlayer(s, p))
-                .forEach(cmd -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd));
+                .forEach(cmd -> Bukkit.getScheduler().runTask(Main.getInstance(), () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd)));
     }
 
     @Override

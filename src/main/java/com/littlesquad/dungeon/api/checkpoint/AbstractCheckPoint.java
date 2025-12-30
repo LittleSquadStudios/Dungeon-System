@@ -67,9 +67,11 @@ public abstract class AbstractCheckPoint implements Checkpoint {
             return;
         e.setCancelled(true);
         getRespawnCheckpoint().respawnAtCheckpoint(e.getPlayer());
-        onDeathCommands.forEach(command -> Bukkit.dispatchCommand(
+        onDeathCommands.forEach(command ->
+                Bukkit.getScheduler().runTask(Main.getInstance(), () ->
+                        Bukkit.dispatchCommand(
                 Bukkit.getConsoleSender(),
-                PlaceholderFormatter.formatPerPlayer(command, e.getPlayer())));
+                PlaceholderFormatter.formatPerPlayer(command, e.getPlayer()))));
     }
 
     public void close () {

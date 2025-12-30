@@ -3,6 +3,7 @@ package com.littlesquad.dungeon.internal;
 import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.boss.BossRoom;
 import com.littlesquad.dungeon.api.status.AbstractStatus;
+import net.Indyuce.mmocore.party.AbstractParty;
 
 import java.util.List;
 

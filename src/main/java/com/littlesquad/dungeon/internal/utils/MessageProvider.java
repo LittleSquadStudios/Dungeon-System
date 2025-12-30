@@ -58,6 +58,7 @@ public final class MessageProvider {
             sender.sendMessage(getPrefix() + getMessage(path));
         else sender.sendMessage(getConsolePrefix() + MessageProvider.removeColors(getMessage(path)));
     }
+
     public void sendMessageInCommand (final CommandSender sender,
                                       final String message) {
         if (message.isEmpty())

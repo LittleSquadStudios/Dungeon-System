@@ -71,9 +71,10 @@ public final class TimedEventImpl extends TimedEvent {
                     this.players.computeIfAbsent(player, _ -> scheduler.schedule(() -> {
                         if (this.players.remove(player) != null)
                             for (final String command : commands)
-                                Bukkit.dispatchCommand(
-                                        Bukkit.getConsoleSender(),
-                                        PlaceholderFormatter.formatPerPlayer(command, player));
+                                Bukkit.getScheduler().runTask(Main.getInstance(), () ->
+                                        Bukkit.getScheduler().runTask(Main.getInstance(), () -> Bukkit.dispatchCommand(
+                                            Bukkit.getConsoleSender(),
+                                            PlaceholderFormatter.formatPerPlayer(command, player))));
                             },
                             isFixed ? timeAmount : new Random(System.nanoTime()).nextLong(timeUnit.toMillis(timeAmount)),
                             isFixed ? timeUnit : TimeUnit.MILLISECONDS));

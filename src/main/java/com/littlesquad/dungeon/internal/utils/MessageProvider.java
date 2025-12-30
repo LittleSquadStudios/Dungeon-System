@@ -1,6 +1,9 @@
 package com.littlesquad.dungeon.internal.utils;
 
+import com.littlesquad.Main;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 
 public final class MessageProvider {
     private final FileConfiguration messageConfig;
@@ -9,13 +12,27 @@ public final class MessageProvider {
     private final String consolePrefix;
 
     private final String enqueuedForBossRoom;
+    private final String eventTriggeredForParty;
+    private final String eventTriggeredForPlayer;
+    private final String eventDeactivated;
 
     public MessageProvider (final FileConfiguration messageConfig) {
         this.messageConfig = messageConfig;
-        prefix = messageConfig.getString("prefix", "");
+        prefix = messageConfig
+                .getString("prefix", "")
+                .replaceAll("&", "§");
         consolePrefix = removeColors(prefix);
         enqueuedForBossRoom = messageConfig
                 .getString("boss.enqueued", "")
+                .replaceAll("&", "§");
+        eventTriggeredForParty = messageConfig
+                .getString("event.event_triggered_for_party", "")
+                .replaceAll("&", "§");
+        eventTriggeredForPlayer = messageConfig
+                .getString("event.event_triggered_for_player", "")
+                .replaceAll("&", "§");
+        eventDeactivated = messageConfig
+                .getString("event.event_deactivated", "")
                 .replaceAll("&", "§");
     }
 
@@ -31,11 +48,35 @@ public final class MessageProvider {
     public String getConsolePrefix () {
         return consolePrefix;
     }
-    private static String removeColors (final String s) {
-        return s.replaceAll("§[a-fA-F0-9]", "");
+    public static String removeColors (final String s) {
+        return s.replaceAll("§|&[a-fA-F0-9]", "");
+    }
+
+    public void sendErrorInCommand (final CommandSender sender,
+                                    final String path) {
+        if (sender instanceof Player)
+            sender.sendMessage(getPrefix() + getMessage(path));
+        else sender.sendMessage(getConsolePrefix() + MessageProvider.removeColors(getMessage(path)));
+    }
+    public void sendMessageInCommand (final CommandSender sender,
+                                      final String message) {
+        if (message.isEmpty())
+            return;
+        if (sender instanceof Player)
+            sender.sendMessage(getPrefix() + message);
+        else sender.sendMessage(getConsolePrefix() + MessageProvider.removeColors(message));
     }
 
     public String getEnqueuedForBossRoom () {
         return enqueuedForBossRoom;
+    }
+    public String getEventTriggeredForParty () {
+        return eventTriggeredForParty;
+    }
+    public String getEventTriggeredForPlayer () {
+        return eventTriggeredForPlayer;
+    }
+    public String getEventDeactivated () {
+        return eventDeactivated;
     }
 }

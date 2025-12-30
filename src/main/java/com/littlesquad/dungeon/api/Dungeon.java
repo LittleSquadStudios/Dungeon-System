@@ -62,6 +62,7 @@ public interface Dungeon {
     Entrance getEntrance();
 
     Event[] getEvents();
+    Event getEvent(final String id);
 
     List<Reward> rewards();
 

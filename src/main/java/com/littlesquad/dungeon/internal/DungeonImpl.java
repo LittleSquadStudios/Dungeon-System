@@ -14,6 +14,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class DungeonImpl extends AbstractDungeon {
 
@@ -26,6 +27,7 @@ public final class DungeonImpl extends AbstractDungeon {
     private final Status status;
     private final List<Reward> rewards;
     private final Event[] events;
+    private final Map<String, Event> eventMap;
     private final Checkpoint[] checkpoints;
 
     public DungeonImpl(final DungeonParser parser) {
@@ -49,6 +51,9 @@ public final class DungeonImpl extends AbstractDungeon {
         this.status = new StatusImpl(flags.contains(TypeFlag.PVP_ENABLED), this);
         this.rewards = parser.getRewards();
         this.events = parser.getEvents(this);
+        eventMap = new ConcurrentHashMap<>(events.length);
+        for (final Event event : events)
+            eventMap.put(event.getID(), event);
         this.checkpoints = parser.getCheckpoints(this);
 
     }
@@ -81,6 +86,11 @@ public final class DungeonImpl extends AbstractDungeon {
     @Override
     public Event[] getEvents() {
         return events;
+    }
+
+    @Override
+    public Event getEvent (final String id) {
+        return eventMap.get(id);
     }
 
     @Override

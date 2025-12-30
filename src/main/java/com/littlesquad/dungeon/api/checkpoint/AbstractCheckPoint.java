@@ -62,6 +62,9 @@ public abstract class AbstractCheckPoint implements Checkpoint {
     @SuppressWarnings("unused")
     @EventHandler(priority = EventPriority.LOW)
     public final void onPlayerDeath (final PlayerDeathEvent e) {
+        final Player player = e.getEntity();
+        if (CheckPointManager.get(player.getUniqueId()) != this)
+            return;
         e.setCancelled(true);
         getRespawnCheckpoint().respawnAtCheckpoint(e.getPlayer());
         onDeathCommands.forEach(command -> Bukkit.dispatchCommand(

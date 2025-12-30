@@ -1,4 +1,4 @@
-prefix: "§7[§bAzure§fMC§7] §8>> §r"
+prefix: "&7[&bAzure&fMC&7] &8>> &r"
 
 config:
   dungeon:
@@ -9,3 +9,18 @@ config:
 
 boss:
   enqueued: "&eThe boss room is full, you have been enqueued, wait until it becomes available. &6You will receive an alert right before it happens!"
+
+event:
+  # The errors are not cached, so take in account to not receive any of these in production!
+  wrong_arguments: "&cThe command didn't respect its syntax: &6/dungeon trigger <event> <player>"
+  inexistent_player: "&cThe given player resulted inexistent!"
+  offline_player: "&cThe given player resulted to be offline!"
+  session_not_found: "&cThe player have to be in a dungeon for starting an event!"
+  event_not_found: "&cThis method doesn't exist!"
+  cannot_deactivate: "&cThis type of event cannot be deactivated"
+  # Erasing or commenting the sequent messages will make them simply not logged
+  # Informative messages like these are cached, useful in case of debugging, but a possible overhead
+  # in production since there is always a logging overhead
+  event_triggered_for_player: "&aEvent triggered successfully"
+  event_triggered_for_party: "&aEvent triggered successfully for the party"
+  event_deactivated: "&aEvent deactivated successfully"

@@ -36,11 +36,15 @@ public final class Main extends JavaPlugin {
 
         FileManager.loadAll(getDataFolder())
                 .thenRunAsync(() -> {
-
-                    //TODO: Register all the services
-                    DungeonManager.getDungeonManager().initDungeons();
-
                     new PlaceholderHook().register();
+                    messageProvider = new MessageProvider(FileManager.getMessages());
+
+                    //TODO: Initialize main-config based services!
+
+                    //TODO: Aggiungere debugging nei comandi per capire se il dispatch command schedula sul
+                    //      main-thread oppure rimane sul caller thread!!!
+
+                    DungeonManager.getDungeonManager().initDungeons();
                 });
 
 

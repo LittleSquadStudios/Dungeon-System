@@ -2,7 +2,7 @@ package com.littlesquad;
 
 import com.littlesquad.dungeon.database.MySQLConnector;
 import com.littlesquad.dungeon.internal.DungeonManager;
-import com.littlesquad.dungeon.internal.commands.DungeonJoinCommand;
+import com.littlesquad.dungeon.internal.commands.DungeonCommand;
 import com.littlesquad.dungeon.internal.event.TimedEventImpl;
 import com.littlesquad.dungeon.internal.file.FileManager;
 import com.littlesquad.dungeon.internal.utils.MessageProvider;
@@ -10,11 +10,9 @@ import com.littlesquad.dungeon.placeholder.PlaceholderHook;
 import net.Indyuce.mmocore.api.MMOCoreAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
-import org.bukkit.command.TabCompleter;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.logging.Logger;
 
 public final class Main extends JavaPlugin {
@@ -49,7 +47,7 @@ public final class Main extends JavaPlugin {
 
 
         final PluginCommand mainCommand = Bukkit.getPluginCommand("dungeon");
-        final DungeonJoinCommand exTabCompleter = new DungeonJoinCommand(DungeonManager.getDungeonManager());
+        final DungeonCommand exTabCompleter = new DungeonCommand(DungeonManager.getDungeonManager());
 
         if (mainCommand != null) {
             mainCommand.setExecutor(exTabCompleter);

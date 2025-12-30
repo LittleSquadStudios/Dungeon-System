@@ -23,12 +23,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public final class DungeonJoinCommand implements CommandExecutor, TabCompleter {
+public final class DungeonCommand implements CommandExecutor, TabCompleter {
 
     private final SecureRandom random = new SecureRandom();
     private final DungeonManager dungeonManager;
 
-    public DungeonJoinCommand(DungeonManager dungeonManager) {
+    public DungeonCommand(DungeonManager dungeonManager) {
         this.dungeonManager = dungeonManager;
     }
 
@@ -41,6 +41,15 @@ public final class DungeonJoinCommand implements CommandExecutor, TabCompleter {
 
         if(!command.getName().equals("dungeon"))
             return false;
+
+        if (args.length > 0) {
+            switch (args[0].toLowerCase()) {
+                case "trigger":
+                    return EventCommandHandler.onTrigger(sender, args);
+                case "deactivate":
+                    return EventCommandHandler.onDeactivate(sender, args);
+            }
+        }
 
         if (!(sender instanceof Player p))
             return false;

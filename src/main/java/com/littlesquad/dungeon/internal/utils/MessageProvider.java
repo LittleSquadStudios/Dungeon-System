@@ -1,6 +1,5 @@
 package com.littlesquad.dungeon.internal.utils;
 
-import com.littlesquad.Main;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;

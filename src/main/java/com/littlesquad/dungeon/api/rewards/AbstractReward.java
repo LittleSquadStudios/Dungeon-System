@@ -1,15 +1,11 @@
 package com.littlesquad.dungeon.api.rewards;
 
-import com.littlesquad.Main;
-import com.littlesquad.dungeon.placeholder.PlaceholderFormatter;
-import net.Indyuce.mmocore.MMOCore;
+import com.littlesquad.dungeon.internal.utils.CommandUtils;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.experience.EXPSource;
-import net.Indyuce.mmoitems.ItemStats;
 import net.Indyuce.mmoitems.api.Type;
 import net.Indyuce.mmoitems.api.item.mmoitem.MMOItem;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -17,11 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public abstract class AbstractReward implements Reward {
 
@@ -39,12 +31,10 @@ public abstract class AbstractReward implements Reward {
 
         data.giveExperience(experience(), EXPSource.SOURCE);
 
-        commands().forEach(cmd ->
-                Bukkit.getScheduler().runTask(Main.getInstance(), () -> Bukkit.dispatchCommand(
-                        Bukkit.getConsoleSender(),
-                        PlaceholderFormatter.formatPerPlayer(cmd, player)
-                ))
-        );
+        CommandUtils.executeMulti(
+                Bukkit.getConsoleSender(),
+                commands(),
+                player);
 
         for (ItemStack item : cachedItems.values()) {
             player.getInventory().addItem(item.clone());

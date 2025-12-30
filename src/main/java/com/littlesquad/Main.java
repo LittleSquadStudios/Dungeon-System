@@ -34,21 +34,16 @@ public final class Main extends JavaPlugin {
                 "Fa003O25QaNrHfIRDKNGF4MJ",
                 Executors.newCachedThreadPool());
 
+        if (!Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")
+                || !new PlaceholderHook().register())
+            getDungeonLogger().warning("PlaceholderAPI not Hooked");
         FileManager.loadAll(getDataFolder())
-                .thenRun(() -> {
-                    System.out.println("Ciao bello");
+                .thenRunAsync(() -> {
                     messageProvider = new MessageProvider(FileManager.getMessages());
 
                     //TODO: Initialize main-config based services!
 
-                    //TODO: Aggiungere debugging nei comandi per capire se il dispatch command schedula sul
-                    //      main-thread oppure rimane sul caller thread!!!
-
                     DungeonManager.getDungeonManager().initDungeons();
-
-                    if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-                        new PlaceholderHook().register();
-                    } else System.out.println("PlaceholderAPI not Hooked");
                 });
 
 

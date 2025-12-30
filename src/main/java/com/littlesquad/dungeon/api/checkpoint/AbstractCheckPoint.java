@@ -2,7 +2,7 @@ package com.littlesquad.dungeon.api.checkpoint;
 
 import com.littlesquad.Main;
 import com.littlesquad.dungeon.internal.checkpoint.CheckPointManager;
-import com.littlesquad.dungeon.placeholder.PlaceholderFormatter;
+import com.littlesquad.dungeon.internal.utils.CommandUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -67,11 +67,10 @@ public abstract class AbstractCheckPoint implements Checkpoint {
             return;
         e.setCancelled(true);
         getRespawnCheckpoint().respawnAtCheckpoint(e.getPlayer());
-        onDeathCommands.forEach(command ->
-                Bukkit.getScheduler().runTask(Main.getInstance(), () ->
-                        Bukkit.dispatchCommand(
+        CommandUtils.executeMulti(
                 Bukkit.getConsoleSender(),
-                PlaceholderFormatter.formatPerPlayer(command, e.getPlayer()))));
+                onDeathCommands,
+                e.getPlayer());
     }
 
     public void close () {

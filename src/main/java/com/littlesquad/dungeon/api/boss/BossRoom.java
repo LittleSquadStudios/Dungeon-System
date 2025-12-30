@@ -1,7 +1,6 @@
 package com.littlesquad.dungeon.api.boss;
 
 import com.littlesquad.dungeon.api.rewards.Reward;
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.util.List;

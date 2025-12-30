@@ -6,7 +6,7 @@ import com.littlesquad.dungeon.api.entrance.ExitReason;
 import com.littlesquad.dungeon.api.session.DungeonSession;
 import com.littlesquad.dungeon.internal.DungeonManager;
 import com.littlesquad.dungeon.internal.SessionManager;
-import com.littlesquad.dungeon.placeholder.PlaceholderFormatter;
+import com.littlesquad.dungeon.internal.utils.CommandUtils;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.party.AbstractParty;
 import org.bukkit.Bukkit;
@@ -69,29 +69,29 @@ public final class JoinCommandHandler {
             case FAILURE_PER_LEVEL -> {
                 p.sendMessage("Your level or your party level isn't enough");
 
-                dungeonToJoin.getEntrance().levelFallbackCommands().forEach(cmd ->
-                        Bukkit.getScheduler().runTask(Main.getInstance(), () -> Bukkit.dispatchCommand(
-                                Bukkit.getConsoleSender(),
-                                PlaceholderFormatter.formatPerPlayer(cmd, p))));
+                CommandUtils.executeMulti(
+                        Bukkit.getConsoleSender(),
+                        dungeonToJoin.getEntrance().levelFallbackCommands(),
+                        p);
             }
             case FAILURE_PER_DUNGEON_BLOCKED -> p.sendMessage("Dungeon is blocked");
             case FAILURE_PER_SLOTS -> {
                 p.sendMessage("There's no space left");
 
-                dungeonToJoin.getEntrance().maxSlotsFallbackCommands().forEach(cmd ->
-                        Bukkit.getScheduler().runTask(Main.getInstance(), () -> Bukkit.dispatchCommand(
-                                Bukkit.getConsoleSender(),
-                                PlaceholderFormatter.formatPerPlayer(cmd, p))));
+                CommandUtils.executeMulti(
+                        Bukkit.getConsoleSender(),
+                        dungeonToJoin.getEntrance().maxSlotsFallbackCommands(),
+                        p);
             }
             case FAILURE_PER_ALREADY_PROCESSING ->
                     p.sendMessage("One of your teammate has already started dungeon join process");
             case FAILURE_PER_PARTY -> {
                 p.sendMessage("Your party sucks");
 
-                dungeonToJoin.getEntrance().partyFallbackCommands().forEach(cmd ->
-                        Bukkit.getScheduler().runTask(Main.getInstance(), () -> Bukkit.dispatchCommand(
-                                Bukkit.getConsoleSender(),
-                                PlaceholderFormatter.formatPerPlayer(cmd, p))));
+                CommandUtils.executeMulti(
+                        Bukkit.getConsoleSender(),
+                        dungeonToJoin.getEntrance().partyFallbackCommands(),
+                        p);
             }
             case FAILURE_PER_SENDER_ALREADY_IN -> p.sendMessage("You're already in a dungeon");
             case FAILURE_PER_MEMBER_ALREADY_IN -> p.sendMessage("There's already a party member in");

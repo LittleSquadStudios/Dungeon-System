@@ -3,7 +3,6 @@ package com.littlesquad.dungeon.api.session;
 import com.littlesquad.dungeon.api.Dungeon;
 
 import java.time.Instant;
-import java.util.Date;
 import java.util.UUID;
 
 /**

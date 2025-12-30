@@ -1,11 +1,13 @@
 package com.littlesquad.dungeon.api.boss;
 
 import com.littlesquad.Main;
+import com.littlesquad.dungeon.internal.utils.CommandUtils;
 import com.littlesquad.dungeon.placeholder.PlaceholderFormatter;
 import io.lumine.mythic.lib.data.SynchronizedDataHolder;
 import net.Indyuce.mmocore.party.AbstractParty;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Arrays;
 import java.util.List;
@@ -72,12 +74,10 @@ public abstract class AbstractBossRoom implements BossRoom {
             br.join(players);
             return;
         }
-        Arrays.stream(players)
-                .forEach(p -> accessDeniedCommands()
-                        .parallelStream()
-                        .forEach(c -> Bukkit.getScheduler().runTask(Main.getInstance(), () -> Bukkit.dispatchCommand(
-                                Bukkit.getConsoleSender(),
-                                PlaceholderFormatter.formatPerPlayer(c, p)))));
+        final BukkitTask task = CommandUtils.executeMultiForMulti(
+                Bukkit.getConsoleSender(),
+                accessDeniedCommands(),
+                players);
         waitingPlayers.addAll(l != null ? l : (l = Arrays.asList(players)));
         f: /* Check again for avoiding race conditions! */ {
             synchronized (playersIn) {
@@ -85,12 +85,12 @@ public abstract class AbstractBossRoom implements BossRoom {
                     break f;
             }
             if (waitingPlayers.removeAll(l)) {
-                Arrays.stream(players)
-                        .forEach(p -> enqueuingCommands()
-                                .parallelStream()
-                                .forEach(c -> Bukkit.getScheduler().runTask(Main.getInstance(), () -> Bukkit.dispatchCommand(
-                                        Bukkit.getConsoleSender(),
-                                        PlaceholderFormatter.formatPerPlayer(c, p)))));
+                task.cancel();
+                if (!task.isCancelled())
+                    CommandUtils.executeMultiForMulti(
+                            Bukkit.getConsoleSender(),
+                            enqueuingCommands(),
+                            players);
                 getBoss().spawn();
             }
             return;

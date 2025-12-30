@@ -3,7 +3,7 @@ package com.littlesquad.dungeon.internal.event;
 import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.event.TimedEvent;
-import com.littlesquad.dungeon.placeholder.PlaceholderFormatter;
+import com.littlesquad.dungeon.internal.utils.CommandUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -70,11 +70,10 @@ public final class TimedEventImpl extends TimedEvent {
                 .forEach(player -> {
                     this.players.computeIfAbsent(player, _ -> scheduler.schedule(() -> {
                         if (this.players.remove(player) != null)
-                            for (final String command : commands)
-                                Bukkit.getScheduler().runTask(Main.getInstance(), () ->
-                                        Bukkit.getScheduler().runTask(Main.getInstance(), () -> Bukkit.dispatchCommand(
-                                            Bukkit.getConsoleSender(),
-                                            PlaceholderFormatter.formatPerPlayer(command, player))));
+                            CommandUtils.executeMulti(
+                                    Bukkit.getConsoleSender(),
+                                    commands,
+                                    player);
                             },
                             isFixed ? timeAmount : new Random(System.nanoTime()).nextLong(timeUnit.toMillis(timeAmount)),
                             isFixed ? timeUnit : TimeUnit.MILLISECONDS));

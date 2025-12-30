@@ -1,11 +1,5 @@
 package com.littlesquad.dungeon.api.entrance;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 /**
  * This class represents a fixed
  * set composed by types of failure that may happen when

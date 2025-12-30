@@ -3,11 +3,8 @@ package com.littlesquad.dungeon.internal;
 import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.internal.file.FileManager;
 
-import java.net.URI;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 

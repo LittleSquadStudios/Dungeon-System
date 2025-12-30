@@ -1,20 +1,11 @@
 package com.littlesquad.dungeon.internal.commands;
 
-import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.Dungeon;
-import com.littlesquad.dungeon.api.entrance.ExitReason;
-import com.littlesquad.dungeon.api.session.DungeonSession;
 import com.littlesquad.dungeon.internal.DungeonManager;
-import com.littlesquad.dungeon.internal.SessionManager;
-import com.littlesquad.dungeon.placeholder.PlaceholderFormatter;
-import net.Indyuce.mmocore.api.player.PlayerData;
-import net.Indyuce.mmocore.party.AbstractParty;
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,8 +18,6 @@ public final class DungeonCommand implements CommandExecutor, TabCompleter {
 
     private final SecureRandom random = new SecureRandom();
     private final DungeonManager dungeonManager;
-
-    // TODO: migrare join features in un JoinCommandHandler
 
     public DungeonCommand(DungeonManager dungeonManager) {
         this.dungeonManager = dungeonManager;

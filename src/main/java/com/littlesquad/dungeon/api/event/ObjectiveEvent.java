@@ -38,6 +38,8 @@ public abstract non-sealed class ObjectiveEvent implements Event {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public final void onEntityDeath (final EntityDeathEvent e) {
+        System.out.println("CCC");
+
         requirements.updateRequirements(RequirementType.SLAY, e);
     }
     @EventHandler(priority = EventPriority.HIGHEST)

@@ -81,6 +81,8 @@ public final class ObjectiveEventImpl extends ObjectiveEvent {
         Arrays.stream(players)
                 .parallel()
                 .forEach(this.players::add);
+
+        System.out.println("BBBB");
     }
     public boolean isActiveFor (final Player... players) {
         return Arrays.stream(players)

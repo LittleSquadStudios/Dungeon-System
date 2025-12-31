@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.List;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public final class CommandUtils {
@@ -16,42 +17,60 @@ public final class CommandUtils {
     public static BukkitTask execute (final CommandSender sender,
                                       final String c,
                                       final Player p) {
+        final String s = PlaceholderFormatter.formatPerPlayer(c, p);
         return Bukkit.getScheduler().runTask(
                 Main.getInstance(),
-                () -> Bukkit.dispatchCommand(
-                        sender,
-                        PlaceholderFormatter.formatPerPlayer(c, p)));
+                () -> Bukkit.dispatchCommand(sender, s));
     }
 
     public static BukkitTask executeMulti (final CommandSender sender,
-                                     final List<String> cl,
-                                     final Player p) {
+                                           final List<String> cl,
+                                           final Player p) {
+        IntStream.range(0, cl.size())
+                .parallel()
+                .forEach(i -> cl.set(
+                        i,
+                        PlaceholderFormatter.formatPerPlayer(
+                                cl.get(i),
+                                p)));
         return Bukkit.getScheduler().runTask(
                 Main.getInstance(),
                 () -> cl.forEach(c -> Bukkit.dispatchCommand(
                         sender,
-                        PlaceholderFormatter.formatPerPlayer(c, p))));
+                        c)));
     }
 
     public static BukkitTask executeForMulti (final CommandSender sender,
-                                        final String c,
-                                        final Player... ps) {
+                                              final String c,
+                                              final Player... ps) {
+        final String[] cl = Stream
+                .of(ps)
+                .parallel()
+                .map(p -> PlaceholderFormatter.formatPerPlayer(c, p))
+                .toArray(String[]::new);
         return Bukkit.getScheduler().runTask(
                 Main.getInstance(),
-                () -> Stream.of(ps).forEach(p -> Bukkit.dispatchCommand(
-                        sender,
-                        PlaceholderFormatter.formatPerPlayer(c, p))));
+                () -> Stream.of(cl)
+                        .forEach(cmd -> Bukkit.dispatchCommand(
+                                sender,
+                                cmd)));
     }
 
     public static BukkitTask executeMultiForMulti (final CommandSender sender,
-                                             final List<String> cl,
-                                             final Player... ps) {
+                                                   final List<String> cl,
+                                                   final Player... ps) {
+        final String[] cs = cl
+                .parallelStream()
+                .flatMap(c -> Stream
+                        .of(ps)
+                        .parallel()
+                        .map(p -> PlaceholderFormatter.formatPerPlayer(c, p)))
+                .toArray(String[]::new);
         return Bukkit.getScheduler().runTask(
                 Main.getInstance(),
-                () -> cl.forEach(c -> Stream
-                        .of(ps)
-                        .forEach(p -> Bukkit.dispatchCommand(
+                () -> Stream.of(cs)
+                        .forEach(cmd -> Bukkit.dispatchCommand(
                                 sender,
-                                PlaceholderFormatter.formatPerPlayer(c, p)))));
+                                cmd)));
     }
 }

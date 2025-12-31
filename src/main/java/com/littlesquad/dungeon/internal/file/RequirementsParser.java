@@ -318,6 +318,9 @@ public final class RequirementsParser {
             final ParticipantRequirements req;
             if ((req = switch (type) {
                 case SLAY -> {
+
+                    System.out.println("DD");
+
                     final ParticipantRequirements requirements;
                     {
                         Object ent;
@@ -334,6 +337,9 @@ public final class RequirementsParser {
                                 && (ent = proj
                                 .getShooter())
                                 instanceof Player))) {
+
+                            System.out.println("EE");
+
                             final Player player;
                             final AbstractParty party;
                             if (!event.isActiveFor((party = Main
@@ -348,6 +354,9 @@ public final class RequirementsParser {
                                     .toArray(Player[]::new)
                                     : new Player[]{player}))
                                 yield null;
+
+                            System.out.println("F");
+
                             requirements = participantRequirements.computeIfAbsent(
                                     party != null ? party : player,
                                     ParticipantRequirements::new);

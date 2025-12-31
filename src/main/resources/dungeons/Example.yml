@@ -55,7 +55,7 @@ entrance:
 
 events:
   # Any event in this section defines its identifier that will be used in commands
-  # Example: /dungeon trigger 'first_event' %player%
+  # Example: /dungeon trigger 'first_event' %player_name%
   first_event:
     # The type of event: [TIMED, OBJECTIVE, STRUCTURAL]
     type: TIMED
@@ -66,9 +66,9 @@ events:
       amount: 1
       unit: MINUTES
     commands:
-      - "/say TIME!"
+      - "say TIME!"
   # The objective is checked ONLY AFTER TRIGGERING THE EVENT!
-  # So a command like "/dungeon trigger 'objective_event' %player%" have to be used before
+  # So a command like "/dungeon trigger 'objective_event' %player_name%" have to be used before
   objective_event:
     type: OBJECTIVE
     # Supported options: [ALL, ANY]
@@ -92,7 +92,7 @@ events:
     # Same for the boss-room
     boss-room: ""
     commands:
-      - "/say OBJECTIVE!"
+      - "say OBJECTIVE!"
   # A structural event is a special type of event that modify the structure of a dungeon through
   # any environmental change that is conditioned by other structural events, example:
   #
@@ -121,7 +121,7 @@ events:
     conditioned_by:
       - "structural_event_B"
     commands:
-      - "/say STRUCTURAL!"
+      - "say STRUCTURAL!"
 
 # The checkpoints are like save-points that gets activated once a OBJECTIVE
 # event gets fired
@@ -141,7 +141,7 @@ checkpoints:
     # May be specified a precedent checkpoint too if this is only a 'technical' checkpoint
     respawn_at_checkpoint: "example"
     on_death_commands:
-      - "/say MORTO!"
+      - "say MORTO!"
 
 boss_rooms:
   # This might be named as you want, the only requirement is to make it different from the others
@@ -150,7 +150,7 @@ boss_rooms:
     max_players_in: 10
     max_one_party_at_a_time: true
     access_denied_commands:
-      - "/say NO!"
+      - "say NO!"
     # If not empty, the player will try to enter the given boss room in case of failure
     fallback_boss_room: ""
     # If the players can't immediately join this boss room and the 'fallback_boss_room'
@@ -158,7 +158,7 @@ boss_rooms:
     # kicked, so when the players will finally be allowed to access the boss room
     # the sequent commands will be executed!
     enqueuing_commands:
-      - "/say NOW YES!"
+      - "say NOW YES!"
     # Configuration of the boss residing in the boss room
     boss:
       base_level: 50
@@ -210,4 +210,4 @@ rewards: # Default section for every reward
         loot:
         # Configure like in 'items', indeed that will have the same parser
     commands:
-      - "/say BRAVO %player%!"
+      - "say BRAVO %player_name%!"

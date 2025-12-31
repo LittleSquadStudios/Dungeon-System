@@ -22,7 +22,6 @@ public final class EventCommandHandler {
     private static Event eventChecks (final @NotNull CommandSender sender,
                                       final @NotNull String@NotNull[] args,
                                       final AtomicReference<OfflinePlayer> p) {
-        System.out.println("Cazzo 0");
         if (args.length != 3) {
             Main.getMessageProvider().sendErrorInCommand(
                     sender,
@@ -30,7 +29,6 @@ public final class EventCommandHandler {
             return null;
         }
         final OfflinePlayer player;
-        System.out.println("Cazzo 1");
         if (!(player = Bukkit
                 .getOfflinePlayer(args[2]))
                 .hasPlayedBefore()) {
@@ -41,7 +39,6 @@ public final class EventCommandHandler {
         }
         p.setPlain(player);
         final DungeonSession session;
-        System.out.println("Cazzo 2");
         if ((session = SessionManager
                 .getInstance()
                 .getSession(player.getUniqueId()))
@@ -52,7 +49,6 @@ public final class EventCommandHandler {
             return null;
         }
         final Event event;
-        System.out.println("Cazzo 3");
         if ((event = session
                 .getDungeon()
                 .getEvent(args[1]))
@@ -68,19 +64,16 @@ public final class EventCommandHandler {
     @SuppressWarnings("SameReturnValue")
     static boolean onTrigger (final @NotNull CommandSender sender,
                               final @NotNull String@NotNull[] args) {
-        System.out.println("Cazzo 1 - 0");
         final AtomicReference<OfflinePlayer> pr = new AtomicReference<>();
         final Event event;
         if ((event = eventChecks(sender, args, pr)) == null)
             return false;
         final OfflinePlayer player;
         final AbstractParty party;
-        System.out.println("Cazzo 1 - 1");
         if ((party = Main
                 .getMMOCoreAPI()
                 .getPlayerData(player = pr.getPlain())
                 .getParty()) != null) {
-            System.out.println("Cazzo 1 - 2");
             event.triggerActivation(party
                     .getOnlineMembers()
                     .parallelStream()
@@ -90,11 +83,8 @@ public final class EventCommandHandler {
                     sender,
                     Main.getMessageProvider().getEventTriggeredForParty());
         } else {
-            System.out.println("Cazzo 1 - 3");
             final Player p;
-            System.out.println("Cazzo 1 - 4");
             if ((p = player.getPlayer()) == null) {
-                System.out.println("Cazzo 1 - 5");
                 Main.getMessageProvider().sendErrorInCommand(
                         sender,
                         "event.offline_player");

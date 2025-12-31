@@ -54,7 +54,7 @@ public final class MessageProvider {
     public void sendErrorInCommand (final CommandSender sender,
                                     final String path) {
         if (sender instanceof Player)
-            sender.sendMessage(getPrefix() + getMessage(path));
+            sender.sendMessage(getPrefix() + getMessage(path).replaceAll("&", "§"));
         else sender.sendMessage(getConsolePrefix() + MessageProvider.removeColors(getMessage(path)));
     }
 

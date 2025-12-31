@@ -68,4 +68,6 @@ public interface Status extends Listener {
      * @author LittleSquad
      * */
     List<BossRoom> bossRooms();
+
+    void shutdown();
 }

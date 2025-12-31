@@ -60,14 +60,13 @@ public final class MySQLConnector {
                           final String password,
                           final ExecutorService ex) {
         poolConfig = new HikariConfig();
-        poolConfig.setDriverClassName("org.mariadb.jdbc.Driver");
         poolConfig.setCredentials(Credentials.of(userName, password));
         poolConfig.addDataSourceProperty("serverName", ipAddr);
         poolConfig.addDataSourceProperty("portNumber", port);
         poolConfig.addDataSourceProperty("databaseName", databaseName);
 
         poolConfig.setJdbcUrl(
-                "jdbc:mariadb://" + ipAddr + ":" + port + "/" + databaseName
+                "jdbc:mysql://" + ipAddr + ":" + port + "/" + databaseName
         );
 
         poolConfig.setConnectionTimeout(5000);
@@ -82,8 +81,7 @@ public final class MySQLConnector {
     public MySQLConnector(final String url,
                           final ExecutorService ex) {
         poolConfig = new HikariConfig();
-        poolConfig.setDriverClassName("org.mariadb.jdbc.Driver");
-        if (url.startsWith("jdbc:mariadb://"))
+        if (url.startsWith("jdbc:mysql://"))
             poolConfig.setJdbcUrl(url);
         this.dataSource = new HikariDataSource(poolConfig);
         connectionGetter = ex;
@@ -200,7 +198,6 @@ public final class MySQLConnector {
         validateBasicParameters();
         validatePoolParameters();
 
-        poolConfig.setDriverClassName("org.mariadb.jdbc.Driver");
         poolConfig.setCredentials(Credentials.of(userName, password));
 
         poolConfig.addDataSourceProperty("serverName", ipAddr);

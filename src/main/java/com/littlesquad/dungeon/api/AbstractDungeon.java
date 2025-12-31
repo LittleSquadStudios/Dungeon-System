@@ -6,6 +6,7 @@ import com.littlesquad.dungeon.api.entrance.ExitReason;
 import com.littlesquad.dungeon.api.session.DungeonSession;
 import com.littlesquad.dungeon.internal.SessionManager;
 import com.littlesquad.dungeon.internal.file.DungeonParser;
+import com.littlesquad.dungeon.internal.utils.CommandUtils;
 import com.littlesquad.dungeon.placeholder.PlaceholderFormatter;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.party.AbstractParty;
@@ -31,7 +32,6 @@ public abstract class AbstractDungeon implements Dungeon {
     private DungeonParser parser;
 
     private static final String[] CREATE_TABLES = {
-            // Dungeon table
             """
         CREATE TABLE IF NOT EXISTS dungeon(
             dungeon_id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -40,7 +40,6 @@ public abstract class AbstractDungeon implements Dungeon {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """,
 
-            // Player table
             """
         CREATE TABLE IF NOT EXISTS player(
             player_id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -49,7 +48,6 @@ public abstract class AbstractDungeon implements Dungeon {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """,
 
-            // Bossroom table
             """
         CREATE TABLE IF NOT EXISTS bossroom(
             bossroom_id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -61,7 +59,6 @@ public abstract class AbstractDungeon implements Dungeon {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """,
 
-            // Objective table
             """
         CREATE TABLE IF NOT EXISTS objective(
             objective_id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -71,7 +68,6 @@ public abstract class AbstractDungeon implements Dungeon {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """,
 
-            // Time restrictions table
             """
         CREATE TABLE IF NOT EXISTS time_restrictions(
             restriction_id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -82,7 +78,6 @@ public abstract class AbstractDungeon implements Dungeon {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """,
 
-            // Player runs table
             """
         CREATE TABLE IF NOT EXISTS player_runs(
             dungeon_id INT NOT NULL,
@@ -101,7 +96,6 @@ public abstract class AbstractDungeon implements Dungeon {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """,
 
-            // Player bossroom defeat table
             """
         CREATE TABLE IF NOT EXISTS player_bossroom_defeat(
             player_id INT NOT NULL,
@@ -122,7 +116,6 @@ public abstract class AbstractDungeon implements Dungeon {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """,
 
-            // Player objective complete table
             """
         CREATE TABLE IF NOT EXISTS player_objective_complete(
             player_id INT NOT NULL,
@@ -162,8 +155,6 @@ public abstract class AbstractDungeon implements Dungeon {
                 try (Statement stmt = conn.createStatement()) {
                     for (String sql : CREATE_TABLES) {
                         stmt.executeUpdate(sql);
-                        Main.getInstance().getLogger().info("Executed: " +
-                                sql.substring(0, 50) + "...");
                     }
 
                     conn.commit();
@@ -196,19 +187,6 @@ public abstract class AbstractDungeon implements Dungeon {
                 e.printStackTrace();
             }
         });
-    }
-
-    private static void dispatchCommands (final List<String> commands, final Player p) {
-        if (p == null) {
-            throw new RuntimeException("Player is offline");
-        }
-
-        commands.stream()
-                .filter(s -> s != null && !s.trim().isEmpty())
-                .map(String::trim)
-                .map(s -> s.startsWith("/") ? s.substring(1) : s)
-                .map(s -> PlaceholderFormatter.formatPerPlayer(s, p))
-                .forEach(cmd -> Bukkit.getScheduler().runTask(Main.getInstance(), () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd)));
     }
 
     @Override
@@ -375,7 +353,13 @@ public abstract class AbstractDungeon implements Dungeon {
                     .startSession(this,
                             player.getUniqueId());
 
-        dispatchCommands(getEntrance().onEnterCommands(), player);
+        System.out.println(getEntrance().onEnterCommands());
+
+        CommandUtils.executeMulti(
+                Bukkit.getConsoleSender(),
+                getEntrance().onEnterCommands(),
+                player);
+
     }
 
     @Override

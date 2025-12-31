@@ -1,11 +1,14 @@
 package com.littlesquad.dungeon.api.status;
 
+import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.session.DungeonSession;
 import com.littlesquad.dungeon.internal.SessionManager;
 import io.lumine.mythic.lib.data.SynchronizedDataHolder;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.party.AbstractParty;
+import net.kyori.adventure.text.event.ClickEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -20,48 +23,54 @@ public abstract class AbstractStatus implements Status {
     private final boolean isPvp;
     private final Dungeon dungeon;
 
-    private final ConcurrentHashMap<UUID, Integer> playerDeaths;
+    private final ConcurrentHashMap<UUID, Integer> playerDeaths; //TODO: Caching
+    //private final ConcurrentHashMap<UUID, Integer> playerKills;
 
     public AbstractStatus(boolean isPvp, final Dungeon dungeon) {
         this.isPvp = isPvp;
         this.dungeon = dungeon;
         playerDeaths = new ConcurrentHashMap<>();
+
+        // Registering events
+        Bukkit.getPluginManager()
+                .registerEvents(
+                        this,
+                        Main.getInstance());
+
     }
 
     //TODO: Rewrite the Status for better Diagnostics!
 
     @EventHandler
-    public void onPvp(final EntityDamageByEntityEvent e) {
-        if (!(e.getDamager() instanceof Player damager) || !(e.getEntity() instanceof Player damaged)) {
-            return;
-        }
-        if (isPlayerInDungeon
-                (damager.getUniqueId()) &&
-                isPlayerInDungeon(damaged.getUniqueId())) {
-            if (isPvp) {
-                SessionManager.getInstance()
-                        .getSession(damager.getUniqueId())
-                        .addDamage(e.getFinalDamage());
-                SessionManager.getInstance()
-                        .getSession(damaged.getUniqueId())
-                        .addDamageTaken(e.getFinalDamage());
-            } else e.setCancelled(true);
-        }
-    }
+    public void handleDamageEvent(final EntityDamageByEntityEvent e) {
+        if (e.getDamager() instanceof final Player damager
+                && e.getEntity() instanceof final Player damaged) {
+            if (isPlayerInDungeon
+                    (damager.getUniqueId()) &&
+                    isPlayerInDungeon(damaged.getUniqueId())) {
+                if (isPvp) {
+                    final DungeonSession damagerSession = SessionManager
+                            .getInstance()
+                            .getSession(damager.getUniqueId());
+                    final DungeonSession damagedSession = SessionManager
+                            .getInstance()
+                            .getSession(damaged.getUniqueId());
 
-    //TODO: Registrare solo una volta l'evento e al suo interno delegare a due metodi: uno per il pve e uno per il pvp!
+                    if (damagerSession != null && damagedSession != null) {
+                        damagerSession.addDamage(e.getFinalDamage());
+                        damagedSession.addDamageTaken(e.getFinalDamage());
+                    }
 
-    @EventHandler
-    public void onPve(final EntityDamageByEntityEvent e) {
-        if (!(e.getDamager() instanceof Player damager)) {
-            return;
-        }
-        if (isPlayerInDungeon
-                (damager.getUniqueId())) {
-            if (e.getEntity() instanceof LivingEntity) {
-                SessionManager.getInstance()
-                        .getSession(damager.getUniqueId())
-                        .addDamage(e.getFinalDamage());
+                } else e.setCancelled(true);
+            }
+        } else if (e.getDamager() instanceof Player damager){
+            if (isPlayerInDungeon
+                    (damager.getUniqueId())) {
+                if (e.getEntity() instanceof LivingEntity) {
+                    SessionManager.getInstance()
+                            .getSession(damager.getUniqueId())
+                            .addDamage(e.getFinalDamage());
+                }
             }
         }
     }
@@ -69,31 +78,47 @@ public abstract class AbstractStatus implements Status {
     @EventHandler
     public void onEntityDeath(final EntityDeathEvent e) {
         final LivingEntity entity = e.getEntity();
+        System.out.println("Death Debug - 1");
         if (entity instanceof Player player) {
+            System.out.println("Death Debug - 2");
             if (isPlayerInDungeon(player.getUniqueId())) {
+                System.out.println("Death Debug - 3");
                 final DungeonSession session = SessionManager.getInstance().getSession(player.getUniqueId());
                 session.addDeath();
             }
             return;
         }
+        System.out.println("Death Debug - 1 - 1");
         final Player killer = entity.getKiller();
-        if (killer != null && isPlayerInDungeon(killer.getUniqueId()))
-            SessionManager.getInstance()
+        System.out.println("Death Debug - 1 - 2");
+        if (killer != null && isPlayerInDungeon(killer.getUniqueId())) {
+            System.out.println("Death Debug - 1 - 3");
+            SessionManager
+                    .getInstance()
                     .getSession(killer.getUniqueId())
                     .addKill(1);
+        }
     }
 
 
     @Override
     public int currentPlayers() {
-        return SessionManager.getInstance().getDungeonSessions(dungeon).size();
+        return SessionManager
+                .getInstance()
+                .getDungeonSessions(dungeon)
+                .size();
     }
 
     @Override
     public boolean isPlayerInDungeon(UUID player) {
         final DungeonSession session;
-        return (session = SessionManager.getInstance().getSession(player)) != null
-                && session.getDungeon() == dungeon;
+        return (session = SessionManager
+                .getInstance()
+                .getSession(player))
+                != null
+                && session.getDungeon()
+                .id()
+                .equals(dungeon.id());
     }
 
     @Override
@@ -210,4 +235,15 @@ public abstract class AbstractStatus implements Status {
     public boolean isPvp() {
         return isPvp;
     }
+
+    @Override
+    public void shutdown() {
+        EntityDeathEvent
+                .getHandlerList()
+                .unregister(this);
+        EntityDamageByEntityEvent
+                .getHandlerList()
+                .unregister(this);
+    }
+
 }

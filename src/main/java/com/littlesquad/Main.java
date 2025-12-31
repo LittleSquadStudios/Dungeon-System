@@ -27,11 +27,11 @@ public final class Main extends JavaPlugin {
 
         mmoCoreAPI = new MMOCoreAPI(this);
 
-        connector = new MySQLConnector("s395033_azurecore",
+        connector = new MySQLConnector("azure",
                 "127.0.0.1",
-                3307,
-                "u395033_ZfMHLJMVpW",
-                "Fa003O25QaNrHfIRDKNGF4MJ",
+                3306,
+                "root",
+                "cazzoinculoloprendotutto",
                 Executors.newCachedThreadPool());
 
         if (!Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")

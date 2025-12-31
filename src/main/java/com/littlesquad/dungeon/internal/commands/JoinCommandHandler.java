@@ -69,6 +69,7 @@ public final class JoinCommandHandler {
             case FAILURE_PER_LEVEL -> {
                 p.sendMessage("Your level or your party level isn't enough");
 
+                System.out.println(dungeonToJoin.getEntrance().levelFallbackCommands());
                 CommandUtils.executeMulti(
                         Bukkit.getConsoleSender(),
                         dungeonToJoin.getEntrance().levelFallbackCommands(),
@@ -78,6 +79,8 @@ public final class JoinCommandHandler {
             case FAILURE_PER_SLOTS -> {
                 p.sendMessage("There's no space left");
 
+
+                System.out.println(dungeonToJoin.getEntrance().maxSlotsFallbackCommands());
                 CommandUtils.executeMulti(
                         Bukkit.getConsoleSender(),
                         dungeonToJoin.getEntrance().maxSlotsFallbackCommands(),
@@ -88,6 +91,7 @@ public final class JoinCommandHandler {
             case FAILURE_PER_PARTY -> {
                 p.sendMessage("Your party sucks");
 
+                System.out.println(dungeonToJoin.getEntrance().partyFallbackCommands());
                 CommandUtils.executeMulti(
                         Bukkit.getConsoleSender(),
                         dungeonToJoin.getEntrance().partyFallbackCommands(),

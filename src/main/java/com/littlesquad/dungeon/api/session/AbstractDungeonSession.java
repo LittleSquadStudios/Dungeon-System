@@ -61,7 +61,10 @@ public abstract class AbstractDungeonSession implements DungeonSession {
         CompletableFuture.allOf(
                 ensurePlayerExists(),
                 ensureDungeonIdLoaded()
-        ).thenRunAsync(this::startPeriodicSave, executor)
+        ).thenRunAsync(() -> {
+            insertInitialRecords();
+            startPeriodicSave();
+        }, executor)
         .handleAsync((_, ex) -> {
             if (ex != null) {
                 ex.printStackTrace();
@@ -133,10 +136,11 @@ public abstract class AbstractDungeonSession implements DungeonSession {
             if (active.get()) {
                 updateRecord();
             }
-        }, 5, 5, TimeUnit.MINUTES);
+        }, 1, 1, TimeUnit.MINUTES);
     }
 
-    public void insertOrUpdateRecord() {
+    public void insertInitialRecords() {
+        System.out.println("Iniziata procedura di salvataggio sessioni nel db delle run");
         if (cachedPlayerId == null || cachedDungeonId == null) {
             throw new IllegalStateException("Player ID o Dungeon ID non inizializzati");
         }
@@ -194,10 +198,7 @@ public abstract class AbstractDungeonSession implements DungeonSession {
                 stmt.setInt(6, cachedDungeonId);
                 stmt.setInt(7, cachedPlayerId);
 
-                int updated = stmt.executeUpdate();
-                if (updated == 0) {
-                    insertOrUpdateRecord();
-                }
+                stmt.executeUpdate();
             } catch (SQLException e) {
                 e.printStackTrace();
             }

@@ -1,6 +1,7 @@
 package com.littlesquad.dungeon.placeholder;
 
 import com.littlesquad.Main;
+import com.littlesquad.dungeon.api.session.DungeonSession;
 import com.littlesquad.dungeon.internal.SessionManager;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import net.Indyuce.mmocore.party.AbstractParty;
@@ -30,95 +31,163 @@ public final class PlaceholderHook extends PlaceholderExpansion {
         if (player == null)
             return null;
         return switch (params.toLowerCase()) {
-            case "name" -> SessionManager
-                    .getInstance()
-                    .getSession(player.getUniqueId())
-                    .getDungeon()
-                    .displayName();
-            case "pvp" -> SessionManager
-                    .getInstance()
-                    .getSession(player.getUniqueId())
-                    .getDungeon()
-                    .status()
-                    .isPvp()
-                    ? "§aEnabled"
-                    : "§cDisabile";
-            case "globalkills" -> String.valueOf(SessionManager
-                    .getInstance()
-                    .getSession(player.getUniqueId())
-                    .getDungeon()
-                    .status()
-                    .totalKills());
+            case "name" -> {
+                final DungeonSession session;
+                yield (session = SessionManager
+                        .getInstance()
+                        .getSession(player.getUniqueId()))
+                        != null
+                        ? session
+                        .getDungeon()
+                        .displayName()
+                        : "§cNot in dungeon";
+            }
+            case "pvp" -> {
+                final DungeonSession session;
+                yield (session = SessionManager
+                        .getInstance()
+                        .getSession(player.getUniqueId()))
+                        != null
+                        ? session
+                        .getDungeon()
+                        .status()
+                        .isPvp()
+                        ? "§aEnabled"
+                        : "§cDisabile"
+                        : "§cNot in dungeon";
+            }
+            case "globalkills" -> {
+                final DungeonSession session;
+                yield (session = SessionManager
+                        .getInstance()
+                        .getSession(player.getUniqueId()))
+                        != null
+                        ? String.valueOf(session
+                        .getDungeon()
+                        .status()
+                        .totalKills())
+                        : "§cNot in dungeon";
+            }
             case "partykills" -> {
                 final AbstractParty party;
+                final DungeonSession session;
                 yield String.valueOf((party = Main
                         .getMMOCoreAPI()
                         .getPlayerData(player)
                         .getParty()) != null
-                        ? SessionManager
+                        ? (session = SessionManager
                         .getInstance()
-                        .getSession(player.getUniqueId())
+                        .getSession(player.getUniqueId()))
+                        != null
+                        ? session
                         .getDungeon()
                         .status()
                         .partyKills(party)
-                        : SessionManager
+                        : "§cNot in dungeon"
+                        : (session = SessionManager
                         .getInstance()
-                        .getSession(player.getUniqueId())
+                        .getSession(player.getUniqueId()))
+                        != null
+                        ? session
                         .getDungeon()
                         .status()
-                        .playerKills(player.getUniqueId()));
+                        .playerKills(player.getUniqueId())
+                        : "§cNot in dungeon");
             }
-            case "personalkills" -> String.valueOf(SessionManager
-                    .getInstance()
-                    .getSession(player.getUniqueId())
-                    .getDungeon()
-                    .status()
-                    .playerKills(player.getUniqueId()));
-            case "sessionkills" -> String.valueOf(SessionManager
-                    .getInstance()
-                    .getSession(player.getUniqueId())
-                    .kills());
-            case "globaldeaths" -> String.valueOf(SessionManager
-                    .getInstance()
-                    .getSession(player.getUniqueId())
-                    .getDungeon()
-                    .status()
-                    .totalDeaths());
+            case "personalkills" -> {
+                final DungeonSession session;
+                yield (session = SessionManager
+                        .getInstance()
+                        .getSession(player.getUniqueId()))
+                        != null
+                        ? String.valueOf(session
+                        .getDungeon()
+                        .status()
+                        .playerKills(player.getUniqueId()))
+                        : "§cNot in dungeon";
+            }
+            case "sessionkills" -> {
+                final DungeonSession session;
+                yield (session = SessionManager
+                        .getInstance()
+                        .getSession(player.getUniqueId()))
+                        != null
+                        ? String.valueOf(session
+                        .kills())
+                        : "§cNot in dungeon";
+            }
+            case "globaldeaths" -> {
+                final DungeonSession session;
+                yield (session = SessionManager
+                        .getInstance()
+                        .getSession(player.getUniqueId()))
+                        != null
+                        ? String.valueOf(session
+                        .getDungeon()
+                        .status()
+                        .totalDeaths())
+                        : "§cNot in dungeon";
+            }
             case "partydeaths" -> {
                 final AbstractParty party;
+                final DungeonSession session;
                 yield String.valueOf((party = Main
                         .getMMOCoreAPI()
                         .getPlayerData(player)
                         .getParty()) != null
-                        ? SessionManager
+                        ? (session = SessionManager
                         .getInstance()
-                        .getSession(player.getUniqueId())
+                        .getSession(player.getUniqueId()))
+                        != null
+                        ? session
                         .getDungeon()
                         .status()
                         .partyDeaths(party)
-                        : SessionManager
+                        : "§cNot in dungeon"
+                        : (session = SessionManager
                         .getInstance()
-                        .getSession(player.getUniqueId())
+                        .getSession(player.getUniqueId()))
+                        != null
+                        ? session
                         .getDungeon()
                         .status()
-                        .playerDeaths(player.getUniqueId()));
+                        .playerDeaths(player.getUniqueId())
+                        : "§cNot in dungeon");
             }
-            case "personaldeaths" -> String.valueOf(SessionManager
-                    .getInstance()
-                    .getSession(player.getUniqueId())
-                    .getDungeon()
-                    .status()
-                    .playerDeaths(player.getUniqueId()));
-            case "sessiondeaths" -> String.valueOf(SessionManager
-                    .getInstance()
-                    .getSession(player.getUniqueId())
-                    .deaths());
-            case "players" -> String.valueOf(SessionManager
-                    .getInstance()
-                    .getSession(player.getUniqueId())
-                    .getDungeon()
-                    .status()
-                    .currentPlayers());
+            case "personaldeaths" -> {
+                final DungeonSession session;
+                yield (session = SessionManager
+                        .getInstance()
+                        .getSession(player.getUniqueId()))
+                        != null
+                        ? String.valueOf(session
+                        .getDungeon()
+                        .status()
+                        .playerDeaths(player.getUniqueId()))
+                        : "§cNot in dungeon";
+            }
+            case "sessiondeaths" -> {
+                final DungeonSession session;
+                yield (session = SessionManager
+                        .getInstance()
+                        .getSession(player.getUniqueId()))
+                        != null
+                        ? String.valueOf(session
+                        .deaths())
+                        : "§cNot in dungeon";
+            }
+            case "players" -> {
+                final DungeonSession session;
+                yield (session = SessionManager
+                        .getInstance()
+                        .getSession(player.getUniqueId()))
+                        != null
+                        ? String.valueOf(session
+                        .getDungeon()
+                        .status()
+                        .currentPlayers())
+                        : "§cNot in dungeon";
+            }
             default -> null;
         };
     }

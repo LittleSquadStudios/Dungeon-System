@@ -1,5 +1,6 @@
 package com.littlesquad;
 
+import com.littlesquad.dungeon.api.session.AbstractDungeonSession;
 import com.littlesquad.dungeon.database.MySQLConnector;
 import com.littlesquad.dungeon.internal.DungeonManager;
 import com.littlesquad.dungeon.internal.commands.DungeonCommand;
@@ -63,6 +64,7 @@ public final class Main extends JavaPlugin {
     public void onDisable () {
         FileManager.close();
         TimedEventImpl.close();
+        AbstractDungeonSession.shutdownExecutor();
     }
 
     public static Main getInstance () {

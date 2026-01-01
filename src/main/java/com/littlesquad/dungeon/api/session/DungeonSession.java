@@ -38,19 +38,6 @@ public interface DungeonSession {
     UUID playerId();
 
     /**
-     * Returns the identifier of the dungeon run associated with this session.
-     * <p>
-     * The run ID can be used to group multiple player sessions
-     * that belong to the same dungeon instance.
-     *
-     * @return the dungeon run ID, or {@code null} if not assigned
-     *
-     * @since 1.0.0
-     * @author LittleSquad
-     */
-    Long runId();
-
-    /**
      * Called when the session ends.
      * <p>
      * This method should stop timers, finalize statistics and

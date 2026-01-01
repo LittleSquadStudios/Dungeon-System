@@ -14,6 +14,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
@@ -80,6 +81,7 @@ public abstract class AbstractDungeon implements Dungeon {
 
             """
         CREATE TABLE IF NOT EXISTS player_runs(
+            pr_id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
             dungeon_id INT NOT NULL,
             player_id INT NOT NULL,
             deaths INT DEFAULT 0 NOT NULL,
@@ -88,7 +90,6 @@ public abstract class AbstractDungeon implements Dungeon {
             total_kills INT DEFAULT 0,
             damage_dealt DOUBLE DEFAULT 0,
             damage_taken DOUBLE DEFAULT 0,
-            PRIMARY KEY(dungeon_id, player_id),
             FOREIGN KEY (dungeon_id) REFERENCES dungeon(dungeon_id) ON DELETE CASCADE,
             FOREIGN KEY (player_id) REFERENCES player(player_id) ON DELETE CASCADE,
             INDEX idx_enter_time (enter_time),
@@ -98,12 +99,12 @@ public abstract class AbstractDungeon implements Dungeon {
 
             """
         CREATE TABLE IF NOT EXISTS player_bossroom_defeat(
+            pbd_id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
             player_id INT NOT NULL,
             bossroom_id INT NOT NULL,
             complete_date DATETIME NOT NULL,
             damage_dealt DOUBLE DEFAULT 0,
             damage_taken DOUBLE DEFAULT 0,
-            PRIMARY KEY (player_id, bossroom_id),
             CONSTRAINT fk_defeat_player
                 FOREIGN KEY (player_id)
                 REFERENCES player(player_id)
@@ -118,10 +119,10 @@ public abstract class AbstractDungeon implements Dungeon {
 
             """
         CREATE TABLE IF NOT EXISTS player_objective_complete(
+            poc_id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
             player_id INT NOT NULL,
             objective_id INT NOT NULL,
             complete_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (player_id, objective_id),
             CONSTRAINT fk_complete_player
                 FOREIGN KEY (player_id)
                 REFERENCES player(player_id)
@@ -136,57 +137,13 @@ public abstract class AbstractDungeon implements Dungeon {
 
     public AbstractDungeon(final DungeonParser parser) {
         this.parser = parser;
-
-        // Inizializza le tabelle e poi inserisci il dungeon
         initializeTables()
-                .thenCompose(v -> insertDungeonIfNotExists())
+                .thenCompose(_ -> insertDungeonIfNotExists())
                 .exceptionally(ex -> {
                     Main.getInstance().getLogger().severe("Error initializing dungeon: " + ex.getMessage());
                     ex.printStackTrace();
                     return null;
                 });
-    }
-
-    public static CompletableFuture<Void> initializeTables() {
-        return Main.getConnector().getConnection(10).thenAcceptAsync(conn -> {
-            try {
-                conn.setAutoCommit(false);
-
-                try (Statement stmt = conn.createStatement()) {
-                    for (String sql : CREATE_TABLES) {
-                        stmt.executeUpdate(sql);
-                    }
-
-                    conn.commit();
-                    Main.getInstance().getLogger().info("✓ All database tables created successfully!");
-
-                } catch (SQLException e) {
-                    conn.rollback();
-                    throw e;
-                }
-
-            } catch (SQLException e) {
-                Main.getInstance().getLogger().severe("✗ Error creating database tables: " + e.getMessage());
-                e.printStackTrace();
-            }
-        });
-    }
-
-    private CompletableFuture<Void> insertDungeonIfNotExists() {
-        return Main.getConnector().getConnection(10).thenAcceptAsync(conn -> {
-            String sql = "INSERT INTO dungeon (dungeon_name, is_pvp) VALUES (?, ?) " +
-                    "ON DUPLICATE KEY UPDATE is_pvp = VALUES(is_pvp)";
-
-            try (var stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, id());
-                stmt.setBoolean(2, typeFlags().contains(TypeFlag.PVP_ENABLED));
-                stmt.executeUpdate();
-
-                Main.getInstance().getLogger().info("Dungeon '" + id() + "' registered in database");
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        });
     }
 
     @Override
@@ -405,6 +362,56 @@ public abstract class AbstractDungeon implements Dungeon {
     public void shutdown() {
         leaders.clear();
         parser = null;
+    }
+
+    public static CompletableFuture<Void> initializeTables() {
+        return Main.getConnector().getConnection(10).thenAcceptAsync(conn -> {
+            try (conn) {
+                conn.setAutoCommit(false);
+
+                try (Statement stmt = conn.createStatement()) {
+                    for (String sql : CREATE_TABLES) {
+                        stmt.executeUpdate(sql);
+                    }
+
+                    conn.commit();
+                    Main.getInstance().getLogger().info("✓ All database tables created successfully!");
+
+                } catch (SQLException e) {
+                    conn.rollback();
+                    Main.getInstance().getLogger().severe("✗ Error creating database tables: " + e.getMessage());
+                    throw new RuntimeException("Database initialization failed", e);
+                }
+
+            } catch (SQLException e) {
+                Main.getInstance().getLogger().severe("✗ Fatal error with database connection: " + e.getMessage());
+                throw new RuntimeException("Database connection error", e);
+            }
+        });
+    }
+
+    private CompletableFuture<Void> insertDungeonIfNotExists() {
+        return Main.getConnector().getConnection(10).thenAcceptAsync(conn -> {
+            String sql = """
+            INSERT INTO dungeon (dungeon_name, is_pvp) 
+            VALUES (?, ?) 
+            ON DUPLICATE KEY UPDATE is_pvp = VALUES(is_pvp)
+            """;
+
+            try (conn;
+                 final PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+                stmt.setString(1, id());
+                stmt.setBoolean(2, typeFlags().contains(TypeFlag.PVP_ENABLED));
+                stmt.executeUpdate();
+
+                Main.getInstance().getLogger().info("Dungeon '" + id() + "' registered in database");
+
+            } catch (SQLException e) {
+                Main.getInstance().getLogger().severe("✗ Error registering dungeon '" + id() + "': " + e.getMessage());
+                throw new RuntimeException("Failed to register dungeon: " + id(), e);
+            }
+        });
     }
 
     private boolean isTimed() {

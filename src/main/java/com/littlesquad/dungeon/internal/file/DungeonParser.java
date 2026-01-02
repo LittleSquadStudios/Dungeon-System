@@ -155,10 +155,10 @@ public final class DungeonParser {
                                 case OBJECTIVE -> new ObjectiveEventImpl(
                                         d,
                                         key,
+                                        requirementsParser,
                                         config.getStringList("events." + key + ".commands"),
                                         config.getString("events." + key + ".checkpoint", ""),
-                                        config.getString("events." + key + ".boss-room", ""),
-                                        requirementsParser);
+                                        config.getString("events." + key + ".boss-room", ""));
                                 case STRUCTURAL -> {
                                     try {
                                         final EnvironmentEvent environmentEvent = EnvironmentEvent.valueOf(config.getString("events." + key + ".environment_event"));

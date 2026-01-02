@@ -7,7 +7,6 @@ import io.lumine.mythic.bukkit.MythicBukkit;
 import io.lumine.mythic.core.mobs.ActiveMob;
 import io.lumine.mythic.lib.data.SynchronizedDataHolder;
 import net.Indyuce.mmocore.party.AbstractParty;
-import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
@@ -106,7 +105,7 @@ public final class RequirementsParser {
                             .split(" "))
                             .length) {
                         case 3:
-                            switch (words[0]) {
+                            switch (words[0].toLowerCase()) {
                                 case "slay":
                                     final int mobNumber;
                                     try {
@@ -314,13 +313,10 @@ public final class RequirementsParser {
                 + ".requirement_mode",
                 "ALL")
                 .equalsIgnoreCase("ALL")
-                ? (type, e) -> ex.execute(() -> {
+                ? (type, e, args) -> ex.execute(() -> {
             final ParticipantRequirements req;
             if ((req = switch (type) {
                 case SLAY -> {
-
-                    System.out.println("DD");
-
                     final ParticipantRequirements requirements;
                     {
                         Object ent;
@@ -337,9 +333,6 @@ public final class RequirementsParser {
                                 && (ent = proj
                                 .getShooter())
                                 instanceof Player))) {
-
-                            System.out.println("EE");
-
                             final Player player;
                             final AbstractParty party;
                             if (!event.isActiveFor((party = Main
@@ -354,9 +347,6 @@ public final class RequirementsParser {
                                     .toArray(Player[]::new)
                                     : new Player[]{player}))
                                 yield null;
-
-                            System.out.println("F");
-
                             requirements = participantRequirements.computeIfAbsent(
                                     party != null ? party : player,
                                     ParticipantRequirements::new);
@@ -536,11 +526,7 @@ public final class RequirementsParser {
                         requirements = participantRequirements.computeIfAbsent(
                                 party != null ? party : player,
                                 ParticipantRequirements::new);
-                        displayName = ((TextComponent) (ev
-                                .getItem()
-                                .getItemStack()
-                                .displayName()))
-                                .content();
+                        displayName = (String) args[0];
                     } else yield null;
                     final AtomicBoolean present = new AtomicBoolean();
                     if (requirements.itemRequirements.computeIfPresent(
@@ -576,7 +562,7 @@ public final class RequirementsParser {
                 event.executeCommandsFor(players);
                 event.bossRoomToUnlock().join(players);
             }
-        }) : (type, e) -> ex.execute(() -> {
+        }) : (type, e, args) -> ex.execute(() -> {
             final ParticipantRequirements req;
             if ((req = switch (type) {
                 case SLAY -> {
@@ -796,11 +782,7 @@ public final class RequirementsParser {
                         requirements = participantRequirements.computeIfAbsent(
                                 party != null ? party : player,
                                 ParticipantRequirements::new);
-                        displayName = ((TextComponent) (ev
-                                .getItem()
-                                .getItemStack()
-                                .displayName()))
-                                .content();
+                        displayName = (String) args[0];
                     } else yield null;
                     final AtomicBoolean present = new AtomicBoolean();
                     if (requirements.itemRequirements.computeIfPresent(

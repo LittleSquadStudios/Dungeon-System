@@ -17,8 +17,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class ObjectiveEventImpl extends ObjectiveEvent {
-    private final Dungeon dungeon;
-    private final String id;
     private final List<String> commands;
 
     //Lazy loading for avoiding initialization order mess!
@@ -31,13 +29,11 @@ public final class ObjectiveEventImpl extends ObjectiveEvent {
 
     public ObjectiveEventImpl (final Dungeon dungeon,
                                final String id,
+                               final RequirementsParser parser,
                                final List<String> commands,
                                final String checkpoint,
-                               final String boosRoom,
-                               final RequirementsParser parser) {
-        super(parser);
-        this.dungeon = dungeon;
-        this.id = id;
+                               final String boosRoom) {
+        super(dungeon, id, parser);
         this.commands = commands;
         this.checkpoint = checkpoint;
         this.boosRoom = boosRoom;
@@ -66,13 +62,6 @@ public final class ObjectiveEventImpl extends ObjectiveEvent {
                 .forEach(this.players::remove);
     }
 
-    public Dungeon getDungeon () {
-        return dungeon;
-    }
-    public String getID () {
-        return id;
-    }
-
     public List<String> commands () {
         return commands;
     }
@@ -81,8 +70,6 @@ public final class ObjectiveEventImpl extends ObjectiveEvent {
         Arrays.stream(players)
                 .parallel()
                 .forEach(this.players::add);
-
-        System.out.println("BBBB");
     }
     public boolean isActiveFor (final Player... players) {
         return Arrays.stream(players)

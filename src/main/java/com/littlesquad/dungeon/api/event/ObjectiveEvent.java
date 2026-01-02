@@ -1,6 +1,7 @@
 package com.littlesquad.dungeon.api.event;
 
 import com.littlesquad.Main;
+import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.boss.BossRoom;
 import com.littlesquad.dungeon.api.checkpoint.Checkpoint;
 import com.littlesquad.dungeon.api.event.requirement.RequirementType;
@@ -17,15 +18,29 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 
 public abstract non-sealed class ObjectiveEvent implements Event {
+    private final Dungeon dungeon;
+    private final String id;
+
     private final Requirements requirements;
 
-    protected ObjectiveEvent (final RequirementsParser parser) {
+    protected ObjectiveEvent (final Dungeon dungeon,
+                              final String id,
+                              final RequirementsParser parser) {
+        this.dungeon = dungeon;
+        this.id = id;
         requirements = parser.parse(this);
         Bukkit.getPluginManager().registerEvents(this, Main.getInstance());
     }
 
     public final EventType getType () {
         return EventType.OBJECTIVE;
+    }
+
+    public Dungeon getDungeon () {
+        return dungeon;
+    }
+    public String getID () {
+        return id;
     }
 
     public abstract Checkpoint checkpointToUnlock ();
@@ -38,8 +53,6 @@ public abstract non-sealed class ObjectiveEvent implements Event {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public final void onEntityDeath (final EntityDeathEvent e) {
-        System.out.println("CCC");
-
         requirements.updateRequirements(RequirementType.SLAY, e);
     }
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -56,7 +69,26 @@ public abstract non-sealed class ObjectiveEvent implements Event {
     }
     @EventHandler(priority = EventPriority.HIGHEST)
     public final void onItemPickUp (final EntityPickupItemEvent e) {
-        requirements.updateRequirements(RequirementType.ITEM, e);
+        //noinspection deprecation
+        requirements.updateRequirements(RequirementType.ITEM, e, e
+                .getItem()
+                .getItemStack()
+                .hasItemMeta()
+                && e
+                .getItem()
+                .getItemStack()
+                .getItemMeta()
+                .hasDisplayName()
+                ? e
+                .getItem()
+                .getItemStack()
+                .getItemMeta()
+                .getDisplayName()
+                : e
+                .getItem()
+                .getItemStack()
+                .getType()
+                .name());
     }
 
     public void close () {

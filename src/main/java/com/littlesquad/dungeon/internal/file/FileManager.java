@@ -25,7 +25,7 @@ public final class FileManager {
 
     private FileManager () {}
 
-    public static CompletableFuture<Void> loadAll (final File dir) { // TODO: TRY AND CATCH DI TUTTI I SINGOLI LOAD
+    public static CompletableFuture<Void> loadAll (final File dir) {
         if (pluginFolder == null) {
             //noinspection ResultOfMethodCallIgnored
             (pluginFolder = dir).mkdirs();
@@ -49,8 +49,8 @@ public final class FileManager {
                 } catch (final IOException e) {
                     throw new RuntimeException(e);
                 }
-            if ((f = new File(pluginFolder, "dungeons")).exists()
-                    || (f.mkdirs())
+            if (!(f = new File(pluginFolder, "dungeons")).exists()
+                    && f.mkdirs()
                     && !(f = new File(f, "Example.yml")).exists())
                 try (final InputStream stream = FileManager.class.getResourceAsStream("/dungeons/Example.yml");
                      final FileOutputStream out = new FileOutputStream(f)) {
@@ -58,7 +58,7 @@ public final class FileManager {
                         out.write(stream.readAllBytes());
                     out.flush();
                 } catch (final IOException e) {
-                    System.out.println();
+                    throw new RuntimeException(e);
                 }
         }
         //Load in parallel the configurations and let the caller wait on it...
@@ -73,18 +73,24 @@ public final class FileManager {
                                 pluginFolder,
                                 "messages.yml")),
                 executor));
-        final File dungeonDir = new File(pluginFolder, "dungeons");
         final File[] dungeonFiles;
-        if ((dungeonFiles = dungeonDir.listFiles()) != null) {
+        if ((dungeonFiles = new File(
+                pluginFolder,
+                "dungeons")
+                .listFiles()) != null) {
             dungeons.clear();
             for (int i = 0; i < dungeonFiles.length; i++) {
                 final int finalI = i;
                 futures.add(CompletableFuture.runAsync(() -> {
-                    final String fileName = dungeonFiles[finalI].getName();
+                    final String fileName;
                     final String name;
                     dungeons.put(
-                            name = fileName.substring(0, fileName.lastIndexOf('.')),
-                            new DungeonParser(name, YamlConfiguration.loadConfiguration(dungeonFiles[finalI])));
+                            name = (fileName = dungeonFiles[finalI]
+                                    .getName())
+                                    .substring(0, fileName.lastIndexOf('.')),
+                            new DungeonParser(
+                                    name,
+                                    YamlConfiguration.loadConfiguration(dungeonFiles[finalI])));
                     }, executor));
             }
         }

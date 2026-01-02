@@ -90,10 +90,12 @@ public abstract class AbstractDungeon implements Dungeon {
             total_kills INT DEFAULT 0,
             damage_dealt DOUBLE DEFAULT 0,
             damage_taken DOUBLE DEFAULT 0,
+            exit_reason ENUM('DEATH', 'TIME_EXPIRED', 'FINISHED', 'QUIT', 'PLUGIN_STOPPING', 'ERROR', 'KICKED') DEFAULT NULL,
             FOREIGN KEY (dungeon_id) REFERENCES dungeon(dungeon_id) ON DELETE CASCADE,
             FOREIGN KEY (player_id) REFERENCES player(player_id) ON DELETE CASCADE,
             INDEX idx_enter_time (enter_time),
-            INDEX idx_player_id (player_id)
+            INDEX idx_player_id (player_id),
+            INDEX idx_exit_reason (exit_reason)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """,
 
@@ -292,6 +294,15 @@ public abstract class AbstractDungeon implements Dungeon {
 
         if (player == null) return;
 
+        final DungeonSession session = SessionManager
+                .getInstance()
+                .getSession(player.getUniqueId());
+
+        if (session != null)
+            SessionManager
+                    .getInstance()
+                    .endSession(player.getUniqueId(), ExitReason.KICKED);
+
         joinPoints.put(player.getUniqueId(), player.getLocation());
         if (isTimed()) {
             System.out.println("Is timed: " + isTimed());
@@ -360,8 +371,25 @@ public abstract class AbstractDungeon implements Dungeon {
 
     @Override
     public void shutdown() {
+
+        SessionManager
+                .getInstance()
+                .getDungeonSessions(this).forEach(s ->
+                    SessionManager
+                    .getInstance()
+                    .endSession(s.playerId(), ExitReason.PLUGIN_STOPPING));
+
         leaders.clear();
         parser = null;
+        status().shutdown();
+    }
+
+    private boolean isTimed() {
+        return typeFlags().contains(TypeFlag.TIMED);
+    }
+
+    public DungeonParser getParser() {
+        return parser;
     }
 
     public static CompletableFuture<Void> initializeTables() {
@@ -369,21 +397,21 @@ public abstract class AbstractDungeon implements Dungeon {
             try (conn) {
                 conn.setAutoCommit(false);
 
-                try (Statement stmt = conn.createStatement()) {
-                    for (String sql : CREATE_TABLES) {
+                try (final Statement stmt = conn.createStatement()) {
+                    for (final String sql : CREATE_TABLES) {
                         stmt.executeUpdate(sql);
                     }
 
                     conn.commit();
                     Main.getInstance().getLogger().info("✓ All database tables created successfully!");
 
-                } catch (SQLException e) {
+                } catch (final SQLException e) {
                     conn.rollback();
                     Main.getInstance().getLogger().severe("✗ Error creating database tables: " + e.getMessage());
                     throw new RuntimeException("Database initialization failed", e);
                 }
 
-            } catch (SQLException e) {
+            } catch (final SQLException e) {
                 Main.getInstance().getLogger().severe("✗ Fatal error with database connection: " + e.getMessage());
                 throw new RuntimeException("Database connection error", e);
             }
@@ -412,13 +440,5 @@ public abstract class AbstractDungeon implements Dungeon {
                 throw new RuntimeException("Failed to register dungeon: " + id(), e);
             }
         });
-    }
-
-    private boolean isTimed() {
-        return typeFlags().contains(TypeFlag.TIMED);
-    }
-
-    public DungeonParser getParser() {
-        return parser;
     }
 }

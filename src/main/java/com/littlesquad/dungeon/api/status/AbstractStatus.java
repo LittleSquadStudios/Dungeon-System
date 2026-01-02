@@ -1,7 +1,10 @@
 package com.littlesquad.dungeon.api.status;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.Dungeon;
+import com.littlesquad.dungeon.api.entrance.ExitReason;
 import com.littlesquad.dungeon.api.session.DungeonSession;
 import com.littlesquad.dungeon.internal.SessionManager;
 import io.lumine.mythic.lib.data.SynchronizedDataHolder;
@@ -14,22 +17,23 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractStatus implements Status {
 
     private final boolean isPvp;
     private final Dungeon dungeon;
 
-    private final ConcurrentHashMap<UUID, Integer> playerDeaths; //TODO: Caching
-    //private final ConcurrentHashMap<UUID, Integer> playerKills;
-
     public AbstractStatus(boolean isPvp, final Dungeon dungeon) {
         this.isPvp = isPvp;
         this.dungeon = dungeon;
-        playerDeaths = new ConcurrentHashMap<>();
 
         // Registering events
         Bukkit.getPluginManager()
@@ -40,6 +44,33 @@ public abstract class AbstractStatus implements Status {
     }
 
     //TODO: Rewrite the Status for better Diagnostics!
+
+    @EventHandler
+    public void onQuit(final PlayerQuitEvent e) {
+        if (isPlayerInDungeon(e.getPlayer().getUniqueId())) {
+            switch (e.getReason()) {
+                case DISCONNECTED -> {
+                    final DungeonSession session = SessionManager.getInstance().getSession(e.getPlayer().getUniqueId());
+                    session.stopSession(ExitReason.ERROR);
+                }
+                default -> {
+
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerJoin(final AsyncPlayerPreLoginEvent event) {
+        UUID playerId = event.getUniqueId();
+
+        SessionManager.getInstance().recoverActiveSessions(playerId, uuid -> {
+            final Player p = Bukkit.getPlayer(uuid);
+            if (p != null) {
+                p.sendMessage("Time's up! You've been removed from the dungeon.");
+            }
+        });
+    }
 
     @EventHandler
     public void handleDamageEvent(final EntityDamageByEntityEvent e) {
@@ -178,36 +209,41 @@ public abstract class AbstractStatus implements Status {
         });
     }*/
     @Override
-    public int playerKills(UUID player) {
-        return SessionManager.getInstance()
-                .getSession(player)
-                .kills();
-    }
-
-    @Override
-    public int partyKills(AbstractParty party) {
-       return party.getOnlineMembers()
-               .stream()
-               .map(SynchronizedDataHolder::getUniqueId)
-               .mapToInt
-                       (uniqueId -> SessionManager.getInstance()
-                       .getSession(uniqueId)
-                       .kills())
-               .sum();
-    }
-
-    @Override
-    public int totalKills() {
-        return SessionManager.getInstance()
-                .getSessions()
-                .stream()
-                .mapToInt(DungeonSession::kills)
-                .sum();
+    public int playerKills(UUID uuid) {
+        final DungeonSession session = SessionManager
+                .getInstance()
+                .getSession(uuid);
+        if (session != null
+                && session
+                .getDungeon()
+                .id()
+                .equals(dungeon.id()))
+            return session.kills();
+        else return -1;
     }
 
     @Override
     public int playerDeaths(UUID uuid) {
-        return playerDeaths.get(uuid);
+        final DungeonSession session = SessionManager
+                .getInstance()
+                .getSession(uuid);
+        if (session != null
+                && session
+                .getDungeon()
+                .id()
+                .equals(dungeon.id()))
+            return session.deaths();
+        else return -1;
+    }
+
+    @Override
+    public int partyKills(AbstractParty party) {
+        return party.getOnlineMembers()
+                .stream()
+                .map(SynchronizedDataHolder::getUniqueId)
+                .mapToInt
+                        (this::playerKills)
+                .sum();
     }
 
     @Override
@@ -216,16 +252,25 @@ public abstract class AbstractStatus implements Status {
                 .stream()
                 .map(SynchronizedDataHolder::getUniqueId)
                 .mapToInt
-                        (uniqueId -> SessionManager.getInstance()
-                                .getSession(uniqueId)
-                                .deaths())
+                        (this::playerDeaths)
+                .sum();
+    }
+
+    @Override
+    public int totalKills() {
+        return SessionManager
+                .getInstance()
+                .getDungeonSessions(dungeon)
+                .stream()
+                .mapToInt(DungeonSession::kills)
                 .sum();
     }
 
     @Override
     public int totalDeaths() {
-        return SessionManager.getInstance()
-                .getSessions()
+        return SessionManager
+                .getInstance()
+                .getDungeonSessions(dungeon)
                 .stream()
                 .mapToInt(DungeonSession::deaths)
                 .sum();

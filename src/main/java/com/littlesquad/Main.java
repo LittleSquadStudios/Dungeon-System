@@ -1,8 +1,10 @@
 package com.littlesquad;
 
+import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.session.AbstractDungeonSession;
 import com.littlesquad.dungeon.database.MySQLConnector;
 import com.littlesquad.dungeon.internal.DungeonManager;
+import com.littlesquad.dungeon.internal.SessionManager;
 import com.littlesquad.dungeon.internal.commands.DungeonCommand;
 import com.littlesquad.dungeon.internal.event.TimedEventImpl;
 import com.littlesquad.dungeon.internal.file.FileManager;
@@ -65,6 +67,11 @@ public final class Main extends JavaPlugin {
         FileManager.close();
         TimedEventImpl.close();
         AbstractDungeonSession.shutdownExecutor();
+        SessionManager.getInstance().shutdown();
+        DungeonManager
+                .getDungeonManager()
+                .getAllDungeons()
+                .forEach(Dungeon::shutdown);
     }
 
     public static Main getInstance () {

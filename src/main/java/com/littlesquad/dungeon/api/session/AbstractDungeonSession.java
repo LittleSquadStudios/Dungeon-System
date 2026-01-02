@@ -2,6 +2,7 @@ package com.littlesquad.dungeon.api.session;
 
 import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.Dungeon;
+import com.littlesquad.dungeon.api.entrance.ExitReason;
 import com.littlesquad.dungeon.internal.checkpoint.CheckPointManager;
 
 import java.sql.PreparedStatement;
@@ -39,36 +40,41 @@ public abstract class AbstractDungeonSession implements DungeonSession {
 
     private final Dungeon dungeon;
 
-    public AbstractDungeonSession(final UUID playerUUID, final Dungeon dungeon) {
+    public AbstractDungeonSession(final UUID playerUUID, final Dungeon dungeon, Instant customStartTime) {
         this.playerUUID = playerUUID;
         this.dungeonName = dungeon.id();
         this.dungeon = dungeon;
 
-        this.startTime = Instant.now();
+        this.startTime = customStartTime != null ? customStartTime : Instant.now();
         this.endTime = new AtomicReference<>(null);
         this.active = new AtomicBoolean(true);
         this.totalKills = new AtomicInteger(0);
         this.damageDealt = new AtomicReference<>(0.0);
         this.damageTaken = new AtomicReference<>(0.0);
         this.deaths = new AtomicInteger(0);
+    }
 
-        System.out.println("Session created for player: " + playerUUID);
+    public AbstractDungeonSession(final UUID playerUUID, final Dungeon dungeon) {
+        this(playerUUID, dungeon, null);
     }
 
     @Override
-    public void stopSession() {
+    public void stopSession(final ExitReason reason) {
         if (!active.compareAndSet(true, false)) {
             System.out.println("Session already stopped for: " + playerUUID);
             return;
         }
 
-        endTime.set(Instant.now());
+        if (!(reason.equals(ExitReason.PLUGIN_STOPPING)
+                || reason.equals(ExitReason.ERROR)
+                || reason.equals(ExitReason.KICKED)))
+            endTime.set(Instant.now());
 
         CompletableFuture.allOf(
                         ensurePlayerExists(),
                         ensureDungeonIdLoaded()
                 )
-                .thenRunAsync(this::pushDatabase, executor)
+                .thenRunAsync(() -> pushDatabase(reason), executor)
                 .whenCompleteAsync((_, ex) -> {
                     if (ex != null) {
                         System.err.println("Error saving session for " + playerUUID + ": " + ex.getMessage());
@@ -133,16 +139,16 @@ public abstract class AbstractDungeonSession implements DungeonSession {
         }, executor);
     }
 
-    private void pushDatabase() {
+    private void pushDatabase(final ExitReason reason) {
         if (cachedPlayerId == null || cachedDungeonId == null) {
             throw new IllegalStateException("Player ID or Dungeon ID not initialized");
         }
 
         String sql = """
-            INSERT INTO player_runs (dungeon_id, player_id, deaths,
-                enter_time, exit_time, total_kills, damage_dealt, damage_taken)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """;
+        INSERT INTO player_runs (dungeon_id, player_id, deaths,
+            enter_time, exit_time, total_kills, damage_dealt, damage_taken, exit_reason)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """;
 
         Main.getConnector().getConnection(10).thenAcceptAsync(conn -> {
             try (conn;
@@ -152,10 +158,11 @@ public abstract class AbstractDungeonSession implements DungeonSession {
                 stmt.setInt(2, cachedPlayerId);
                 stmt.setInt(3, deaths.get());
                 stmt.setTimestamp(4, Timestamp.from(startTime));
-                stmt.setTimestamp(5, Timestamp.from(endTime.get() != null ? endTime.get() : Instant.now()));
+                stmt.setTimestamp(5, Timestamp.from(endTime.get()));
                 stmt.setInt(6, totalKills.get());
                 stmt.setDouble(7, damageDealt.get());
                 stmt.setDouble(8, damageTaken.get());
+                stmt.setString(9, reason.name());
 
                 int rows = stmt.executeUpdate();
                 System.out.println("Saved session data: " + rows + " row(s) affected");

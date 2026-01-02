@@ -1,6 +1,7 @@
 package com.littlesquad.dungeon.api.session;
 
 import com.littlesquad.dungeon.api.Dungeon;
+import com.littlesquad.dungeon.api.entrance.ExitReason;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -48,7 +49,7 @@ public interface DungeonSession {
      * @since 1.0.0
      * @author LittleSquad
      */
-    void stopSession();
+    void stopSession(final ExitReason reason);
 
     /**
      * Indicates whether this session is currently active.

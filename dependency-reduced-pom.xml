@@ -168,11 +168,7 @@
     </dependency>
   </dependencies>
   <properties>
-    <vps.user>root</vps.user>
-    <vps.password>915zyVEU9Hh45dLIxe</vps.password>
-    <vps.path>/root/customer/azure/test/plugins/</vps.path>
     <java.version>23</java.version>
-    <vps.host>178.218.144.49</vps.host>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 </project>

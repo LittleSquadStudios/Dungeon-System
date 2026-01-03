@@ -152,13 +152,23 @@ public abstract class AbstractDungeonSession implements DungeonSession {
 
         Main.getConnector().getConnection(10).thenAcceptAsync(conn -> {
             try (conn;
-                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+                 final PreparedStatement stmt = conn.prepareStatement(sql)) {
 
                 stmt.setInt(1, cachedDungeonId);
                 stmt.setInt(2, cachedPlayerId);
                 stmt.setInt(3, deaths.get());
                 stmt.setTimestamp(4, Timestamp.from(startTime));
-                stmt.setTimestamp(5, Timestamp.from(endTime.get()));
+
+                final Instant instant;
+                if ((instant = endTime.get()) == null)
+                    stmt.setTimestamp(
+                            5,
+                            null);
+                else
+                    stmt.setTimestamp(
+                            5,
+                            Timestamp.from(instant));
+
                 stmt.setInt(6, totalKills.get());
                 stmt.setDouble(7, damageDealt.get());
                 stmt.setDouble(8, damageTaken.get());

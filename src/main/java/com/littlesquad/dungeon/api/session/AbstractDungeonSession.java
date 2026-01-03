@@ -89,12 +89,12 @@ public abstract class AbstractDungeonSession implements DungeonSession {
 
     private CompletableFuture<Void> ensurePlayerExists() {
         return Main.getConnector().getConnection(10).thenAcceptAsync(conn -> {
-            String insert = "INSERT IGNORE INTO player (uuid) VALUES (?)";
-            String select = "SELECT player_id FROM player WHERE uuid = ?";
+            final String insert = "INSERT IGNORE INTO player (uuid) VALUES (?)";
+            final String select = "SELECT player_id FROM player WHERE uuid = ?";
 
             try (conn;
-                 PreparedStatement insertStmt = conn.prepareStatement(insert);
-                 PreparedStatement selectStmt = conn.prepareStatement(select)) {
+                 final PreparedStatement insertStmt = conn.prepareStatement(insert);
+                 final PreparedStatement selectStmt = conn.prepareStatement(select)) {
 
                 // Insert player
                 insertStmt.setString(1, playerUUID.toString());
@@ -102,7 +102,7 @@ public abstract class AbstractDungeonSession implements DungeonSession {
 
                 // Get player_id
                 selectStmt.setString(1, playerUUID.toString());
-                try (ResultSet rs = selectStmt.executeQuery()) {
+                try (final ResultSet rs = selectStmt.executeQuery()) {
                     if (rs.next()) {
                         cachedPlayerId = rs.getInt("player_id");
                     } else {

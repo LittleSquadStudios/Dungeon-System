@@ -7,6 +7,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -26,18 +28,22 @@ public final class CommandUtils {
     public static BukkitTask executeMulti (final CommandSender sender,
                                            final List<String> cl,
                                            final Player p) {
-        IntStream.range(0, cl.size())
+        final int size;
+        final String[] clCopy = new String[size = cl.size()];
+        IntStream.range(0, size)
                 .parallel()
-                .forEach(i -> cl.set(
-                        i,
+                .forEach(i -> clCopy[i] =
                         PlaceholderFormatter.formatPerPlayer(
                                 cl.get(i),
-                                p)));
+                                p));
         return Bukkit.getScheduler().runTask(
                 Main.getInstance(),
-                () -> cl.forEach(c -> Bukkit.dispatchCommand(
-                        sender,
-                        c)));
+                () -> {
+                    for (int i = 0; i < size; ++i)
+                        Bukkit.dispatchCommand(
+                                sender,
+                                clCopy[i]);
+                });
     }
 
     public static BukkitTask executeForMulti (final CommandSender sender,

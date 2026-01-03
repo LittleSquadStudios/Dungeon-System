@@ -51,8 +51,10 @@ public abstract class AbstractCheckPoint implements Checkpoint {
     }
 
     public void respawnAtCheckpoint (final Player player) {
-        player.teleport(getLocation());
+        System.out.println(getLocation());
+        System.out.println(player.teleport(getLocation()));
     }
+
     public Checkpoint getRespawnCheckpoint () {
         return lazyRespawnCheckpoint != null
                 ? lazyRespawnCheckpoint

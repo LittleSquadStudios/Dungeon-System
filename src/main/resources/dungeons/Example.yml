@@ -88,7 +88,7 @@ events:
       # item <displayName> <amount>
       - "slay 100 ZOMBIE"
     # Leave this blank in case there is no associated checkpoint once this event gets fired
-    checkpoint: ""
+    checkpoint: "example"
     # Same for the boss-room
     boss-room: ""
     commands:

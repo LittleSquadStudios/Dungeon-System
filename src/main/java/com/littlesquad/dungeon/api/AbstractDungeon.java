@@ -150,103 +150,172 @@ public abstract class AbstractDungeon implements Dungeon {
 
     @Override
     public EntryResponse tryEnter(final Player leader) {
+        System.out.println("=== DEBUG tryEnter START ===");
+        System.out.println("Leader: " + leader.getName());
 
         final PlayerData data = Main.getMMOCoreAPI().getPlayerData(leader);
         final AbstractParty party = data.getParty();
+        System.out.println("Party object: " + (party != null ? "EXISTS" : "NULL"));
 
         final boolean hasParty = party != null && getOnlinePartySize(party) > 1;
-
-        if (leader.hasPermission(getEntrance().adminPermission())) {
-            if (hasParty)
-                return EntryResponse.SUCCESS_PARTY;
-            else
-                return EntryResponse.SUCCESS_SOLO;
+        System.out.println("hasParty: " + hasParty);
+        if (party != null) {
+            System.out.println("Online party size: " + getOnlinePartySize(party));
         }
 
-        System.out.println(SessionManager.getInstance()
-                .getSession(leader.getUniqueId()) != null);
+        // Admin permission check
+        System.out.println("Debug checkpoint 1 - Admin check");
+        System.out.println("Has admin permission: " + leader.hasPermission(getEntrance().adminPermission()));
+        if (leader.hasPermission(getEntrance().adminPermission())) {
+            System.out.println("Debug checkpoint 2 - Admin confirmed");
+            if (hasParty) {
+                System.out.println("Admin with party -> SUCCESS_PARTY");
+                return EntryResponse.SUCCESS_PARTY;
+            } else {
+                System.out.println("Admin solo -> SUCCESS_SOLO");
+                return EntryResponse.SUCCESS_SOLO;
+            }
+        }
 
-        if (SessionManager.getInstance()
-                .getSession(leader.getUniqueId()) != null)
+        // Check if leader already in dungeon
+        System.out.println("Debug checkpoint 3 - Check leader session");
+        final DungeonSession leaderSession = SessionManager.getInstance()
+                .getSession(leader.getUniqueId());
+        System.out.println("Leader has active session: " + (leaderSession != null));
+
+        if (leaderSession != null) {
+            System.out.println("Debug checkpoint 4 - Leader already in dungeon");
+            System.out.println("Leader's dungeon ID: " + leaderSession.getDungeon().id());
             return EntryResponse.FAILURE_PER_SENDER_ALREADY_IN;
+        }
 
+        // Check party members
+        System.out.println("Debug checkpoint 5 - Party members check");
         if (hasParty) {
+            System.out.println("Debug checkpoint 6 - Has party, checking members");
+            System.out.println("Party online members count: " + party.getOnlineMembers().size());
+
             for (final PlayerData onlineMember : party.getOnlineMembers()) {
+                System.out.println("Debug checkpoint 7 - Checking member: " + onlineMember.getPlayer().getName());
+
                 final DungeonSession partyMemberSession = SessionManager
                         .getInstance()
                         .getSession(onlineMember.getUniqueId());
 
-                if (partyMemberSession != null) {
-                    if (partyMemberSession.getDungeon() == this)
-                        return EntryResponse.SUCCESS_SOLO;
-                    else
-                        return EntryResponse.FAILURE_PER_MEMBER_ALREADY_IN;
-                }
+                System.out.println("Debug checkpoint 8 - Member session: " + (partyMemberSession != null ? "EXISTS" : "NULL"));
 
+                if (partyMemberSession != null) {
+                    System.out.println("Debug checkpoint 9 - Member in dungeon");
+                    System.out.println("Member's dungeon ID: " + partyMemberSession.getDungeon().id());
+                    System.out.println("Current dungeon ID: " + id());
+                    System.out.println("Same dungeon? " + partyMemberSession.getDungeon().id().equals(id()));
+
+                    if (partyMemberSession.getDungeon().id().equals(id())) {
+                        System.out.println("Debug checkpoint 10 - Member in SAME dungeon -> SUCCESS_SOLO");
+                        return EntryResponse.SUCCESS_SOLO;
+                    } else {
+                        System.out.println("Debug checkpoint 11 - Member in DIFFERENT dungeon -> FAILURE");
+                        return EntryResponse.FAILURE_PER_MEMBER_ALREADY_IN;
+                    }
+                }
             }
+            System.out.println("All party members checked, none in dungeon");
         }
 
-
-        // New check: If the player has adminPermission he can join without any other check
-
-
+        // Check max slots
+        System.out.println("Debug checkpoint 12 - Max slots check");
+        System.out.println("Max slots: " + getEntrance().maxSlots());
         if (getEntrance().maxSlots() == 0) {
+            System.out.println("Dungeon blocked (0 slots) -> FAILURE");
             return EntryResponse.FAILURE_PER_DUNGEON_BLOCKED;
         }
 
-        // First check: Are the party required? Is the player alone?
-
-
+        // Party required check
+        System.out.println("Debug checkpoint 13 - Party required check");
+        System.out.println("Party required: " + getEntrance().partyRequired());
         if (getEntrance().partyRequired()) {
-
-            // Second check: Check if leader has a party if not, it will return FAILURE_PER_PARTY
+            System.out.println("Debug checkpoint 14 - Party IS required");
 
             if (!hasParty) {
+                System.out.println("No party but required -> FAILURE_PER_PARTY");
                 return EntryResponse.FAILURE_PER_PARTY;
             }
 
-            // Third check:
-
-            if (isPartyAlreadyProcessing(party))
+            System.out.println("Debug checkpoint 15 - Checking if party already processing");
+            if (isPartyAlreadyProcessing(party)) {
+                System.out.println("Party already processing -> FAILURE");
                 return EntryResponse.FAILURE_PER_ALREADY_PROCESSING;
-
-            final int partySize = getOnlinePartySize(party);
-
-            if(!hasEnoughSlots(partySize, leader)) {
-                return EntryResponse.FAILURE_PER_SLOTS;
             }
 
-            if (!hasPartyMinimumLevel(party)) {
-                return EntryResponse.FAILURE_PER_LEVEL;
-            }
-
-            return EntryResponse.SUCCESS_PARTY;
-        }
-
-        if (hasParty) {
-
-            if (isPartyAlreadyProcessing(party))
-                return EntryResponse.FAILURE_PER_ALREADY_PROCESSING;
-
             final int partySize = getOnlinePartySize(party);
+            System.out.println("Debug checkpoint 16 - Party size: " + partySize);
+            System.out.println("Has enough slots: " + hasEnoughSlots(partySize, leader));
 
             if (!hasEnoughSlots(partySize, leader)) {
+                System.out.println("Not enough slots -> FAILURE");
                 return EntryResponse.FAILURE_PER_SLOTS;
             }
 
+            System.out.println("Debug checkpoint 17 - Checking party level");
+            System.out.println("Has minimum level: " + hasPartyMinimumLevel(party));
             if (!hasPartyMinimumLevel(party)) {
+                System.out.println("Party level too low -> FAILURE");
                 return EntryResponse.FAILURE_PER_LEVEL;
             }
 
+            System.out.println("All checks passed -> SUCCESS_PARTY");
             return EntryResponse.SUCCESS_PARTY;
         }
 
-        if (!hasEnoughSlots(1, leader))
+        // Party not required but player has party
+        System.out.println("Debug checkpoint 18 - Party not required, checking if has party");
+        if (hasParty) {
+            System.out.println("Debug checkpoint 19 - Player has party (optional)");
+
+            System.out.println("Checking if party already processing");
+            if (isPartyAlreadyProcessing(party)) {
+                System.out.println("Party already processing -> FAILURE");
+                return EntryResponse.FAILURE_PER_ALREADY_PROCESSING;
+            }
+
+            final int partySize = getOnlinePartySize(party);
+            System.out.println("Debug checkpoint 20 - Party size: " + partySize);
+            System.out.println("Has enough slots: " + hasEnoughSlots(partySize, leader));
+
+            if (!hasEnoughSlots(partySize, leader)) {
+                System.out.println("Not enough slots -> FAILURE");
+                return EntryResponse.FAILURE_PER_SLOTS;
+            }
+
+            System.out.println("Debug checkpoint 21 - Checking party level");
+            System.out.println("Has minimum level: " + hasPartyMinimumLevel(party));
+            if (!hasPartyMinimumLevel(party)) {
+                System.out.println("Party level too low -> FAILURE");
+                return EntryResponse.FAILURE_PER_LEVEL;
+            }
+
+            System.out.println("Party checks passed -> SUCCESS_PARTY");
+            return EntryResponse.SUCCESS_PARTY;
+        }
+
+        // Solo player checks
+        System.out.println("Debug checkpoint 22 - Solo player checks");
+        System.out.println("Has enough slots for 1: " + hasEnoughSlots(1, leader));
+        if (!hasEnoughSlots(1, leader)) {
+            System.out.println("Not enough slots for solo -> FAILURE");
             return EntryResponse.FAILURE_PER_SLOTS;
+        }
 
-        if (leader.getLevel() < getEntrance().playerMinimumLevel())
+        System.out.println("Debug checkpoint 23 - Level check");
+        System.out.println("Player level: " + leader.getLevel());
+        System.out.println("Required level: " + getEntrance().playerMinimumLevel());
+        if (leader.getLevel() < getEntrance().playerMinimumLevel()) {
+            System.out.println("Level too low -> FAILURE");
             return EntryResponse.FAILURE_PER_LEVEL;
+        }
 
+        System.out.println("All solo checks passed -> SUCCESS_SOLO");
+        System.out.println("=== DEBUG tryEnter END ===");
         return EntryResponse.SUCCESS_SOLO;
     }
 
@@ -290,49 +359,106 @@ public abstract class AbstractDungeon implements Dungeon {
         return null;
     }
 
+    @Override
     public void onEnter(final Player player) {
+        System.out.println("=== DEBUG onEnter(Player) START ===");
+        System.out.println("Player: " + (player != null ? player.getName() : "NULL"));
 
-        if (player == null) return;
+        if (player == null) {
+            System.out.println("Player is null -> returning");
+            return;
+        }
+
+        System.out.println("Player UUID: " + player.getUniqueId());
 
         final DungeonSession session = SessionManager
                 .getInstance()
                 .getSession(player.getUniqueId());
 
-        if (session != null)
+        System.out.println("Existing session: " + (session != null ? session.getDungeon().id() : "NONE"));
+
+        if (session != null) {
+            System.out.println("Found existing session, ending with KICKED reason");
             SessionManager
                     .getInstance()
                     .endSession(player.getUniqueId(), ExitReason.KICKED);
+            System.out.println("Existing session ended");
+        }
 
+        System.out.println("Saving join point location: " + player.getLocation());
         joinPoints.put(player.getUniqueId(), player.getLocation());
+
+        System.out.println("Is timed dungeon: " + isTimed());
         if (isTimed()) {
-            System.out.println("Is timed: " + isTimed());
+            System.out.println("Starting TIMED session");
+            System.out.println("Time amount: " + getParser().getTimeAmount());
+            System.out.println("Time unit: " + getParser().getTimeUnit());
+
             SessionManager.getInstance().startTimedSession(this,
                     player.getUniqueId(),
                     getParser().getTimeAmount(),
                     getParser().getTimeUnit(),
                     s -> {
-                final Player p = Bukkit.getPlayer(s);
-                p.sendMessage("ciao");
-                onExit(p);
-            });
+                        System.out.println("Timed session callback triggered for UUID: " + s);
+                        final Player p = Bukkit.getPlayer(s);
+                        if (p != null) {
+                            System.out.println("Player found: " + p.getName() + ", sending message and calling onExit");
+                            p.sendMessage("ciao");
+                            onExit(p);
+                        } else {
+                            System.out.println("WARNING: Player not found for UUID: " + s);
+                        }
+                    });
+            System.out.println("Timed session started");
 
-        } else
+        } else {
+            System.out.println("Starting STANDARD session");
             SessionManager.getInstance()
                     .startSession(this,
                             player.getUniqueId());
+            System.out.println("Standard session started");
+        }
 
-        System.out.println(getEntrance().onEnterCommands());
+        System.out.println("OnEnter commands: " + getEntrance().onEnterCommands());
+        System.out.println("Executing onEnter commands...");
 
         CommandUtils.executeMulti(
                 Bukkit.getConsoleSender(),
                 getEntrance().onEnterCommands(),
                 player);
 
+        System.out.println("OnEnter commands executed successfully");
+        System.out.println("=== DEBUG onEnter(Player) END ===");
     }
 
     @Override
     public void onEnter(final Player... players) {
-        Arrays.stream(players).forEach(this::onEnter);
+        System.out.println("=== DEBUG onEnter(Player...) START ===");
+        System.out.println("Players array: " + (players != null ? "EXISTS" : "NULL"));
+        System.out.println("Players array length: " + (players != null ? players.length : "N/A"));
+
+        if (players == null || players.length == 0) {
+            System.out.println("WARNING: Players array is null or empty -> returning");
+            return;
+        }
+
+        System.out.println("Players in array:");
+        for (int i = 0; i < players.length; i++) {
+            System.out.println("  [" + i + "] " + (players[i] != null ? players[i].getName() + " (UUID: " + players[i].getUniqueId() + ")" : "NULL"));
+        }
+
+        System.out.println("Processing each player with stream...");
+        Arrays.stream(players).forEach(p -> {
+            if (p != null) {
+                System.out.println("Stream processing player: " + p.getName());
+                this.onEnter(p);
+                System.out.println("Completed processing: " + p.getName());
+            } else {
+                System.out.println("WARNING: Null player in stream, skipping");
+            }
+        });
+
+        System.out.println("=== DEBUG onEnter(Player...) END ===");
     }
 
     @Override

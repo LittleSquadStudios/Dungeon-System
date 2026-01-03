@@ -3,6 +3,7 @@ package com.littlesquad.dungeon.api.checkpoint;
 import com.littlesquad.Main;
 import com.littlesquad.dungeon.internal.checkpoint.CheckPointManager;
 import com.littlesquad.dungeon.internal.utils.CommandUtils;
+import net.kyori.adventure.util.TriState;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -74,6 +75,8 @@ public abstract class AbstractCheckPoint implements Checkpoint {
             return;
         e.setCancelled(true);
         player.setHealth(20.0D);
+        player.setFireTicks(0);
+        player.setVisualFire(TriState.FALSE);
         player.clearActivePotionEffects();
         player.clearTitle();
         getRespawnCheckpoint().respawnAtCheckpoint(player);

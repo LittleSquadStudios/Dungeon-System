@@ -178,7 +178,7 @@ public final class DungeonParser {
                                                         d.getWorld(),
                                                         Double.parseDouble(loc.substring(0, i = loc.indexOf(' ', 1))),
                                                         Double.parseDouble(loc.substring(i + 1, i = loc.indexOf(' ', i + 2))),
-                                                        Double.parseDouble(loc.substring(i + 3))),
+                                                        Double.parseDouble(loc.substring(i + 1))),
                                                 config.getStringList("events." + key + ".conditioned_by")
                                                         .stream()
                                                         .parallel()
@@ -212,7 +212,7 @@ public final class DungeonParser {
                                             d.getWorld(),
                                             Double.parseDouble(loc.substring(0, i = loc.indexOf(' ', 1))),
                                             Double.parseDouble(loc.substring(i + 1, i = loc.indexOf(' ', i + 2))),
-                                            Double.parseDouble(loc.substring(i + 3))),
+                                            Double.parseDouble(loc.substring(i + 1))),
                                     config.getString("checkpoints." + key + ".respawn_at_checkpoint", key),
                                     config.getStringList("checkpoints." + key + ".on_death_commands"));
                         } catch (final Throwable _) {
@@ -250,7 +250,7 @@ public final class DungeonParser {
                                     new Location(d.getWorld(),
                                             Double.parseDouble(loc.substring(0, i = loc.indexOf(' ', 1))),
                                             Double.parseDouble(loc.substring(i + 1, i = loc.indexOf(' ', i + 2))),
-                                            Double.parseDouble(loc.substring(i + 3))),
+                                            Double.parseDouble(loc.substring(i + 1))),
                                     config.getStringList("boss_rooms." + key + ".rewards")
                                             .parallelStream()
                                             .map(id -> allRewards

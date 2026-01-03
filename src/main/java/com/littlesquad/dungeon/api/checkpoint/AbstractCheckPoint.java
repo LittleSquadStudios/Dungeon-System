@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.util.Arrays;
 import java.util.List;
@@ -54,7 +55,9 @@ public abstract class AbstractCheckPoint implements Checkpoint {
         final Location loc;
         if (!(loc = getLocation()).isChunkLoaded())
             loc.getChunk().load(true);
-        player.teleport(loc);
+        player.teleport(
+                loc,
+                PlayerTeleportEvent.TeleportCause.PLUGIN);
     }
 
     public Checkpoint getRespawnCheckpoint () {
@@ -70,11 +73,14 @@ public abstract class AbstractCheckPoint implements Checkpoint {
         if (CheckPointManager.get(player.getUniqueId()) != this)
             return;
         e.setCancelled(true);
-        getRespawnCheckpoint().respawnAtCheckpoint(e.getPlayer());
+        player.setHealth(20.0D);
+        player.clearActivePotionEffects();
+        player.clearTitle();
+        getRespawnCheckpoint().respawnAtCheckpoint(player);
         CommandUtils.executeMulti(
                 Bukkit.getConsoleSender(),
                 onDeathCommands,
-                e.getPlayer());
+                player);
     }
 
     public void close () {

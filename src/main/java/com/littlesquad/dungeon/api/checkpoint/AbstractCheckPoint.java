@@ -21,9 +21,9 @@ public abstract class AbstractCheckPoint implements Checkpoint {
     protected final List<String> onDeathCommands;
 
     protected AbstractCheckPoint (final String id,
-                               final Location loc,
-                               final String respawnCheckpoint,
-                               final List<String> onDeathCommands) {
+                                  final Location loc,
+                                  final String respawnCheckpoint,
+                                  final List<String> onDeathCommands) {
         this.id = id;
         checkPointLoc = loc;
         this.respawnCheckpoint = respawnCheckpoint;
@@ -51,8 +51,10 @@ public abstract class AbstractCheckPoint implements Checkpoint {
     }
 
     public void respawnAtCheckpoint (final Player player) {
-        System.out.println(getLocation());
-        System.out.println(player.teleport(getLocation()));
+        final Location loc;
+        if (!(loc = getLocation()).isChunkLoaded())
+            loc.getChunk().load(true);
+        player.teleport(loc);
     }
 
     public Checkpoint getRespawnCheckpoint () {

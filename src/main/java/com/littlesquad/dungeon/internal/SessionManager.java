@@ -160,7 +160,7 @@ public final class SessionManager {
                                 .getDungeonManager()
                                 .getDungeon(dungeonName)
                                 .orElseThrow();
-
+                        //TODO: Il dungeon non setta al suo avvio il suo maxCompleteTime
                         if (maxCompleteTime != null && unitType != null) {
                             final TimeUnit unit = TimeUnit.valueOf(unitType.toUpperCase());
                             final long elapsedMillis = System.currentTimeMillis() - enterTime.getTime(); //TODO: Pushare i dati dal config in merito al timing altrimenti non funzionerà

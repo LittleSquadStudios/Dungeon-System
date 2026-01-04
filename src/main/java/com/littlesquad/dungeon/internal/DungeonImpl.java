@@ -29,6 +29,7 @@ public final class DungeonImpl extends AbstractDungeon {
     private final Event[] events;
     private final Map<String, Event> eventMap;
     private final Checkpoint[] checkpoints;
+    private final BossRoom[] bossrooms;
 
     public DungeonImpl(final DungeonParser parser) {
         super(parser);
@@ -55,6 +56,8 @@ public final class DungeonImpl extends AbstractDungeon {
         for (final Event event : events)
             eventMap.put(event.getID(), event);
         this.checkpoints = parser.getCheckpoints(this);
+
+        bossrooms = parser.getBossRooms(this);
 
     }
 
@@ -105,12 +108,7 @@ public final class DungeonImpl extends AbstractDungeon {
 
     @Override
     public BossRoom[] getBossRooms() {
-        return null;
-    }
-
-    @Override
-    public ExitReason forceExit(Player player) {
-        return null;
+        return bossrooms;
     }
 
     @Override

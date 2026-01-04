@@ -36,7 +36,7 @@ entrance:
       - "kill %player_name%"
   party:
     # Don't allow solo players to enter the dungeon if set to true
-    required: false
+    required: true
     # Commands to execute in case the player isn't allowed to enter for the 'party' limit
     fall_back_commands:
       - "kill %player_name%"
@@ -136,12 +136,16 @@ events:
 checkpoints:
   # Name of the checkpoint used in the 'checkpoint' section of the OBJECTIVE event
   # Each checkpoint should have a different name even across different files!
+  first:
+    location: "-40 66 -16"
+    on_death_commands:
+      - "tw trigger cinematic_"
   example:
     location: "-40 66 -16"
     # May be specified a precedent checkpoint too if this is only a 'technical' checkpoint
-    respawn_at_checkpoint: "example"
+    respawn_at_checkpoint: "first"
     on_death_commands:
-      - "say MORTO!"
+      - "kill %player_name%"
 
 boss_rooms:
   # This might be named as you want, the only requirement is to make it different from the others

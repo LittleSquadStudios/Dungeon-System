@@ -96,18 +96,6 @@ public interface Dungeon {
      * */
     CompletableFuture<EntryResponse> tryEnterAsync(Player p);
 
-    /**
-     * Forces the player to exit the dungeon.
-     * Regardless of the player's progress or performance, they will be
-     * removed from the dungeon and an {@link ExitReason#KICKED} will be returned.
-     * Additionally, the player registry will record that, at the moment this
-     * method was executed, the player was forcibly removed.
-     *
-     * @return {@link ExitReason#KICKED}
-     * @since 1.0.0
-     * author LittleSquad
-     */
-    ExitReason forceExit(final Player player);
 
     /**
      * What happens every time a player joins the dungeon, is different from tryEnter
@@ -117,10 +105,20 @@ public interface Dungeon {
      * @since 1.0.0
      * @author LittleSquad
      * */
-    void onEnter(final Player player);
     void onEnter(final Player... players);
-
     void onExit(final Player player);
+
+    /**
+     * Forces the player to exit the dungeon.
+     * Regardless of the player's progress or performance, they will be
+     * removed from the dungeon and an {@link ExitReason#KICKED} will be returned.
+     * Additionally, the player registry will record that, at the moment this
+     * method was executed, the player was forcibly removed.
+     *
+     * @since 1.0.0
+     * author LittleSquad
+     */
+    void onEnter(final Player player);
     void onExit(final Player... players);
 
     /**

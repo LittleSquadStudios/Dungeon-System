@@ -1,7 +1,5 @@
 package com.littlesquad.dungeon.api.status;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.entrance.ExitReason;
@@ -10,7 +8,6 @@ import com.littlesquad.dungeon.internal.SessionManager;
 import io.lumine.mythic.lib.data.SynchronizedDataHolder;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.party.AbstractParty;
-import net.kyori.adventure.text.event.ClickEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -18,13 +15,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractStatus implements Status {
 
@@ -109,21 +102,15 @@ public abstract class AbstractStatus implements Status {
     @EventHandler
     public void onEntityDeath(final EntityDeathEvent e) {
         final LivingEntity entity = e.getEntity();
-        System.out.println("Death Debug - 1");
         if (entity instanceof Player player) {
-            System.out.println("Death Debug - 2");
             if (isPlayerInDungeon(player.getUniqueId())) {
-                System.out.println("Death Debug - 3");
                 final DungeonSession session = SessionManager.getInstance().getSession(player.getUniqueId());
                 session.addDeath();
             }
             return;
         }
-        System.out.println("Death Debug - 1 - 1");
         final Player killer = entity.getKiller();
-        System.out.println("Death Debug - 1 - 2");
         if (killer != null && isPlayerInDungeon(killer.getUniqueId())) {
-            System.out.println("Death Debug - 1 - 3");
             SessionManager
                     .getInstance()
                     .getSession(killer.getUniqueId())

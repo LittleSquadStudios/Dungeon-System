@@ -79,28 +79,23 @@ public abstract class AbstractBoss implements Boss, Listener {
                 return;
             }
 
-            // Attempt to spawn the boss with retries
-            final int maxAttempts = 6;
-            ActiveMob spawnedMob = null;
-
-            for (int attempt = 0; attempt < maxAttempts && spawnedMob == null; attempt++) {
-                spawnedMob = bossEntity.spawn(
+            Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
+                final ActiveMob spawnedMob = bossEntity.spawn(
                         BukkitAdapter.adapt(spawnLocation),
                         calculatedLevel,
-                        SpawnReason.COMMAND
-                );
-            }
+                        SpawnReason.COMMAND);
 
-            if (spawnedMob != null) {
-                this.activeMob = spawnedMob;
-                this.bossUUID = spawnedMob.getEntity().getUniqueId();
-                state = BossState.ALIVE;
-                participants.clear();
-                onSpawn();
-            } else {
-                state = BossState.NOT_SPAWNED;
-                System.err.println("[BossSpawn] Failed to spawn boss after " + maxAttempts + " attempts");
-            }
+                if (spawnedMob != null) {
+                    this.activeMob = spawnedMob;
+                    this.bossUUID = spawnedMob.getEntity().getUniqueId();
+                    state = BossState.ALIVE;
+                    participants.clear();
+                    onSpawn();
+                } else {
+                    state = BossState.NOT_SPAWNED;
+                    System.err.println("[BossSpawn] Failed to spawn boss after 1 attempt");
+                }
+            });
 
         } catch (final Exception e) {
             state = BossState.NOT_SPAWNED;

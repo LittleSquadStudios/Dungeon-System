@@ -548,6 +548,8 @@ public final class RequirementsParser {
                     && req.interactions.isEmpty()
                     && req.itemRequirements.isEmpty()
                     && req.completed.compareAndSet(false, true)) {
+                event.deActiveFor();
+                participantRequirements.remove(req.key);
                 final Player[] players;
                 event.checkpointToUnlock().unlockFor(players
                         = req
@@ -802,6 +804,8 @@ public final class RequirementsParser {
                     && req
                     .completed
                     .compareAndSet(false, true)) {
+                event.deActiveFor();
+                participantRequirements.remove(req.key);
                 final Player[] players;
                 event.checkpointToUnlock().unlockFor(players
                         = req

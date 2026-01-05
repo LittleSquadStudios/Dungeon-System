@@ -1,5 +1,6 @@
 package com.littlesquad.dungeon.database;
 
+import com.littlesquad.Main;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.util.Credentials;
@@ -38,7 +39,7 @@ public final class MySQLConnector {
 
 
     public MySQLConnector() {
-        this(Executors.newCachedThreadPool());
+        this(Main.getCachedExecutor());
     }
     public MySQLConnector(final ExecutorService ex) {
         poolConfig = new HikariConfig();
@@ -50,7 +51,7 @@ public final class MySQLConnector {
                           final int port,
                           final String userName,
                           final String password) {
-        this(databaseName, ipAddr, port, userName, password, Executors.newCachedThreadPool());
+        this(databaseName, ipAddr, port, userName, password, Main.getCachedExecutor());
     }
 
     public MySQLConnector(final String databaseName,
@@ -76,7 +77,7 @@ public final class MySQLConnector {
     }
 
     public MySQLConnector(final String url) {
-        this(url, Executors.newCachedThreadPool());
+        this(url, Main.getCachedExecutor());
     }
     public MySQLConnector(final String url,
                           final ExecutorService ex) {

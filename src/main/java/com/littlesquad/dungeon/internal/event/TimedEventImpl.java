@@ -14,8 +14,6 @@ import java.util.Random;
 import java.util.concurrent.*;
 
 public final class TimedEventImpl extends TimedEvent {
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
-
     private final Dungeon dungeon;
     private final String id;
     private final List<String> commands;
@@ -68,7 +66,7 @@ public final class TimedEventImpl extends TimedEvent {
         Arrays.stream(players)
                 .parallel()
                 .forEach(player -> {
-                    this.players.computeIfAbsent(player, _ -> scheduler.schedule(() -> {
+                    this.players.computeIfAbsent(player, _ -> Main.getScheduledExecutor().schedule(() -> {
                         if (this.players.remove(player) != null)
                             CommandUtils.executeMulti(
                                     Bukkit.getConsoleSender(),
@@ -97,9 +95,5 @@ public final class TimedEventImpl extends TimedEvent {
                     if ((task = this.players.remove(player)) != null)
                         task.cancel(false);
                 });
-    }
-
-    public static void close () {
-        scheduler.shutdownNow();
     }
 }

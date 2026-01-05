@@ -24,13 +24,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class RequirementsParser {
     private final FileConfiguration config;
-    private final ExecutorService ex = Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors());
 
     RequirementsParser (final FileConfiguration config) {
         this.config = config;
@@ -313,7 +310,7 @@ public final class RequirementsParser {
                 + ".requirement_mode",
                 "ALL")
                 .equalsIgnoreCase("ALL")
-                ? (type, e, args) -> ex.execute(() -> {
+                ? (type, e, args) -> Main.getWorkStealingExecutor().execute(() -> {
             final ParticipantRequirements req;
             if ((req = switch (type) {
                 case SLAY -> {
@@ -563,7 +560,7 @@ public final class RequirementsParser {
                 event.executeCommandsFor(players);
                 event.bossRoomToUnlock().join(players);
             }
-        }) : (type, e, args) -> ex.execute(() -> {
+        }) : (type, e, args) -> Main.getWorkStealingExecutor().execute(() -> {
             final ParticipantRequirements req;
             if ((req = switch (type) {
                 case SLAY -> {
@@ -819,9 +816,5 @@ public final class RequirementsParser {
                 event.bossRoomToUnlock().join(players);
             }
         });
-    }
-
-    public void close () {
-        ex.shutdownNow();
     }
 }

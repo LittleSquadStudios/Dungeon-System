@@ -29,8 +29,6 @@ public final class SessionManager {
     private final ConcurrentHashMap<UUID, ScheduledFuture<?>> timedTasks = new ConcurrentHashMap<>();
     private final Map<Dungeon, List<DungeonSession>> dungeonSessions = new ConcurrentHashMap<>();
 
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
-
     public void startSession(final Dungeon dungeon, UUID playerId) {
         final DungeonSession session = createSessionInstance(dungeon, playerId);
         sessions.put(playerId, session);
@@ -50,7 +48,7 @@ public final class SessionManager {
                 .add(session);
 
         timedTasks.put(playerId,
-                scheduler.schedule(() -> {
+                Main.getScheduledExecutor().schedule(() -> {
                     if (session.isActive()) {
                         onExpire.accept(playerId);
                         endSession(playerId, ExitReason.TIME_EXPIRED);
@@ -107,7 +105,6 @@ public final class SessionManager {
         dungeonSessions.clear();
         sessions.values().forEach(session -> endSession(session.playerId(), ExitReason.PLUGIN_STOPPING));
         sessions.clear();
-        scheduler.shutdown();
     }
 
     public void onReload() {
@@ -184,7 +181,7 @@ public final class SessionManager {
                                         .add(session);
 
                                 timedTasks.put(playerId,
-                                        scheduler.schedule(() -> {
+                                        Main.getScheduledExecutor().schedule(() -> {
                                             if (session.isActive()) {
                                                 onExpire.accept(playerId);
                                                 endSession(playerId, ExitReason.TIME_EXPIRED);
@@ -231,6 +228,7 @@ public final class SessionManager {
         }
         session.addKill(kills);
         session.addDamage(damageDealt); //TODO: AGGIUNGERE SETDEATH E SETKILLS E FAR FUNZIONARE addKill come addDeath
+                                        //TODO: SWAPE! Ti faccio esplodere se non specifici il CachedExecutor nei Futures delle Query!!!
         session.addDamageTaken(damageTaken);
     }
 

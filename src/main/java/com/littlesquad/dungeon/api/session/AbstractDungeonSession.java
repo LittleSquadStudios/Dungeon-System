@@ -29,12 +29,6 @@ public abstract class AbstractDungeonSession implements DungeonSession {
     private final AtomicReference<Double> damageTaken;
     private final AtomicInteger deaths;
 
-    private static final ExecutorService executor;
-
-    static {
-        executor = Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors());
-    }
-
     private final UUID playerUUID;
     private final String dungeonName;
     private Integer cachedPlayerId;
@@ -77,7 +71,7 @@ public abstract class AbstractDungeonSession implements DungeonSession {
                         ensurePlayerExists(),
                         ensureDungeonIdLoaded()
                 )
-                .thenRunAsync(() -> pushDatabase(reason), executor)
+                .thenRunAsync(() -> pushDatabase(reason), Main.getCachedExecutor())
                 .whenCompleteAsync((_, ex) -> {
                     if (ex != null) {
                         System.err.println("Error saving session for " + playerUUID + ": " + ex.getMessage());
@@ -86,7 +80,7 @@ public abstract class AbstractDungeonSession implements DungeonSession {
                         System.out.println("Session saved successfully for: " + playerUUID);
                     }
                     CheckPointManager.removeCheckPointFor(playerUUID);
-                }, executor);
+                }, Main.getWorkStealingExecutor());
 
     }
 
@@ -116,7 +110,7 @@ public abstract class AbstractDungeonSession implements DungeonSession {
             } catch (SQLException e) {
                 throw new RuntimeException("Error ensuring player exists for UUID: " + playerUUID, e);
             }
-        }, executor);
+        }, Main.getCachedExecutor());
     }
 
     private CompletableFuture<Void> ensureDungeonIdLoaded() {
@@ -139,7 +133,7 @@ public abstract class AbstractDungeonSession implements DungeonSession {
             } catch (SQLException e) {
                 throw new RuntimeException("Error retrieving dungeon_id for: " + dungeonName, e);
             }
-        }, executor);
+        }, Main.getCachedExecutor());
     }
 
     private void pushDatabase(final ExitReason reason) {
@@ -217,7 +211,7 @@ public abstract class AbstractDungeonSession implements DungeonSession {
             } catch (SQLException e) {
                 throw new RuntimeException("Error saving session data", e);
             }
-        }, executor).exceptionally(ex -> {
+        }, Main.getCachedExecutor()).exceptionally(ex -> {
             System.err.println("Database push failed: " + ex.getMessage());
             ex.printStackTrace();
             return null;
@@ -293,17 +287,5 @@ public abstract class AbstractDungeonSession implements DungeonSession {
     @Override
     public void addDamageTaken(double damage) {
         damageTaken.updateAndGet(current -> current + damage);
-    }
-
-    public static void shutdownExecutor() {
-        executor.shutdown();
-        try {
-            if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
-                executor.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            executor.shutdownNow();
-            Thread.currentThread().interrupt();
-        }
     }
 }

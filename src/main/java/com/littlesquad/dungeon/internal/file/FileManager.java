@@ -1,5 +1,6 @@
 package com.littlesquad.dungeon.internal.file;
 
+import com.littlesquad.Main;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -11,15 +12,11 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public final class FileManager {
     private static volatile ConfigParser config;
     private static volatile FileConfiguration messages;
     private static final Map<String, DungeonParser> dungeons = new ConcurrentHashMap<>();
-
-    private static final ExecutorService executor = Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors());
 
     private static File pluginFolder;
 
@@ -67,12 +64,12 @@ public final class FileManager {
                         YamlConfiguration.loadConfiguration(new File(
                                 pluginFolder,
                                 "config.yml"))),
-                executor));
+                Main.getWorkStealingExecutor()));
         futures.add(CompletableFuture.runAsync(() -> messages = YamlConfiguration
                         .loadConfiguration(new File(
                                 pluginFolder,
                                 "messages.yml")),
-                executor));
+                Main.getWorkStealingExecutor()));
         final File[] dungeonFiles;
         if ((dungeonFiles = new File(
                 pluginFolder,
@@ -91,7 +88,7 @@ public final class FileManager {
                             new DungeonParser(
                                     name,
                                     YamlConfiguration.loadConfiguration(dungeonFiles[finalI])));
-                    }, executor));
+                    }, Main.getWorkStealingExecutor()));
             }
         }
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
@@ -105,9 +102,5 @@ public final class FileManager {
     }
     public static Map<String, DungeonParser> getDungeons () {
         return dungeons;
-    }
-
-    public static void close () {
-        executor.shutdownNow();
     }
 }

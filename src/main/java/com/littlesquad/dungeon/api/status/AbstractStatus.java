@@ -18,11 +18,13 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AbstractStatus implements Status {
 
     private final boolean isPvp;
     private final Dungeon dungeon;
+    private final ConcurrentHashMap<UUID, ExitReason> exitReasons = new ConcurrentHashMap<>();
 
     public AbstractStatus(boolean isPvp, final Dungeon dungeon) {
         this.isPvp = isPvp;
@@ -42,27 +44,33 @@ public abstract class AbstractStatus implements Status {
     public void onQuit(final PlayerQuitEvent e) {
         if (isPlayerInDungeon(e.getPlayer().getUniqueId())) {
             switch (e.getReason()) {
-                case DISCONNECTED -> {
+                case DISCONNECTED -> { // CASE TEST
                     final DungeonSession session = SessionManager.getInstance().getSession(e.getPlayer().getUniqueId());
-                    session.stopSession(ExitReason.ERROR);
+                    if (session != null)
+                        session.stopSession(ExitReason.ERROR);
+                    exitReasons.put(e.getPlayer().getUniqueId(), ExitReason.ERROR);
                 }
-                default -> {
-
-                }
+                default -> exitReasons.put(e.getPlayer().getUniqueId(), ExitReason.QUIT);
             }
         }
     }
 
     @EventHandler
     public void onPlayerJoin(final AsyncPlayerPreLoginEvent event) {
-        UUID playerId = event.getUniqueId();
 
-        SessionManager.getInstance().recoverActiveSessions(playerId, uuid -> {
-            final Player p = Bukkit.getPlayer(uuid);
-            if (p != null) {
-                p.sendMessage("Time's up! You've been removed from the dungeon.");
+        final UUID uuid = event.getUniqueId();
+        final ExitReason reason = exitReasons.get(uuid);
+
+        if (reason != null)
+            if(reason.equals(ExitReason.ERROR)) {
+                SessionManager.getInstance().recoverActiveSessions(uuid, _ -> {
+                    final Player p = Bukkit.getPlayer(uuid);
+                    if (p != null) {
+                        p.sendMessage("Time's up! You've been removed from the dungeon.");
+                    }
+                });
             }
-        });
+
     }
 
     @EventHandler

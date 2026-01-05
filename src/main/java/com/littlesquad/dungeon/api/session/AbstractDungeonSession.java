@@ -5,6 +5,7 @@ import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.entrance.ExitReason;
 import com.littlesquad.dungeon.internal.checkpoint.CheckPointManager;
 
+import javax.annotation.Nullable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,6 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class AbstractDungeonSession implements DungeonSession {
 
+    private final int runId;
     private final Instant startTime;
     private final AtomicReference<Instant> endTime;
     private final AtomicBoolean active;
@@ -40,7 +42,7 @@ public abstract class AbstractDungeonSession implements DungeonSession {
 
     private final Dungeon dungeon;
 
-    public AbstractDungeonSession(final UUID playerUUID, final Dungeon dungeon, Instant customStartTime) {
+    public AbstractDungeonSession(final UUID playerUUID, final Dungeon dungeon, final Instant customStartTime, final int runId) {
         this.playerUUID = playerUUID;
         this.dungeonName = dungeon.id();
         this.dungeon = dungeon;
@@ -52,10 +54,11 @@ public abstract class AbstractDungeonSession implements DungeonSession {
         this.damageDealt = new AtomicReference<>(0.0);
         this.damageTaken = new AtomicReference<>(0.0);
         this.deaths = new AtomicInteger(0);
+        this.runId = runId;
     }
 
     public AbstractDungeonSession(final UUID playerUUID, final Dungeon dungeon) {
-        this(playerUUID, dungeon, null);
+        this(playerUUID, dungeon, null, -1);
     }
 
     @Override
@@ -144,38 +147,72 @@ public abstract class AbstractDungeonSession implements DungeonSession {
             throw new IllegalStateException("Player ID or Dungeon ID not initialized");
         }
 
-        String sql = """
-        INSERT INTO player_runs (dungeon_id, player_id, deaths,
-            enter_time, exit_time, total_kills, damage_dealt, damage_taken, exit_reason)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """;
-
         Main.getConnector().getConnection(10).thenAcceptAsync(conn -> {
-            try (conn;
-                 final PreparedStatement stmt = conn.prepareStatement(sql)) {
+            try (conn) {
 
-                stmt.setInt(1, cachedDungeonId);
-                stmt.setInt(2, cachedPlayerId);
-                stmt.setInt(3, deaths.get());
-                stmt.setTimestamp(4, Timestamp.from(startTime));
+                String sql;
 
-                final Instant instant;
-                if ((instant = endTime.get()) == null)
-                    stmt.setTimestamp(
-                            5,
-                            null);
-                else
-                    stmt.setTimestamp(
-                            5,
-                            Timestamp.from(instant));
+                if (runId > -1) {
+                    sql = """
+                    UPDATE player_runs 
+                    SET deaths = ?,
+                        exit_time = ?,
+                        total_kills = ?,
+                        damage_dealt = ?,
+                        damage_taken = ?,
+                        exit_reason = ?
+                    WHERE pr_id = ?
+                    """;
 
-                stmt.setInt(6, totalKills.get());
-                stmt.setDouble(7, damageDealt.get());
-                stmt.setDouble(8, damageTaken.get());
-                stmt.setString(9, reason.name());
+                    try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
+                        stmt.setInt(1, deaths.get());
 
-                int rows = stmt.executeUpdate();
-                System.out.println("Saved session data: " + rows + " row(s) affected");
+                        final Instant instant;
+                        if ((instant = endTime.get()) == null) {
+                            stmt.setTimestamp(2, null);
+                        } else {
+                            stmt.setTimestamp(2, Timestamp.from(instant));
+                        }
+
+                        stmt.setInt(3, totalKills.get());
+                        stmt.setDouble(4, damageDealt.get());
+                        stmt.setDouble(5, damageTaken.get());
+                        stmt.setString(6, reason.name());
+                        stmt.setInt(7, runId);
+
+                        int rows = stmt.executeUpdate();
+                        System.out.println("Updated session data: " + rows + " row(s) affected");
+                    }
+
+                } else {
+                    sql = """
+                    INSERT INTO player_runs (dungeon_id, player_id, deaths,
+                        enter_time, exit_time, total_kills, damage_dealt, damage_taken, exit_reason)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """;
+
+                    try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
+                        stmt.setInt(1, cachedDungeonId);
+                        stmt.setInt(2, cachedPlayerId);
+                        stmt.setInt(3, deaths.get());
+                        stmt.setTimestamp(4, Timestamp.from(startTime));
+
+                        final Instant instant;
+                        if ((instant = endTime.get()) == null) {
+                            stmt.setTimestamp(5, null);
+                        } else {
+                            stmt.setTimestamp(5, Timestamp.from(instant));
+                        }
+
+                        stmt.setInt(6, totalKills.get());
+                        stmt.setDouble(7, damageDealt.get());
+                        stmt.setDouble(8, damageTaken.get());
+                        stmt.setString(9, reason.name());
+
+                        int rows = stmt.executeUpdate();
+                        System.out.println("Inserted session data: " + rows + " row(s) affected");
+                    }
+                }
 
             } catch (SQLException e) {
                 throw new RuntimeException("Error saving session data", e);

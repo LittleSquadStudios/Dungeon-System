@@ -10,11 +10,13 @@ import com.littlesquad.dungeon.internal.utils.CommandUtils;
 import com.littlesquad.dungeon.placeholder.PlaceholderFormatter;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.party.AbstractParty;
+import net.Indyuce.mmocore.party.provided.Party;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
@@ -154,7 +156,7 @@ public abstract class AbstractDungeon implements Dungeon {
         System.out.println("Leader: " + leader.getName());
 
         final PlayerData data = Main.getMMOCoreAPI().getPlayerData(leader);
-        final AbstractParty party = data.getParty();
+        final Party party = (Party) data.getParty();
         System.out.println("Party object: " + (party != null ? "EXISTS" : "NULL"));
 
         final boolean hasParty = party != null && getOnlinePartySize(party) > 1;
@@ -546,24 +548,57 @@ public abstract class AbstractDungeon implements Dungeon {
 
     private CompletableFuture<Void> insertDungeonIfNotExists() {
         return Main.getConnector().getConnection(10).thenAcceptAsync(conn -> {
-            String sql = """
+            String insertDungeonQuery = """
             INSERT INTO dungeon (dungeon_name, is_pvp) 
             VALUES (?, ?) 
             ON DUPLICATE KEY UPDATE is_pvp = VALUES(is_pvp)
             """;
 
-            try (conn;
-                 final PreparedStatement stmt = conn.prepareStatement(sql)) {
+            String sqlGetDungeonId = """
+            SELECT dungeon_id FROM dungeon WHERE dungeon_name = ?
+            """;
 
-                stmt.setString(1, id());
-                stmt.setBoolean(2, typeFlags().contains(TypeFlag.PVP_ENABLED));
-                stmt.executeUpdate();
+            String sqlTimeRestrictions = """
+            INSERT INTO time_restrictions (max_complete_time, unit_type, dungeon_id)
+            SELECT ?, ?, dungeon_id 
+            FROM dungeon 
+            WHERE dungeon_name = ?
+            ON DUPLICATE KEY UPDATE 
+                max_complete_time = VALUES(max_complete_time),
+                unit_type = VALUES(unit_type)
+            """;
 
-                Main.getInstance().getLogger().info("Dungeon '" + id() + "' registered in database");
+            try (conn) {
+
+                try (final PreparedStatement stmtDungeon = conn.prepareStatement(insertDungeonQuery)) {
+                    stmtDungeon.setString(1, id());
+                    stmtDungeon.setBoolean(2, typeFlags().contains(TypeFlag.PVP_ENABLED));
+                    stmtDungeon.executeUpdate();
+                }
+
+                int dungeonId;
+                try (final PreparedStatement stmtGet = conn.prepareStatement(sqlGetDungeonId)) {
+                    stmtGet.setString(1, id());
+                    try (final ResultSet rs = stmtGet.executeQuery()) {
+                        if (rs.next()) {
+                            dungeonId = rs.getInt("dungeon_id");
+                        } else {
+                            throw new SQLException("Failed to retrieve dungeon_id for: " + id());
+                        }
+                    }
+                }
+
+                if (isTimed()) {
+                    try (final PreparedStatement timeStmt = conn.prepareStatement(sqlTimeRestrictions)) {
+                        timeStmt.setLong(1, getParser().getTimeAmount());
+                        timeStmt.setString(2, getParser().getTimeUnit().name());
+                        timeStmt.setInt(3, dungeonId);
+                    }
+                }
+
 
             } catch (SQLException e) {
-                Main.getInstance().getLogger().severe("✗ Error registering dungeon '" + id() + "': " + e.getMessage());
-                throw new RuntimeException("Failed to register dungeon: " + id(), e);
+                throw new RuntimeException(e);
             }
         });
     }

@@ -12,7 +12,7 @@ public final class SessionImpl extends AbstractDungeonSession {
         super(playerUUID, dungeon);
     }
 
-    SessionImpl(final UUID playerUUID, final Dungeon dungeon, final Instant customStartTime) {
-        super(playerUUID, dungeon, customStartTime);
+    SessionImpl(final UUID playerUUID, final Dungeon dungeon, final Instant customStartTime, final int runId) {
+        super(playerUUID, dungeon, customStartTime, runId);
     }
 }

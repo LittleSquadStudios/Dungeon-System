@@ -4,6 +4,8 @@ import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.entrance.ExitReason;
 import com.littlesquad.dungeon.api.session.DungeonSession;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -53,7 +55,7 @@ public final class SessionManager {
                         onExpire.accept(playerId);
                         endSession(playerId, ExitReason.TIME_EXPIRED);
                     }
-                }, duration, unit)); //TODO: Tener miglior traccia della task che si occupa di gestire la timed session, perché se viene trminata la session la task continua a esistere
+                }, duration, unit));
 
     }
 
@@ -114,6 +116,11 @@ public final class SessionManager {
 
     public void recoverActiveSessions(final UUID playerId, final Consumer<UUID> onExpire) {
 
+        final Player p = Bukkit.getPlayer(playerId);
+
+        if (p == null)
+            return;
+
         String sql = """
                     SELECT 
                         pr.pr_id,
@@ -169,7 +176,7 @@ public final class SessionManager {
 
                             if (remainingMillis > 0) {
 
-                                final DungeonSession session = createSessionInstance(dungeon, playerId, enterTime.toInstant());
+                                final DungeonSession session = createSessionInstance(dungeon, playerId, enterTime.toInstant(), runId);
                                 restoreSessionStats(session, deaths, totalKills, damageDealt, damageTaken);
 
                                 sessions.put(playerId, session);
@@ -249,8 +256,8 @@ public final class SessionManager {
         return new SessionImpl(playerId, dungeon);
     }
 
-    public DungeonSession createSessionInstance(final Dungeon dungeon, UUID playerId, Instant startTime) {
-        return new SessionImpl(playerId, dungeon, startTime);
+    public DungeonSession createSessionInstance(final Dungeon dungeon, UUID playerId, Instant startTime, final int runId) {
+        return new SessionImpl(playerId, dungeon, startTime, runId);
     }
 
 }

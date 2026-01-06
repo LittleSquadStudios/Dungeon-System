@@ -1,8 +1,12 @@
 package com.littlesquad.dungeon.internal;
 
 import com.littlesquad.dungeon.api.Dungeon;
+import com.littlesquad.dungeon.api.entrance.ExitReason;
+import com.littlesquad.dungeon.internal.boss.BossRoomManager;
+import com.littlesquad.dungeon.internal.checkpoint.CheckPointManager;
 import com.littlesquad.dungeon.internal.file.FileManager;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -84,7 +88,23 @@ public final class DungeonManager {
 
     public void clear() {
 
+        dungeons.values().forEach(dungeon -> {
+            SessionManager
+                    .getInstance()
+                    .getDungeonSessions(dungeon)
+                    .forEach(session ->
+                            session.stopSession(ExitReason.PLUGIN_STOPPING));
+
+            Arrays.stream(dungeon.getCheckpoints()).forEach(checkPoint -> CheckPointManager.unregister(checkPoint.getID()));
+
+            BossRoomManager.getInstance().clear();
+            dungeon.status().shutdown();
+
+        });
         //TODO: End here all the session and do cleanup like unregistering dungeon checkpoints ecc...
+        // Bossrooms
+        // Rewards
+        // Events (from session, from event impls, from status)
 
         dungeons.clear();
         initialized = false;

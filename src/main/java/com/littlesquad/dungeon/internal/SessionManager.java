@@ -214,11 +214,11 @@ public final class SessionManager {
                 System.err.println("Error recovering session for player " + playerId + ": " + e.getMessage());
                 throw new RuntimeException("Failed to recover session", e);
             }
-        }).exceptionally(ex -> {
+        }, Main.getCachedExecutor()).exceptionallyAsync(ex -> {
             System.err.println("Fatal error during session recovery: " + ex.getMessage());
             ex.printStackTrace();
             return null;
-        });
+        }, Main.getWorkStealingExecutor());
     }
 
     private void restoreSessionStats(DungeonSession session, int deaths, int kills,
@@ -246,7 +246,7 @@ public final class SessionManager {
             } catch (SQLException e) {
                 System.err.println("Failed to mark session as TIME_EXPIRED: " + e.getMessage());
             }
-        });
+        }, Main.getCachedExecutor());
     }
 
 

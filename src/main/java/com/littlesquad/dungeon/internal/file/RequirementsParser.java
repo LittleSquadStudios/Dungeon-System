@@ -38,11 +38,11 @@ public final class RequirementsParser {
         final class VariableRequirement {
             private int current;
             private final int objective;
-            private VariableRequirement(final int objective) {
+            private VariableRequirement (final int objective) {
                 this.objective = objective;
             }
         }
-        final Map<String, VariableRequirement> baseSlayRequirements = new ConcurrentHashMap<>();
+        final Map<String, Integer> baseSlayRequirements = new ConcurrentHashMap<>();
         //noinspection ClassCanBeRecord
         final class DistanceRequirement {
             private final Location loc;
@@ -75,19 +75,23 @@ public final class RequirementsParser {
         final List<LocationPair> baseRTV = new CopyOnWriteArrayList<>();
         //empty key if block interaction
         final Map<Location, String> baseInteractions = new ConcurrentHashMap<>();
-        final Map<String, VariableRequirement> baseItemRequirements = new ConcurrentHashMap<>();
+        final Map<String, Integer> baseItemRequirements = new ConcurrentHashMap<>();
         final class ParticipantRequirements {
             private final Object key;
-            private final Map<String, VariableRequirement> slayRequirements = new ConcurrentHashMap<>(baseSlayRequirements);
+            private final Map<String, VariableRequirement> slayRequirements;
             //LTV = Locations To Visit
             private final List<DistanceRequirement> nearLTV = new CopyOnWriteArrayList<>(baseLTV);
             //RTV = Regions To Visit
             private final List<LocationPair> rtv = new CopyOnWriteArrayList<>(baseRTV);
             private final Map<Location, String> interactions = new ConcurrentHashMap<>(baseInteractions);
-            private final Map<String, VariableRequirement> itemRequirements = new ConcurrentHashMap<>(baseItemRequirements);
+            private final Map<String, VariableRequirement> itemRequirements;
             private final AtomicBoolean completed = new AtomicBoolean();
             private ParticipantRequirements (final Object key) {
                 this.key = key;
+                slayRequirements = new ConcurrentHashMap<>(baseSlayRequirements.size());
+                baseSlayRequirements.forEach((s, obj) -> slayRequirements.put(s, new VariableRequirement(obj)));
+                itemRequirements = new ConcurrentHashMap<>(baseItemRequirements.size());
+                baseItemRequirements.forEach((s, obj) -> itemRequirements.put(s, new VariableRequirement(obj)));
             }
         }
         //key might be either a player or a party
@@ -143,7 +147,7 @@ public final class RequirementsParser {
                                             return;
                                         }
                                     }
-                                    baseSlayRequirements.put(words[2], new VariableRequirement(mobNumber));
+                                    baseSlayRequirements.put(words[2], mobNumber);
                                     return;
                                 case "item":
                                     final int itemNumber;
@@ -163,7 +167,7 @@ public final class RequirementsParser {
                                                 + event.getDungeon().id());
                                         return;
                                     }
-                                    baseItemRequirements.put(words[1], new VariableRequirement(itemNumber));
+                                    baseItemRequirements.put(words[1], itemNumber);
                                     return;
                             }
                             break;

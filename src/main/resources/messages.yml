@@ -16,7 +16,7 @@ event:
   inexistent_player: "&cThe given player resulted inexistent!"
   offline_player: "&cThe given player resulted to be offline!"
   session_not_found: "&cThe player have to be in a dungeon for starting an event!"
-  event_not_found: "&cThis method doesn't exist!"
+  event_not_found: "&cThis event doesn't exist!"
   cannot_deactivate: "&cThis type of event cannot be deactivated"
   # Erasing or commenting the sequent messages will make them simply not logged
   # Informative messages like these are cached, useful in case of debugging, but a possible overhead
@@ -24,3 +24,8 @@ event:
   event_triggered_for_player: "&aEvent triggered successfully"
   event_triggered_for_party: "&aEvent triggered successfully for the party"
   event_deactivated: "&aEvent deactivated successfully"
+
+reload:
+  wrong_arguments: "&cThe command didn't respect its syntax: &6/dungeon reload"
+  initialization: "&eReloading the plugin..."
+  success: "&aPlugin reloaded successfully"

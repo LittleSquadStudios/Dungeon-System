@@ -14,6 +14,8 @@ public final class MessageProvider {
     private final String eventTriggeredForParty;
     private final String eventTriggeredForPlayer;
     private final String eventDeactivated;
+    private final String reloadInitialization;
+    private final String successfulReload;
 
     public MessageProvider (final FileConfiguration messageConfig) {
         this.messageConfig = messageConfig;
@@ -32,6 +34,12 @@ public final class MessageProvider {
                 .replaceAll("&", "§");
         eventDeactivated = messageConfig
                 .getString("event.event_deactivated", "")
+                .replaceAll("&", "§");
+        reloadInitialization = messageConfig
+                .getString("reload.initialization", "")
+                .replaceAll("&", "§");
+        successfulReload = messageConfig
+                .getString("reload.success", "")
                 .replaceAll("&", "§");
     }
 
@@ -78,5 +86,11 @@ public final class MessageProvider {
     }
     public String getEventDeactivated () {
         return eventDeactivated;
+    }
+    public String getReloadInitialization () {
+        return reloadInitialization;
+    }
+    public String getSuccessfulReload () {
+        return successfulReload;
     }
 }

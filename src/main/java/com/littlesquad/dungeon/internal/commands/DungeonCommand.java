@@ -43,6 +43,8 @@ public final class DungeonCommand implements CommandExecutor, TabCompleter {
                     return JoinCommandHandler.onJoin(sender, random, args);
                 case "leave":
                     return JoinCommandHandler.onLeave(sender);
+                case "reload":
+                    return ReloadCommandHandler.onReload(sender, args);
             }
         }
 

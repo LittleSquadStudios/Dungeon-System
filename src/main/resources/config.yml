@@ -37,6 +37,3 @@ database:
     thread_count: 12
     # Defines the type of thread pool between FIXED and WORK-STEALING
     is_work_stealing: true
-
-permissions:
-  # Work in progress

@@ -5,7 +5,6 @@ import com.littlesquad.dungeon.database.MySQLConnector;
 import com.littlesquad.dungeon.internal.DungeonManager;
 import com.littlesquad.dungeon.internal.SessionManager;
 import com.littlesquad.dungeon.internal.commands.DungeonCommand;
-import com.littlesquad.dungeon.internal.event.TimedEventImpl;
 import com.littlesquad.dungeon.internal.file.FileManager;
 import com.littlesquad.dungeon.internal.utils.MessageProvider;
 import com.littlesquad.dungeon.placeholder.PlaceholderHook;
@@ -48,7 +47,7 @@ public final class Main extends JavaPlugin {
             getDungeonLogger().warning("PlaceholderAPI not Hooked");
         FileManager.loadAll(getDataFolder())
                 .thenRunAsync(() -> {
-                    messageProvider = new MessageProvider(FileManager.getMessages());
+                    reloadMessageProvider();
 
                     //TODO: Initialize main-config based services!
 
@@ -104,6 +103,9 @@ public final class Main extends JavaPlugin {
 
     public static MessageProvider getMessageProvider () {
         return messageProvider;
+    }
+    public static void reloadMessageProvider () {
+        messageProvider = new MessageProvider(FileManager.getMessages());
     }
 
     public static MySQLConnector getConnector() {

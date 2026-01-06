@@ -83,6 +83,9 @@ public final class DungeonManager {
     }
 
     public void clear() {
+
+        //TODO: End here all the session and do cleanup like unregistering dungeon checkpoints ecc...
+
         dungeons.clear();
         initialized = false;
     }

@@ -96,7 +96,6 @@ public final class DungeonManager {
                             session.stopSession(ExitReason.PLUGIN_STOPPING));
 
             Arrays.stream(dungeon.getCheckpoints()).forEach(checkPoint -> CheckPointManager.unregister(checkPoint.getID()));
-
             BossRoomManager.getInstance().clear();
             dungeon.status().shutdown();
 

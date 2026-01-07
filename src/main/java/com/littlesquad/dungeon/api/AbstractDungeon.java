@@ -421,16 +421,10 @@ public abstract class AbstractDungeon implements Dungeon {
             System.out.println("Standard session started");
         }
 
-        System.out.println("OnEnter commands: " + getEntrance().onEnterCommands());
-        System.out.println("Executing onEnter commands...");
-
         CommandUtils.executeMulti(
                 Bukkit.getConsoleSender(),
                 getEntrance().onEnterCommands(),
                 player);
-
-        System.out.println("OnEnter commands executed successfully");
-        System.out.println("=== DEBUG onEnter(Player) END ===");
     }
 
     @Override

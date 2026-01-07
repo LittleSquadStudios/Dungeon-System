@@ -284,6 +284,12 @@ public abstract class AbstractStatus implements Status {
         EntityDamageByEntityEvent
                 .getHandlerList()
                 .unregister(this);
+        AsyncPlayerPreLoginEvent
+                .getHandlerList()
+                .unregister(this);
+        PlayerQuitEvent
+                .getHandlerList()
+                .unregister(this);
     }
 
 }

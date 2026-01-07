@@ -60,33 +60,25 @@ public final class DungeonCommand implements CommandExecutor, TabCompleter {
             completions.add("leave");
             completions.add("list");
             completions.add("info");
-            completions.add("trigger");
+            completions.add("event");
 
             return completions.stream()
                     .filter(completion -> completion.toLowerCase().startsWith(args[0].toLowerCase()))
                     .collect(Collectors.toList());
         }
 
-        if (args.length == 2) {
-            switch (args[0].toLowerCase()) {
-                case "join":
-                case "info":
-                    return dungeonManager.getAllDungeons().stream()
-                            .map(Dungeon::id)
-                            .filter(id -> id.toLowerCase().startsWith(args[1].toLowerCase()))
-                            .collect(Collectors.toList());
+        if (args.length == 2)
+            if (args[1].equals("info") || args[1].equals("join"))
+                return dungeonManager.getAllDungeons().stream()
+                        .map(Dungeon::id)
+                        .filter(id -> id.toLowerCase().startsWith(args[1].toLowerCase()))
+                        .collect(Collectors.toList());
+            else if (args[1].equals("event"))
+                return List.of("trigger");
 
-                case "trigger":
-                    completions.add("first_event");
-                    completions.add("objective_event");
-                    completions.add("structural_event_A");
-                    return completions.stream()
-                            .filter(completion -> completion.toLowerCase().startsWith(args[1].toLowerCase()))
-                            .collect(Collectors.toList());
-            }
-        }
+        if (args.length == 3 && args[0].equalsIgnoreCase("event")) {
+            final String dungeon = args[1];
 
-        if (args.length == 3 && args[0].equalsIgnoreCase("trigger")) {
             return null;
         }
 

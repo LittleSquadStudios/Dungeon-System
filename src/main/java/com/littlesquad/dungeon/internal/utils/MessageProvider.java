@@ -16,6 +16,14 @@ public final class MessageProvider {
     private final String eventDeactivated;
     private final String reloadInitialization;
     private final String successfulReload;
+    private final String entranceSuccess;
+    private final String entranceFailurePerLevel;
+    private final String entranceFailurePerParty;
+    private final String entranceFailurePerSlots;
+    private final String entranceFailurePerAlreadyProcessing;
+    private final String entranceFailurePerDungeonBlocked;
+    private final String entranceFailurePerMemberAlreadyIn;
+    private final String entranceFailurePerSenderAlreadyIn;
 
     public MessageProvider (final FileConfiguration messageConfig) {
         this.messageConfig = messageConfig;
@@ -40,6 +48,30 @@ public final class MessageProvider {
                 .replaceAll("&", "§");
         successfulReload = messageConfig
                 .getString("reload.success", "")
+                .replaceAll("&", "§");
+        entranceSuccess = messageConfig
+                .getString("entrance.success", "")
+                .replaceAll("&", "§");
+        entranceFailurePerLevel = messageConfig
+                .getString("entrance.failures.failure_per_level", "")
+                .replaceAll("&", "§");
+        entranceFailurePerParty = messageConfig
+                .getString("entrance.failures.failure_per_party", "")
+                .replaceAll("&", "§");
+        entranceFailurePerSlots = messageConfig
+                .getString("entrance.failures.failure_per_slots", "")
+                .replaceAll("&", "§");
+        entranceFailurePerAlreadyProcessing = messageConfig
+                .getString("entrance.failures.failure_per_already_processing", "")
+                .replaceAll("&", "§");
+        entranceFailurePerDungeonBlocked = messageConfig
+                .getString("entrance.failures.failure_per_dungeon_blocked", "")
+                .replaceAll("&", "§");
+        entranceFailurePerMemberAlreadyIn = messageConfig
+                .getString("entrance.failures.failure_per_member_already_in", "")
+                .replaceAll("&", "§");
+        entranceFailurePerSenderAlreadyIn = messageConfig
+                .getString("entrance.failures.failure_per_sender_already_in", "")
                 .replaceAll("&", "§");
     }
 
@@ -93,4 +125,33 @@ public final class MessageProvider {
     public String getSuccessfulReload () {
         return successfulReload;
     }
+    public String getEntranceSuccess () {return entranceSuccess;}
+    public String getEntranceFailurePerLevel() {
+        return entranceFailurePerLevel;
+    }
+
+    public String getEntranceFailurePerParty() {
+        return entranceFailurePerParty;
+    }
+
+    public String getEntranceFailurePerSlots() {
+        return entranceFailurePerSlots;
+    }
+
+    public String getEntranceFailurePerAlreadyProcessing() {
+        return entranceFailurePerAlreadyProcessing;
+    }
+
+    public String getEntranceFailurePerDungeonBlocked() {
+        return entranceFailurePerDungeonBlocked;
+    }
+
+    public String getEntranceFailurePerMemberAlreadyIn() {
+        return entranceFailurePerMemberAlreadyIn;
+    }
+
+    public String getEntranceFailurePerSenderAlreadyIn() {
+        return entranceFailurePerSenderAlreadyIn;
+    }
+
 }

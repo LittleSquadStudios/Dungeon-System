@@ -5,6 +5,7 @@ import com.littlesquad.dungeon.database.MySQLConnector;
 import com.littlesquad.dungeon.internal.DungeonManager;
 import com.littlesquad.dungeon.internal.SessionManager;
 import com.littlesquad.dungeon.internal.commands.DungeonCommand;
+import com.littlesquad.dungeon.internal.file.ConfigParser;
 import com.littlesquad.dungeon.internal.file.FileManager;
 import com.littlesquad.dungeon.internal.utils.MessageProvider;
 import com.littlesquad.dungeon.placeholder.PlaceholderHook;
@@ -35,27 +36,17 @@ public final class Main extends JavaPlugin {
 
         mmoCoreAPI = new MMOCoreAPI(this);
 
-        connector = new MySQLConnector("azure",
-                "127.0.0.1",
-                3306,
-                "root",
-                "cazzoinculoloprendotutto",
-                CACHED);
-
         if (!Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")
                 || !new PlaceholderHook().register())
             getDungeonLogger().warning("PlaceholderAPI not Hooked");
         FileManager.loadAll(getDataFolder())
                 .thenRunAsync(() -> {
                     reloadMessageProvider();
-
-                    //TODO: Initialize main-config based services!
-
-                    DungeonManager.getDungeonManager().initDungeons();
+                    connector = FileManager.getConfig().createConnector();
+                    if (connector != null)
+                        DungeonManager.getDungeonManager().initDungeons();
+                    else Bukkit.getPluginManager().disablePlugin(this);
                 });
-
-
-
 
         final PluginCommand mainCommand = Bukkit.getPluginCommand("dungeon");
         final DungeonCommand exTabCompleter = new DungeonCommand(DungeonManager.getDungeonManager());

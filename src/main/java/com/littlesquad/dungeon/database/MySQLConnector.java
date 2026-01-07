@@ -4,6 +4,7 @@ import com.littlesquad.Main;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.util.Credentials;
+import io.lumine.mythic.bukkit.utils.lib.jooq.util.mysql.MySQLDSL;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -62,6 +63,7 @@ public final class MySQLConnector {
                           final ExecutorService ex) {
         poolConfig = new HikariConfig();
         poolConfig.setCredentials(Credentials.of(userName, password));
+        poolConfig.setDriverClassName("com.mysql.cj.jdbc.Driver");
         poolConfig.addDataSourceProperty("serverName", ipAddr);
         poolConfig.addDataSourceProperty("portNumber", port);
         poolConfig.addDataSourceProperty("databaseName", databaseName);
@@ -200,6 +202,12 @@ public final class MySQLConnector {
         validatePoolParameters();
 
         poolConfig.setCredentials(Credentials.of(userName, password));
+
+        poolConfig.setDriverClassName("com.mysql.cj.jdbc.Driver");
+
+        poolConfig.setJdbcUrl(
+                "jdbc:mysql://" + ipAddr + ":" + port + "/" + databaseName
+        );
 
         poolConfig.addDataSourceProperty("serverName", ipAddr);
         poolConfig.addDataSourceProperty("portNumber", port);

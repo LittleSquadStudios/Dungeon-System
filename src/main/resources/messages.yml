@@ -7,6 +7,19 @@ config:
     invalid_mob: "Invalid Mob/MythicMob found in "
     already_existing_checkpoint: "Invalid checkpoint ID, this ID has been already registered: "
 
+entrance:
+  failures:
+    failure_per_level: "&cYour &elevel &cor your party's level is not high enough"
+    failure_per_party: "&cYou must be in a party to enter this dungeon"
+    failure_per_slots: "&cYour party does not have enough available slots"
+    failure_per_already_processing: "&cYour dungeon entrance is already being processed"
+    failure_per_dungeon_blocked: "&cThis dungeon is currently unavailable"
+    failure_per_member_already_in: "&cOne or more party members are already inside a dungeon"
+    failure_per_sender_already_in: "&cYou are already inside a dungeon"
+  success: "&aYou have successfully entered the dungeon"
+
+
+
 boss:
   enqueued: "&eThe boss room is full, you have been enqueued, wait until it becomes available. &6You will receive an alert right before it happens!"
 

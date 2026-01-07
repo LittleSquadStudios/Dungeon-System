@@ -181,6 +181,17 @@ boss_rooms:
     rewards:
       # Here you can link the id of each reward you want to give
       - "completion_reward"
+    time:
+      # The maximum fight duration before despawning the boss and letting other players try
+      max_boss_fight_duration:
+        amount: 5
+        unit: MINUTES
+        # commands to execute when a player or a party fail to defeat the boss before the time expires
+        time_out_commands:
+          - "say FIGHT EXPIRED!"
+      kick_after_completion:
+        amount: 30
+        unit: SECONDS
 
 rewards: # Default section for every reward
   completion_reward:
@@ -207,11 +218,5 @@ rewards: # Default section for every reward
         lore:
           - "def"
     experience: 1000
-    loot_chest:
-      # This might be named as you want, the only requirement is to make it different from the others
-      loot_chest_example:
-        location: "-30 70 -28"
-        loot:
-        # Configure like in 'items', indeed that will have the same parser
     commands:
       - "say BRAVO %player_name%!"

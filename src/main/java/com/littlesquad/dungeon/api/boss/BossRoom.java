@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Represents a single instance of a BossRoom inside a dungeon.
@@ -113,6 +114,16 @@ public interface BossRoom {
     Boss getBoss ();
 
     List<Reward> rewards ();
+
+    long maxBossFightDurationTime ();
+    TimeUnit maxBossFightDurationUnit ();
+
+    List<String> timedOutCommands();
+
+    long kickAfterCompletionTime ();
+    TimeUnit kickAfterCompletionUnit ();
+
+    void kick (final Player... player);
 
     Player[] getPlayersIn ();
 }

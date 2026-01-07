@@ -1,6 +1,7 @@
 package com.littlesquad.dungeon.api.boss;
 
 import com.littlesquad.Main;
+import com.littlesquad.dungeon.api.rewards.AbstractReward;
 import com.littlesquad.dungeon.api.rewards.Reward;
 import io.lumine.mythic.api.MythicProvider;
 import io.lumine.mythic.api.mobs.MythicMob;
@@ -26,7 +27,7 @@ public abstract class AbstractBoss implements Boss, Listener {
     private final BossRoom room;
     private MythicMob bossEntity;
     private ActiveMob activeMob;
-    private BossState state;
+    private volatile BossState state;
     private final Set<UUID> participants;
     private UUID bossUUID;
 
@@ -106,30 +107,26 @@ public abstract class AbstractBoss implements Boss, Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onBossDeath(final MythicMobDeathEvent event) {
-        if (!isBossEvent(event.getMobType().getInternalName(), event.getEntity().getUniqueId())) {
+        if (!isBossEvent(event.getMobType().getInternalName(), event.getEntity().getUniqueId()))
             return;
-        }
-
-        final List<Reward> rewards = room.rewards();
-        if (rewards == null || rewards.isEmpty()) {
-            return;
-        }
-
-        for (final UUID participantId : participants) {
-            final Player player = Bukkit.getPlayer(participantId);
-            if (player != null && player.isOnline()) {
-                for (final Reward reward : rewards) {
-                    //reward give logic
+        Main.getWorkStealingExecutor().execute(() -> {
+            final List<Reward> rewards = room.rewards();
+            if (rewards == null || rewards.isEmpty())
+                for (final UUID participantId : participants) {
+                    final Player player = Bukkit.getPlayer(participantId);
+                    if (player != null && player.isOnline()) {
+                        assert rewards != null;
+                        for (final Reward reward : rewards)
+                            ((AbstractReward) reward).give(player);
+                    }
                 }
-            }
-        }
+            state = BossState.DEAD;
+            onDeath();
 
-        state = BossState.DEAD;
-        onDeath();
-
-        //set a timer for taking the rewards, then expel from the dungeon
-        //TODO: When kicking the partecipants from the bossroom, shift the player in waiting list and make them enter,
-        //      if any, otherwise clear (the replace action must be done inside a 'synchronize' block)
+            //set a timer for taking the rewards, then expel from the dungeon
+            //TODO: When kicking the partecipants from the bossroom, shift the player in waiting list and make them enter,
+            //      if any, otherwise clear (the replace action must be done inside a 'synchronize' block)
+        });
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

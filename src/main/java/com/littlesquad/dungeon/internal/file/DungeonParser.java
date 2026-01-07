@@ -231,6 +231,8 @@ public final class DungeonParser {
                     .parallelStream()
                     .map(key -> {
                         try {
+                            final TimeUnit unit0 = TimeUnit.valueOf(config.getString("boss_rooms." + key + ".time.max_boss_fight_duration.unit"));
+                            final TimeUnit unit1 = TimeUnit.valueOf(config.getString("boss_rooms." + key + ".time.kick_after_completion.unit"));
                             final String loc = config.getString("boss_rooms." + key + ".boss.location", "0 0 0");
                             int i;
                             final List<Reward> allRewards = getRewards();
@@ -241,6 +243,11 @@ public final class DungeonParser {
                                     config.getStringList("boss_rooms." + key + ".access_denied_commands"),
                                     config.getString("boss_rooms." + key + ".fallback_boss_room", ""),
                                     config.getStringList("boss_rooms." + key + ".enqueuing_commands"),
+                                    config.getLong("boss_rooms." + key + ".time.max_boss_fight_duration.amount", 0L),
+                                    unit0,
+                                    config.getStringList("boss_rooms." + key + ".time.max_boss_fight_duration.time_out_commands"),
+                                    config.getLong("boss_rooms." + key + ".time.kick_after_completion.amount", 0L),
+                                    unit1,
                                     config.getInt("boss_rooms." + key + ".boss.party_level"),
                                     config.getInt("boss_rooms." + key + ".boss.multiplier"),
                                     config.getInt("boss_rooms." + key + ".boss.exponent"),

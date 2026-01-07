@@ -19,10 +19,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -475,20 +472,14 @@ public abstract class AbstractDungeon implements Dungeon {
 
     @Override
     public void triggerEvent(String eventId, Player triggerer) {
-        Arrays.stream(getEvents())
-                .filter(event -> event.getID().equals(eventId))
-                .findFirst()
-                .ifPresent(ev -> ev.triggerActivation(triggerer));
-
+        Optional.ofNullable(getEvent(eventId)).ifPresent(ev -> ev.triggerActivation(triggerer));
     }
 
     @Override
     public CompletableFuture<Void> triggerEventAsync(String eventId, Player triggerer) {
-        return CompletableFuture.runAsync(() ->
-                Arrays.stream(getEvents())
-                    .filter(event -> event.getID().equals(eventId))
-                    .findFirst()
-                    .ifPresent(ev -> ev.triggerActivation(triggerer)));
+        return CompletableFuture.runAsync(() -> Optional
+                .ofNullable(getEvent(eventId))
+                .ifPresent(ev -> ev.triggerActivation(triggerer)));
     }
 
     @Override

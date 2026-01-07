@@ -31,6 +31,12 @@ public abstract class AbstractBossRoom implements BossRoom {
         return playersIn.toArray(emptyPlayerArray);
     }
 
+    public void kick (final Player... player) {
+
+
+
+    }
+
     public boolean join (final UUID playerId) {
         final Player player;
         if ((player = Bukkit.getPlayer(playerId)) == null)

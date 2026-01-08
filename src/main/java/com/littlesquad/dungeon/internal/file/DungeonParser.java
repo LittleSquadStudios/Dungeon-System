@@ -237,6 +237,7 @@ public final class DungeonParser {
                             int i;
                             final List<Reward> allRewards = getRewards();
                             return new BossRoomImpl(
+                                    d,
                                     key,
                                     config.getInt("boss_rooms." + key + ".max_players_in", 0),
                                     config.getBoolean("boss_rooms." + key + ".max_one_party_at_a_time", false),

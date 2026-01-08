@@ -1,5 +1,6 @@
 package com.littlesquad.dungeon.internal.boss;
 
+import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.boss.AbstractBossRoom;
 import com.littlesquad.dungeon.api.boss.Boss;
 import com.littlesquad.dungeon.api.boss.BossRoom;
@@ -25,7 +26,8 @@ public final class BossRoomImpl extends AbstractBossRoom {
     private final Boss boss;
     private final List<Reward> rewards;
 
-    public BossRoomImpl (final String id,
+    public BossRoomImpl (final Dungeon dungeon,
+                         final String id,
                          final int capacity,
                          final boolean onePartyOnly,
                          final List<String> accessDeniedCommands,
@@ -44,7 +46,7 @@ public final class BossRoomImpl extends AbstractBossRoom {
                          final String bossName,
                          final Location spawnLocation,
                          final List<Reward> rewards) {
-        super();
+        super(dungeon);
         this.id = id;
         this.capacity = capacity;
         this.onePartyOnly = onePartyOnly;

@@ -122,10 +122,14 @@ public abstract class AbstractBoss implements Boss, Listener {
                 }
             state = BossState.DEAD;
             onDeath();
+            final Player[] players = room.getPlayersIn();
 
-            //set a timer for taking the rewards, then expel from the dungeon
-            //TODO: When kicking the partecipants from the bossroom, shift the player in waiting list and make them enter,
-            //      if any, otherwise clear (the replace action must be done inside a 'synchronize' block)
+            //TODO: set a timer for taking the rewards, then expel from the dungeon
+
+            //Example
+            room.kick(() -> room.getDungeon().onExit(players), players);
+
+            //TODO: Map the players to their current boss-room and before closing the session, try to kick it!
         });
     }
 

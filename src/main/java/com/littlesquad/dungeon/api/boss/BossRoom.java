@@ -1,5 +1,6 @@
 package com.littlesquad.dungeon.api.boss;
 
+import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.rewards.Reward;
 import org.bukkit.entity.Player;
 
@@ -34,6 +35,8 @@ import java.util.concurrent.TimeUnit;
 public interface BossRoom {
 
     String getID ();
+
+    Dungeon getDungeon ();
 
     /**
      * Attempts to allow a player (or their party) to join this boss room.
@@ -123,7 +126,7 @@ public interface BossRoom {
     long kickAfterCompletionTime ();
     TimeUnit kickAfterCompletionUnit ();
 
-    void kick (final Player... player);
+    boolean kick (final Runnable onSuccess, final Player[] player);
 
     Player[] getPlayersIn ();
 }

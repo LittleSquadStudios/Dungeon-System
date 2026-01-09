@@ -3,6 +3,8 @@ package com.littlesquad.dungeon.api.boss;
 import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.rewards.AbstractReward;
 import com.littlesquad.dungeon.api.rewards.Reward;
+import com.littlesquad.dungeon.internal.boss.BossRoomManager;
+import com.littlesquad.dungeon.internal.utils.CommandUtils;
 import io.lumine.mythic.api.MythicProvider;
 import io.lumine.mythic.api.mobs.MythicMob;
 import io.lumine.mythic.api.mobs.entities.SpawnReason;
@@ -21,6 +23,8 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class AbstractBoss implements Boss, Listener {
 
@@ -92,6 +96,36 @@ public abstract class AbstractBoss implements Boss, Listener {
                     state = BossState.ALIVE;
                     participants.clear();
                     onSpawn();
+                    final Player[] players = room.getPlayersIn();
+                    final ScheduledFuture<?> timeoutTask = Main.getScheduledExecutor().schedule(
+                            () -> {
+                                final List<Player> inRoomPlayers = Arrays.asList(players);
+                                for (final Player p : inRoomPlayers) {
+                                    final PlayerBossRoomInfo info;
+                                    if ((info = BossRoomManager
+                                            .getInstance()
+                                            .removePlayer(p.getUniqueId()))
+                                            != null)
+                                        if (info.rewardTask != null)
+                                            return;
+                                    else inRoomPlayers.remove(p);
+                                }
+                                final Player[] ps = inRoomPlayers.toArray(new Player[0]);
+                                room.kick(() -> {
+                                    CommandUtils.executeMultiForMulti(
+                                            Bukkit.getConsoleSender(),
+                                            room.timedOutCommands(),
+                                            ps);
+                                    room.getDungeon().onExit(ps);
+                                }, ps);
+                            },
+                            room.maxBossFightDurationTime(),
+                            room.maxBossFightDurationUnit());
+                    for (final Player player : players)
+                        BossRoomManager.getInstance().addPlayer(
+                                player.getUniqueId(),
+                                room,
+                                timeoutTask);
                 } else {
                     state = BossState.NOT_SPAWNED;
                     System.err.println("[BossSpawn] Failed to spawn boss after 1 attempt");
@@ -123,13 +157,25 @@ public abstract class AbstractBoss implements Boss, Listener {
             state = BossState.DEAD;
             onDeath();
             final Player[] players = room.getPlayersIn();
-
-            //TODO: set a timer for taking the rewards, then expel from the dungeon
-
-            //Example
-            room.kick(() -> room.getDungeon().onExit(players), players);
-
-            //TODO: Map the players to their current boss-room and before closing the session, try to kick it!
+            final AtomicReference<ScheduledFuture<?>> sharedTask = new AtomicReference<>();
+            for (final Player player : players)
+                BossRoomManager.getInstance().updatePlayer(
+                        player.getUniqueId(),
+                        () -> {
+                            if (sharedTask.getPlain() == null)
+                                sharedTask.setPlain(Main.getScheduledExecutor().schedule(
+                                        () -> room.kick(() -> {
+                                            for (final Player p : players)
+                                                if (BossRoomManager
+                                                        .getInstance()
+                                                        .removePlayer(p.getUniqueId())
+                                                        != null)
+                                                    room.getDungeon().onExit(p);
+                                        }, players),
+                                        room.kickAfterCompletionTime(),
+                                        room.kickAfterCompletionUnit()));
+                            return sharedTask.getPlain();
+                        });
         });
     }
 
@@ -192,16 +238,12 @@ public abstract class AbstractBoss implements Boss, Listener {
 
     @Override
     public boolean isAlive() {
-        if (state != BossState.ALIVE || activeMob == null) {
-            return false;
-        }
-
-        try {
-            return !activeMob.isDead() && activeMob.getEntity().getBukkitEntity() instanceof LivingEntity
-                    && ((LivingEntity) activeMob.getEntity().getBukkitEntity()).getHealth() > 0;
-        } catch (Exception e) {
-            return false;
-        }
+        final ActiveMob activeMob;
+        return state == BossState.ALIVE
+                && (activeMob = this.activeMob) != null
+                && !activeMob.isDead()
+                && activeMob.getEntity().getBukkitEntity() instanceof final LivingEntity e
+                && e.getHealth() > 0;
     }
 
     @Override

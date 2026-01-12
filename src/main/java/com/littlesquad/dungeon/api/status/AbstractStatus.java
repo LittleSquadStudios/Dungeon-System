@@ -30,7 +30,6 @@ public abstract class AbstractStatus implements Status {
         this.isPvp = isPvp;
         this.dungeon = dungeon;
 
-        // Registering events
         Bukkit.getPluginManager()
                 .registerEvents(
                         this,
@@ -38,13 +37,11 @@ public abstract class AbstractStatus implements Status {
 
     }
 
-    //TODO: Rewrite the Status for better Diagnostics!
-
     @EventHandler
     public void onQuit(final PlayerQuitEvent e) {
         if (isPlayerInDungeon(e.getPlayer().getUniqueId())) {
             switch (e.getReason()) {
-                case DISCONNECTED -> { // CASE TEST
+                case TIMED_OUT, ERRONEOUS_STATE -> { // CASE TEST
                     final DungeonSession session = SessionManager.getInstance().getSession(e.getPlayer().getUniqueId());
                     if (session != null)
                         session.stopSession(ExitReason.ERROR);
@@ -63,12 +60,7 @@ public abstract class AbstractStatus implements Status {
 
         if (reason != null)
             if(reason.equals(ExitReason.ERROR)) {
-                SessionManager.getInstance().recoverActiveSessions(uuid, _ -> {
-                    final Player p = Bukkit.getPlayer(uuid);
-                    if (p != null) {
-                        p.sendMessage("Time's up! You've been removed from the dungeon.");
-                    }
-                });
+                SessionManager.getInstance().recoverActiveSessions(uuid, _ -> {});
             }
 
     }

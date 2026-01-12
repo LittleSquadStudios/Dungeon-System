@@ -1,16 +1,23 @@
 package com.littlesquad.dungeon.internal.commands;
 
 import com.littlesquad.dungeon.api.Dungeon;
+import com.littlesquad.dungeon.api.event.Event;
+import com.littlesquad.dungeon.api.session.DungeonSession;
 import com.littlesquad.dungeon.internal.DungeonManager;
+import com.littlesquad.dungeon.internal.SessionManager;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,32 +62,55 @@ public final class DungeonCommand implements CommandExecutor, TabCompleter {
     public @Nullable List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] args) {
         final List<String> completions = new ArrayList<>();
 
-        if (args.length == 1) {
-            completions.add("join");
-            completions.add("leave");
-            completions.add("list");
-            completions.add("info");
-            completions.add("event");
+        if (commandSender instanceof Player p)
+            switch (args.length) {
+                case 1 -> {
+                    completions.add("join");
+                    completions.add("leave");
+                    completions.add("list");
+                    completions.add("info");
+                    completions.add("trigger");
 
-            return completions.stream()
-                    .filter(completion -> completion.toLowerCase().startsWith(args[0].toLowerCase()))
-                    .collect(Collectors.toList());
-        }
+                    return completions.stream()
+                            .filter(completion -> completion.toLowerCase().startsWith(args[0].toLowerCase()))
+                            .collect(Collectors.toList());
+                }
+                case 2 -> {
+                    switch (args[0]) {
+                        case "info", "join" -> {
+                            return dungeonManager.getAllDungeons().stream()
+                                    .map(Dungeon::id)
+                                    .collect(Collectors.toList());
+                        }
+                        case "trigger" -> {
 
-        if (args.length == 2)
-            if (args[1].equals("info") || args[1].equals("join"))
-                return dungeonManager.getAllDungeons().stream()
-                        .map(Dungeon::id)
-                        .filter(id -> id.toLowerCase().startsWith(args[1].toLowerCase()))
-                        .collect(Collectors.toList());
-            else if (args[1].equals("event"))
-                return List.of("trigger");
+                            final DungeonSession session;
 
-        if (args.length == 3 && args[0].equalsIgnoreCase("event")) {
-            final String dungeon = args[1];
-
-            return null;
-        }
+                            if((session = SessionManager
+                                    .getInstance()
+                                    .getSession(p.getUniqueId()))
+                                    != null) {
+                                Arrays.stream(session
+                                                .getDungeon()
+                                                .getEvents())
+                                        .forEach(e ->
+                                                completions.add(e.getID()));
+                            } else return Collections.singletonList("not-in-dungeon");
+                        }
+                    }
+                }
+                case 3 -> {
+                    if (args[0].equals("trigger")
+                            && SessionManager
+                            .getInstance()
+                            .getSession(p.getUniqueId())
+                            != null)
+                        return Bukkit.getOnlinePlayers()
+                                .parallelStream()
+                                .map(Player::getName)
+                                .toList();
+                }
+            }
 
         return completions;
     }

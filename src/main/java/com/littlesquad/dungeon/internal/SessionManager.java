@@ -107,10 +107,6 @@ public final class SessionManager {
         sessions.clear();
     }
 
-    public void onReload() {
-
-    }
-
     public void recoverActiveSessions(final UUID playerId, final Consumer<UUID> onExpire) {
 
         String sql = """

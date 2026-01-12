@@ -7,6 +7,10 @@ import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import net.Indyuce.mmocore.party.AbstractParty;
 import org.bukkit.OfflinePlayer;
 
+import java.time.Instant;
+import java.time.temporal.TemporalAmount;
+import java.time.temporal.TemporalUnit;
+
 @SuppressWarnings("NullableProblems")
 public final class PlaceholderHook extends PlaceholderExpansion {
     public PlaceholderHook() {}
@@ -187,6 +191,19 @@ public final class PlaceholderHook extends PlaceholderExpansion {
                         .status()
                         .currentPlayers())
                         : "§cNot in dungeon";
+            }
+            case "timein" -> {
+                final DungeonSession session;
+                if ((session = SessionManager
+                        .getInstance()
+                        .getSession(player.getUniqueId()))
+                        != null) {
+                    yield String.valueOf(Instant
+                            .ofEpochMilli(
+                                    Instant.now().toEpochMilli()
+                                    - session.enterTime().toEpochMilli())
+                            .getEpochSecond());
+                } yield "§cNot in dungeon";
             }
             default -> null;
         };

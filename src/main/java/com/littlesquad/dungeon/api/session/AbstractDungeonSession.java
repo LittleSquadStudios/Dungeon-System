@@ -6,10 +6,7 @@ import com.littlesquad.dungeon.api.entrance.ExitReason;
 import com.littlesquad.dungeon.internal.checkpoint.CheckPointManager;
 
 import javax.annotation.Nullable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
@@ -34,6 +31,8 @@ public abstract class AbstractDungeonSession implements DungeonSession {
     private Integer cachedPlayerId;
     private Integer cachedDungeonId;
 
+    private final CountDownLatch idsLoadedLatch = new CountDownLatch(1);
+
     private final Dungeon dungeon;
 
     public AbstractDungeonSession(final UUID playerUUID, final Dungeon dungeon, final Instant customStartTime, final int runId) {
@@ -49,6 +48,24 @@ public abstract class AbstractDungeonSession implements DungeonSession {
         this.damageTaken = new AtomicReference<>(0.0);
         this.deaths = new AtomicInteger(0);
         this.runId = runId;
+
+        if (runId > -1) {
+            CompletableFuture.allOf(
+                    ensurePlayerExists(),
+                    ensureDungeonIdLoaded(),
+                    loadSessionData()
+            ).whenCompleteAsync((_, ex) -> {
+                if (ex != null) {
+                    System.err.println("Failed to recover session for run_id " + runId + ": " + ex.getMessage());
+                    ex.printStackTrace();
+                } else {
+                    Main.getInstance().getLogger().info("Session recovered for player " + playerUUID);
+                }
+                idsLoadedLatch.countDown();
+            }, Main.getCachedExecutor());
+        } else {
+            idsLoadedLatch.countDown();
+        }
     }
 
     public AbstractDungeonSession(final UUID playerUUID, final Dungeon dungeon) {
@@ -67,10 +84,27 @@ public abstract class AbstractDungeonSession implements DungeonSession {
                 || reason.equals(ExitReason.KICKED)))
             endTime.set(Instant.now());
 
-        CompletableFuture.allOf(
-                        ensurePlayerExists(),
-                        ensureDungeonIdLoaded()
-                )
+        CompletableFuture<Void> prepareFuture;
+
+        if (runId > -1) {
+            prepareFuture = CompletableFuture.runAsync(() -> {
+                try {
+                    if (!idsLoadedLatch.await(30, TimeUnit.SECONDS)) {
+                        throw new IllegalStateException("Timeout waiting for session data to load");
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Interrupted while waiting for session data", e);
+                }
+            }, Main.getCachedExecutor());
+        } else {
+            prepareFuture = CompletableFuture.allOf(
+                    ensurePlayerExists(),
+                    ensureDungeonIdLoaded()
+            );
+        }
+
+        prepareFuture
                 .thenRunAsync(() -> pushDatabase(reason), Main.getCachedExecutor())
                 .whenCompleteAsync((_, ex) -> {
                     if (ex != null) {
@@ -81,29 +115,57 @@ public abstract class AbstractDungeonSession implements DungeonSession {
                     }
                     CheckPointManager.removeCheckPointFor(playerUUID);
                 }, Main.getWorkStealingExecutor());
+    }
 
+    private CompletableFuture<Void> loadSessionData() {
+        return Main.getConnector().getConnection(10).thenAcceptAsync(conn -> {
+            final String select = """
+                SELECT deaths, total_kills, damage_dealt, damage_taken
+                FROM player_runs
+                WHERE pr_id = ?
+                """;
+
+            try (conn;
+                 final PreparedStatement stmt = conn.prepareStatement(select)) {
+
+                stmt.setInt(1, runId);
+
+                try (final ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        deaths.set(rs.getInt("deaths"));
+                        totalKills.set(rs.getInt("total_kills"));
+                        damageDealt.set(rs.getDouble("damage_dealt"));
+                        damageTaken.set(rs.getDouble("damage_taken"));
+                    } else {
+                        throw new IllegalStateException("Session not found for pr_id: " + runId);
+                    }
+                }
+
+            } catch (SQLException e) {
+                throw new RuntimeException("Error loading session data for pr_id: " + runId, e);
+            }
+        }, Main.getCachedExecutor());
     }
 
     private CompletableFuture<Void> ensurePlayerExists() {
         return Main.getConnector().getConnection(10).thenAcceptAsync(conn -> {
-            final String insert = "INSERT IGNORE INTO player (uuid) VALUES (?)";
-            final String select = "SELECT player_id FROM player WHERE uuid = ?";
+            final String upsert  = """
+                    INSERT INTO player (uuid)
+                    VALUES (?)
+                    ON DUPLICATE KEY UPDATE player_id = LAST_INSERT_ID(player_id)
+                    """;
 
             try (conn;
-                 final PreparedStatement insertStmt = conn.prepareStatement(insert);
-                 final PreparedStatement selectStmt = conn.prepareStatement(select)) {
+                 final PreparedStatement stmt = conn.prepareStatement(upsert, Statement.RETURN_GENERATED_KEYS)) {
 
-                // Insert player
-                insertStmt.setString(1, playerUUID.toString());
-                insertStmt.executeUpdate();
+                stmt.setString(1, playerUUID.toString());
+                stmt.executeUpdate();
 
-                // Get player_id
-                selectStmt.setString(1, playerUUID.toString());
-                try (final ResultSet rs = selectStmt.executeQuery()) {
+                try (final ResultSet rs = stmt.getGeneratedKeys()) {
                     if (rs.next()) {
-                        cachedPlayerId = rs.getInt("player_id");
+                        cachedPlayerId = rs.getInt(1);
                     } else {
-                        throw new IllegalStateException("Player not found after insert: " + playerUUID);
+                        throw new IllegalStateException("Failed to retrieve player_id for: " + playerUUID);
                     }
                 }
 
@@ -120,9 +182,9 @@ public abstract class AbstractDungeonSession implements DungeonSession {
             try (conn;
                  PreparedStatement stmt = conn.prepareStatement(select)) {
 
-                stmt.setString(1, dungeonName); // PRIMA setti il parametro
+                stmt.setString(1, dungeonName);
 
-                try (ResultSet rs = stmt.executeQuery()) { // POI esegui la query
+                try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         cachedDungeonId = rs.getInt("dungeon_id");
                     } else {
@@ -159,11 +221,12 @@ public abstract class AbstractDungeonSession implements DungeonSession {
                     """;
 
                     try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
+
                         stmt.setInt(1, deaths.get());
 
                         final Instant instant;
                         if ((instant = endTime.get()) == null) {
-                            stmt.setTimestamp(2, null);
+                            stmt.setNull(2, Types.TIMESTAMP);
                         } else {
                             stmt.setTimestamp(2, Timestamp.from(instant));
                         }
@@ -180,9 +243,18 @@ public abstract class AbstractDungeonSession implements DungeonSession {
 
                 } else {
                     sql = """
-                    INSERT INTO player_runs (dungeon_id, player_id, deaths,
-                        enter_time, exit_time, total_kills, damage_dealt, damage_taken, exit_reason)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO player_runs (
+                        dungeon_id, player_id, deaths,
+                        enter_time, exit_time, total_kills, 
+                        damage_dealt, damage_taken, exit_reason
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE
+                        deaths = VALUES(deaths),
+                        exit_time = VALUES(exit_time),
+                        total_kills = VALUES(total_kills),
+                        damage_dealt = VALUES(damage_dealt),
+                        damage_taken = VALUES(damage_taken),
+                        exit_reason = VALUES(exit_reason)
                     """;
 
                     try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -193,7 +265,7 @@ public abstract class AbstractDungeonSession implements DungeonSession {
 
                         final Instant instant;
                         if ((instant = endTime.get()) == null) {
-                            stmt.setTimestamp(5, null);
+                            stmt.setNull(5, Types.TIMESTAMP);
                         } else {
                             stmt.setTimestamp(5, Timestamp.from(instant));
                         }
@@ -204,7 +276,13 @@ public abstract class AbstractDungeonSession implements DungeonSession {
                         stmt.setString(9, reason.name());
 
                         int rows = stmt.executeUpdate();
-                        System.out.println("Inserted session data: " + rows + " row(s) affected");
+
+                        if (rows == 0) {
+                            System.err.println("WARNING: UPDATE affected 0 rows for pr_id=" + runId +
+                                    ". Session might have been deleted from database!");
+                        } else {
+                            System.out.println("Updated session data for pr_id=" + runId + ": " + rows + " row(s) affected");
+                        }
                     }
                 }
 

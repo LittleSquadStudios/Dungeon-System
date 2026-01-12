@@ -30,9 +30,6 @@ public final class JoinCommandHandler {
 
         if (session != null) {
             session.getDungeon().onExit(p);
-            SessionManager
-                    .getInstance()
-                    .endSession(p.getUniqueId(), ExitReason.QUIT);
         }
 
         return true;

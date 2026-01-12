@@ -113,11 +113,6 @@ public final class SessionManager {
 
     public void recoverActiveSessions(final UUID playerId, final Consumer<UUID> onExpire) {
 
-        final Player p = Bukkit.getPlayer(playerId);
-
-        if (p == null)
-            return;
-
         String sql = """
                     SELECT 
                         pr.pr_id,
@@ -182,7 +177,7 @@ public final class SessionManager {
 
                                 timedTasks.put(playerId,
                                         Main.getScheduledExecutor().schedule(() -> {
-                                            if (session.isActive()) {
+                                            if (session.isActive()) { //TODO : Fix race condition
                                                 onExpire.accept(playerId);
                                                 endSession(playerId, ExitReason.TIME_EXPIRED);
                                             }
@@ -195,7 +190,12 @@ public final class SessionManager {
                                 markSessionAsTimeExpired(runId);
                             }
                         } else {
-                            final DungeonSession session = createSessionInstance(dungeon, playerId);
+                            final DungeonSession session = createSessionInstance(
+                                    dungeon,
+                                    playerId,
+                                    enterTime.toInstant(),
+                                    runId
+                            );
 
                             restoreSessionStats(session, deaths, totalKills, damageDealt, damageTaken);
 
@@ -228,7 +228,6 @@ public final class SessionManager {
         }
         session.addKill(kills);
         session.addDamage(damageDealt); //TODO: AGGIUNGERE SETDEATH E SETKILLS E FAR FUNZIONARE addKill come addDeath
-                                        //TODO: SWAPE! Ti faccio esplodere se non specifici il CachedExecutor nei Futures delle Query!!!
         session.addDamageTaken(damageTaken);
     }
 

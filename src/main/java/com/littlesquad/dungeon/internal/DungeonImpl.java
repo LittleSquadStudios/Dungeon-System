@@ -98,7 +98,7 @@ public final class DungeonImpl extends AbstractDungeon {
 
     @Override
     public List<Reward> rewards() {
-        return Collections.unmodifiableList(rewards);
+        return rewards;
     }
 
     @Override

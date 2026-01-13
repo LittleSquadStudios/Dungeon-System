@@ -67,8 +67,8 @@ public final class DungeonCommand implements CommandExecutor, TabCompleter {
                 case 1 -> {
                     completions.add("join");
                     completions.add("leave");
-                    completions.add("list");
-                    completions.add("info");
+                    completions.add("reload");
+                    completions.add("deactivate");
                     completions.add("trigger");
 
                     return completions.stream()
@@ -77,12 +77,12 @@ public final class DungeonCommand implements CommandExecutor, TabCompleter {
                 }
                 case 2 -> {
                     switch (args[0]) {
-                        case "info", "join" -> {
+                        case "join" -> {
                             return dungeonManager.getAllDungeons().stream()
                                     .map(Dungeon::id)
                                     .collect(Collectors.toList());
                         }
-                        case "trigger" -> {
+                        case "trigger", "deactivate" -> {
 
                             final DungeonSession session;
 

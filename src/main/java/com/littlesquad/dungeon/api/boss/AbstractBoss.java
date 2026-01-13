@@ -97,21 +97,31 @@ public abstract class AbstractBoss implements Boss, Listener {
                     participants.clear();
                     onSpawn();
                     final Player[] players = room.getPlayersIn();
+
+                    System.out.println("A1: ("
+                            + room.maxBossFightDurationTime()
+                            + ") - ("
+                            + room.maxBossFightDurationUnit()
+                            + ')');
+
                     final ScheduledFuture<?> timeoutTask = Main.getScheduledExecutor().schedule(
                             () -> {
-                                final List<Player> inRoomPlayers = Arrays.asList(players);
+                                final List<Player> inRoomPlayers = new ArrayList<>(Arrays.asList(players));
                                 for (final Player p : inRoomPlayers) {
                                     final PlayerBossRoomInfo info;
                                     if ((info = BossRoomManager
                                             .getInstance()
                                             .removePlayer(p.getUniqueId()))
-                                            != null)
+                                            != null) {
                                         if (info.rewardTask != null)
                                             return;
-                                    else inRoomPlayers.remove(p);
+                                    } else inRoomPlayers.remove(p);
                                 }
                                 final Player[] ps = inRoomPlayers.toArray(new Player[0]);
                                 room.kick(() -> {
+                                    Bukkit.getScheduler().runTask(
+                                            Main.getInstance(),
+                                            spawnedMob::despawn);
                                     CommandUtils.executeMultiForMulti(
                                             Bukkit.getConsoleSender(),
                                             room.timedOutCommands(),

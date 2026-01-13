@@ -2,9 +2,11 @@ package com.littlesquad.dungeon.api.status;
 
 import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.Dungeon;
+import com.littlesquad.dungeon.api.boss.PlayerBossRoomInfo;
 import com.littlesquad.dungeon.api.entrance.ExitReason;
 import com.littlesquad.dungeon.api.session.DungeonSession;
 import com.littlesquad.dungeon.internal.SessionManager;
+import com.littlesquad.dungeon.internal.boss.BossRoomManager;
 import io.lumine.mythic.lib.data.SynchronizedDataHolder;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.party.AbstractParty;
@@ -39,15 +41,25 @@ public abstract class AbstractStatus implements Status {
 
     @EventHandler
     public void onQuit(final PlayerQuitEvent e) {
-        if (isPlayerInDungeon(e.getPlayer().getUniqueId())) {
-            switch (e.getReason()) {
-                case TIMED_OUT, ERRONEOUS_STATE -> { // CASE TEST
-                    final DungeonSession session = SessionManager.getInstance().getSession(e.getPlayer().getUniqueId());
-                    if (session != null)
-                        session.stopSession(ExitReason.ERROR);
-                    exitReasons.put(e.getPlayer().getUniqueId(), ExitReason.ERROR);
+        final Player p = e.getPlayer();
+        final UUID uuid = p.getUniqueId();
+        if (isPlayerInDungeon(uuid)) {
+            final PlayerBossRoomInfo info;
+            if ((info = BossRoomManager
+                    .getInstance()
+                    .getPlayer(uuid)) != null)
+                info.bossRoom.kick(
+                        () -> BossRoomManager.getInstance().removePlayer(uuid),
+                        p);
+            final DungeonSession session = SessionManager.getInstance().getSession(uuid);
+            if (session != null) {
+                final ExitReason reason;
+                switch (e.getReason()) {
+                    case TIMED_OUT, ERRONEOUS_STATE -> // CASE TEST
+                            exitReasons.put(uuid, reason = ExitReason.ERROR);
+                    default -> exitReasons.put(uuid, reason = ExitReason.QUIT);
                 }
-                default -> exitReasons.put(e.getPlayer().getUniqueId(), ExitReason.QUIT);
+                session.stopSession(reason);
             }
         }
     }

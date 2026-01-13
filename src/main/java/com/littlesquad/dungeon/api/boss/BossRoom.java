@@ -126,7 +126,7 @@ public interface BossRoom {
     long kickAfterCompletionTime ();
     TimeUnit kickAfterCompletionUnit ();
 
-    boolean kick (final Runnable onSuccess, final Player[] player);
+    boolean kick (final Runnable onSuccess, final Player... player);
 
     Player[] getPlayersIn ();
 }

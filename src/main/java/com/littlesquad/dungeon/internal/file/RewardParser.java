@@ -33,6 +33,7 @@ public final class RewardParser {
      */
     public List<Reward> parse() {
         LOGGER.info(DEBUG_PREFIX + "=== INIZIO PARSING REWARDS ===");
+        try {throw new RuntimeException();} catch (final RuntimeException e) {e.printStackTrace();}
 
         // Initializing array of rewards
         Reward[] rewards = new Reward[0];

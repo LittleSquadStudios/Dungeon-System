@@ -76,6 +76,7 @@ public final class DungeonParser {
     }
 
     public List<Reward> getRewards() {
+        System.out.println(id);
         return rewardParser.parse();
     }
 
@@ -235,7 +236,7 @@ public final class DungeonParser {
                             final TimeUnit unit1 = TimeUnit.valueOf(config.getString("boss_rooms." + key + ".time.kick_after_completion.unit"));
                             final String loc = config.getString("boss_rooms." + key + ".boss.location", "0 0 0");
                             int i;
-                            final List<Reward> allRewards = getRewards();
+                            final List<Reward> allRewards = d.rewards();
                             return new BossRoomImpl(
                                     d,
                                     key,

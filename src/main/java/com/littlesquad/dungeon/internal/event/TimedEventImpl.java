@@ -96,4 +96,8 @@ public final class TimedEventImpl extends TimedEvent {
                         task.cancel(false);
                 });
     }
+
+    public void close () {
+        deActiveFor(players.keySet().toArray(new Player[0]));
+    }
 }

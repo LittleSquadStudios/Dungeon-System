@@ -3,8 +3,16 @@ package com.littlesquad.dungeon.api;
 import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.entrance.EntryResponse;
 import com.littlesquad.dungeon.api.entrance.ExitReason;
+import com.littlesquad.dungeon.api.event.Event;
+import com.littlesquad.dungeon.api.event.ObjectiveEvent;
+import com.littlesquad.dungeon.api.event.TimedEvent;
 import com.littlesquad.dungeon.api.session.DungeonSession;
 import com.littlesquad.dungeon.internal.SessionManager;
+import com.littlesquad.dungeon.internal.boss.BossRoomManager;
+import com.littlesquad.dungeon.internal.checkpoint.CheckPointManager;
+import com.littlesquad.dungeon.internal.event.ObjectiveEventImpl;
+import com.littlesquad.dungeon.internal.event.StructuralEventImpl;
+import com.littlesquad.dungeon.internal.event.TimedEventImpl;
 import com.littlesquad.dungeon.internal.file.DungeonParser;
 import com.littlesquad.dungeon.internal.utils.CommandUtils;
 import com.littlesquad.dungeon.placeholder.PlaceholderFormatter;
@@ -491,6 +499,17 @@ public abstract class AbstractDungeon implements Dungeon {
                     SessionManager
                     .getInstance()
                     .endSession(s.playerId(), ExitReason.PLUGIN_STOPPING));
+
+        Arrays.stream(getCheckpoints()).forEach(checkPoint -> CheckPointManager.unregister(checkPoint.getID()));
+        BossRoomManager.getInstance().clear();
+
+        for (final Event event : getEvents()) {
+            switch (event.getType()) {
+                case TIMED -> ((TimedEventImpl) event).close();
+                case OBJECTIVE -> ((ObjectiveEventImpl) event).close();
+                case STRUCTURAL -> ((StructuralEventImpl) event).close();
+            }
+        }
 
         leaders.clear();
         parser = null;

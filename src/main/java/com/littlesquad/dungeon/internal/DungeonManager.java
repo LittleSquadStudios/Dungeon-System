@@ -88,22 +88,7 @@ public final class DungeonManager {
 
     public void clear() {
 
-        dungeons.values().forEach(dungeon -> {
-            SessionManager
-                    .getInstance()
-                    .getDungeonSessions(dungeon)
-                    .forEach(session ->
-                            session.stopSession(ExitReason.PLUGIN_STOPPING));
-
-            Arrays.stream(dungeon.getCheckpoints()).forEach(checkPoint -> CheckPointManager.unregister(checkPoint.getID()));
-            BossRoomManager.getInstance().clear();
-            dungeon.status().shutdown();
-
-        });
-        //TODO: End here all the session and do cleanup like unregistering dungeon checkpoints ecc...
-        // Bossrooms
-        // Rewards
-        // Events (from session, from event impls, from status)
+        dungeons.values().forEach(Dungeon::shutdown);
 
         dungeons.clear();
         initialized = false;

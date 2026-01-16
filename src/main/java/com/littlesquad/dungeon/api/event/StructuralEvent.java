@@ -12,7 +12,7 @@ public abstract non-sealed class StructuralEvent implements Event {
 
     public abstract Material[] getBlockTypes ();
 
-    public abstract Location getLocation ();
+    public abstract Location[] getLocations ();
 
     public abstract List<StructuralEvent> conditionedBy ();
 

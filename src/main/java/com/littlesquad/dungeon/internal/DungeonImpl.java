@@ -7,6 +7,7 @@ import com.littlesquad.dungeon.api.checkpoint.Checkpoint;
 import com.littlesquad.dungeon.api.entrance.Entrance;
 import com.littlesquad.dungeon.api.entrance.ExitReason;
 import com.littlesquad.dungeon.api.event.Event;
+import com.littlesquad.dungeon.api.event.EventType;
 import com.littlesquad.dungeon.api.rewards.Reward;
 import com.littlesquad.dungeon.api.status.Status;
 import com.littlesquad.dungeon.internal.file.DungeonParser;
@@ -53,8 +54,11 @@ public final class DungeonImpl extends AbstractDungeon {
         this.rewards = parser.getRewards();
         this.events = parser.getEvents(this);
         eventMap = new ConcurrentHashMap<>(events.length);
-        for (final Event event : events)
+        for (final Event event : events) {
             eventMap.put(event.getID(), event);
+            if (event.getType() == EventType.STRUCTURAL)
+                event.triggerActivation();
+        }
         this.checkpoints = parser.getCheckpoints(this);
 
         bossrooms = parser.getBossRooms(this);

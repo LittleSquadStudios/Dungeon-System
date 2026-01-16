@@ -116,7 +116,7 @@ events:
     block_types:
       - "STONE"
     # Ignored for location independent events
-    location: "-24 68 -24"
+    area: "-24 68 -24 -24 72 -28"
     # List of events where AT LEAST ONE should be NOT_ACTIVE for allowing this event to trigger
     conditioned_by:
       - "structural_event_B"

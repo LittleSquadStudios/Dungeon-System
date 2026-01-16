@@ -97,13 +97,6 @@ public abstract class AbstractBoss implements Boss, Listener {
                     participants.clear();
                     onSpawn();
                     final Player[] players = room.getPlayersIn();
-
-                    System.out.println("A1: ("
-                            + room.maxBossFightDurationTime()
-                            + ") - ("
-                            + room.maxBossFightDurationUnit()
-                            + ')');
-
                     final ScheduledFuture<?> timeoutTask = Main.getScheduledExecutor().schedule(
                             () -> {
                                 final List<Player> inRoomPlayers = new ArrayList<>(Arrays.asList(players));

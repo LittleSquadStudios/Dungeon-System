@@ -167,7 +167,7 @@ public final class DungeonParser {
                                         final Material[] mArray = new Material[materialStrings.size()];
                                         for (int i = 0; i < mArray.length; ++i)
                                             mArray[i] = Material.valueOf(materialStrings.get(i));
-                                        final String loc = config.getString("events." + key + ".location", "0 0 0");
+                                        final String loc = config.getString("events." + key + ".area", "0 0 0 0 0 0");
                                         int i;
                                         yield new StructuralEventImpl(
                                                 d,
@@ -175,11 +175,18 @@ public final class DungeonParser {
                                                 config.getStringList("events." + key + ".commands"),
                                                 environmentEvent,
                                                 mArray,
-                                                new Location(
-                                                        d.getWorld(),
-                                                        Double.parseDouble(loc.substring(0, i = loc.indexOf(' ', 1))),
-                                                        Double.parseDouble(loc.substring(i + 1, i = loc.indexOf(' ', i + 2))),
-                                                        Double.parseDouble(loc.substring(i + 1))),
+                                                new Location[]{
+                                                        new Location(
+                                                                d.getWorld(),
+                                                                Double.parseDouble(loc.substring(0, i = loc.indexOf(' ', 1))),
+                                                                Double.parseDouble(loc.substring(i + 1, i = loc.indexOf(' ', i + 2))),
+                                                                Double.parseDouble(loc.substring(i + 1, i = loc.indexOf(' ', i + 2)))),
+                                                        new Location(
+                                                                d.getWorld(),
+                                                                Double.parseDouble(loc.substring(i + 1, i = loc.indexOf(' ', i + 2))),
+                                                                Double.parseDouble(loc.substring(i + 1, i = loc.indexOf(' ', i + 2))),
+                                                                Double.parseDouble(loc.substring(i + 1)))
+                                                },
                                                 config.getStringList("events." + key + ".conditioned_by")
                                                         .stream()
                                                         .parallel()

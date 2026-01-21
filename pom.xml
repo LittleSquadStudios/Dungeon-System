@@ -16,8 +16,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <vps.host>178.218.144.49</vps.host>
         <vps.user>root</vps.user>
-        <vps.password>cazzoinculoloprendotutto</vps.password>
-        <vps.path>/root/customer/azure/test/plugins/</vps.path>
+        <vps.password>cazzoinculoloprendoquasitutto</vps.password>
+        <vps.path>/root/customer/instance/plugins</vps.path>
     </properties>
 
     <build>

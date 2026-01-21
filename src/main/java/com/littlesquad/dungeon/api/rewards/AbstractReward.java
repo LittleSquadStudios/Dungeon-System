@@ -1,8 +1,11 @@
 package com.littlesquad.dungeon.api.rewards;
 
+import com.littlesquad.Main;
 import com.littlesquad.dungeon.internal.utils.CommandUtils;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.experience.EXPSource;
+import net.Indyuce.mmoitems.MMOItems;
+import net.Indyuce.mmoitems.api.MMOItemsAPI;
 import net.Indyuce.mmoitems.api.Type;
 import net.Indyuce.mmoitems.api.item.mmoitem.MMOItem;
 import net.kyori.adventure.text.Component;
@@ -22,6 +25,7 @@ public abstract class AbstractReward implements Reward {
 
     public void give(final Player player) {
 
+
         if (cachedItems.isEmpty()) {
             cacheItemsRewards();
         }
@@ -29,12 +33,33 @@ public abstract class AbstractReward implements Reward {
         final UUID pu = player.getUniqueId();
         final PlayerData data = PlayerData.get(pu);
 
-        data.giveExperience(experience(), EXPSource.SOURCE);
+        Bukkit.getScheduler().runTask(Main.getInstance(),
+                () -> data.giveExperience(experience(), EXPSource.SOURCE));
 
         CommandUtils.executeMulti(
                 Bukkit.getConsoleSender(),
                 commands(),
                 player);
+
+        Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
+            rewards()
+                    .stream()
+                    .filter(ItemReward::isMythicItem)
+                    .forEach(r -> {
+
+                        final MMOItem mmoitem = MMOItems
+                                .plugin
+                                .getMMOItem(MMOItems
+                                                .plugin
+                                                .getTypes()
+                                                .get(r.type().orElseThrow()),
+                                        r.mythicItemName().orElseThrow());
+
+                        final ItemStack item = mmoitem.newBuilder().build();
+
+                        player.getInventory().addItem(item);
+                    });
+        });
 
         for (ItemStack item : cachedItems.values()) {
             player.getInventory().addItem(item.clone());
@@ -51,16 +76,7 @@ public abstract class AbstractReward implements Reward {
         int itemIndex = 0;
         for (final ItemReward reward : rewards()) {
 
-            if (reward.isMythicItem()) {
-
-                ItemStack mythicItem = new MMOItem(
-                        Type.get(reward.type().orElseThrow()),
-                        reward.mythicItemName().orElseThrow()
-                ).newBuilder().getItemStack();
-
-                cachedItems.put("mythic_" + itemIndex, mythicItem);
-
-            } else {
+            if (!reward.isMythicItem()) {
 
                 final Material material = Material.getMaterial(reward.type().orElse("STONE"));
 
@@ -101,6 +117,7 @@ public abstract class AbstractReward implements Reward {
 
                     cachedItems.put("item_" + itemIndex, is);
                 }
+
             }
 
             itemIndex++;

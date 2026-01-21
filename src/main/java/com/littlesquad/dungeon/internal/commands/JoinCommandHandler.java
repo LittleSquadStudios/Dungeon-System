@@ -64,8 +64,8 @@ public final class JoinCommandHandler {
 
         switch (entryResponse) {
             case FAILURE_PER_LEVEL -> {
-                p.sendMessage(Main.getMessageProvider()
-                        .getEntranceFailurePerLevel());
+                Main.getMessageProvider().sendMessageInCommand(p,
+                        Main.getMessageProvider().getEntranceFailurePerLevel());
                 CommandUtils.executeMulti(
                         Bukkit.getConsoleSender(),
                         dungeonToJoin
@@ -74,9 +74,9 @@ public final class JoinCommandHandler {
                         p
                 );
             }
-            case FAILURE_PER_DUNGEON_BLOCKED -> p.sendMessage(Main.getMessageProvider().getEntranceFailurePerDungeonBlocked());
+            case FAILURE_PER_DUNGEON_BLOCKED -> Main.getMessageProvider().sendMessageInCommand(p, Main.getMessageProvider().getEntranceFailurePerDungeonBlocked());
             case FAILURE_PER_SLOTS -> {
-                p.sendMessage(Main
+                Main.getMessageProvider().sendMessageInCommand(p, Main
                         .getMessageProvider()
                         .getEntranceFailurePerSlots());
                 CommandUtils.executeMulti(
@@ -87,9 +87,9 @@ public final class JoinCommandHandler {
                         p
                 );
             }
-            case FAILURE_PER_ALREADY_PROCESSING -> p.sendMessage(Main.getMessageProvider().getEntranceFailurePerAlreadyProcessing());
+            case FAILURE_PER_ALREADY_PROCESSING -> Main.getMessageProvider().sendMessageInCommand(p, Main.getMessageProvider().getEntranceFailurePerAlreadyProcessing());
             case FAILURE_PER_PARTY -> {
-                p.sendMessage(Main.getMessageProvider().getEntranceFailurePerParty());
+                Main.getMessageProvider().sendMessageInCommand(p, Main.getMessageProvider().getEntranceFailurePerParty());
                 CommandUtils.executeMulti(
                         Bukkit.getConsoleSender(),
                         dungeonToJoin
@@ -98,8 +98,8 @@ public final class JoinCommandHandler {
                         p
                 );
             }
-            case FAILURE_PER_SENDER_ALREADY_IN -> p.sendMessage(Main.getMessageProvider().getEntranceFailurePerSenderAlreadyIn());
-            case FAILURE_PER_MEMBER_ALREADY_IN -> p.sendMessage(Main.getMessageProvider().getEntranceFailurePerMemberAlreadyIn());
+            case FAILURE_PER_SENDER_ALREADY_IN -> Main.getMessageProvider().sendMessageInCommand(p, Main.getMessageProvider().getEntranceFailurePerSenderAlreadyIn());
+            case FAILURE_PER_MEMBER_ALREADY_IN -> Main.getMessageProvider().sendMessageInCommand(p, Main.getMessageProvider().getEntranceFailurePerMemberAlreadyIn());
             case SUCCESS_PARTY -> {
 
                 final AbstractParty playerParty = Main.getMMOCoreAPI()
@@ -107,7 +107,7 @@ public final class JoinCommandHandler {
                         .getParty();
 
                 if (playerParty == null) {
-                    p.sendMessage("You must be in a party to join this dungeon");
+                    Main.getMessageProvider().sendMessageInCommand(p, Main.getMessageProvider().getEntranceSuccess());
                     return false;
                 }
 
@@ -117,7 +117,7 @@ public final class JoinCommandHandler {
                         .toArray(Player[]::new);
 
                 if (partyMembers.length == 0) {
-                    p.sendMessage("No party members are online");
+                    Main.getMessageProvider().sendMessageInCommand(p, "§cAt least one 2 members should be present in this party!");
                     return false;
                 }
 

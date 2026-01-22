@@ -7,9 +7,7 @@ import com.littlesquad.dungeon.api.event.structural.EnvironmentEvent;
 import com.littlesquad.dungeon.api.session.DungeonSession;
 import com.littlesquad.dungeon.internal.SessionManager;
 import com.littlesquad.dungeon.internal.utils.CommandUtils;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
@@ -71,10 +69,13 @@ public final class StructuralEventImpl extends StructuralEvent {
                         .abs(locations[0].getBlockZ() - locations[1].getBlockZ()));
                 final int toX = Math.max(locations[0].getBlockX(), locations[1].getBlockX()),
                         toY = Math.max(locations[0].getBlockY(), locations[1].getBlockY()),
-                        toZ = Math.max(locations[0].getBlockZ(), locations[1].getBlockZ());
-                for (int x = Math.min(locations[0].getBlockX(), locations[1].getBlockX()); x <= toX; ++x)
-                    for (int y = Math.min(locations[0].getBlockY(), locations[1].getBlockY()); y <= toY; ++y)
-                        for (int z = Math.min(locations[0].getBlockZ(), locations[1].getBlockZ()); z <= toZ; ++z)
+                        toZ = Math.max(locations[0].getBlockZ(), locations[1].getBlockZ()),
+                        fromX = Math.min(locations[0].getBlockX(), locations[1].getBlockX()),
+                        fromY = Math.min(locations[0].getBlockY(), locations[1].getBlockY()),
+                        fromZ = Math.min(locations[0].getBlockZ(), locations[1].getBlockZ());
+                for (int x = fromX; x <= toX; ++x)
+                    for (int y = fromY; y <= toY; ++y)
+                        for (int z = fromZ; z <= toZ; ++z)
                             airBlockList.add(dungeon.getWorld().getBlockAt(x, y, z));
                 yield () -> {
                     try {
@@ -97,9 +98,24 @@ public final class StructuralEventImpl extends StructuralEvent {
                                             globalStateLock.lock();
                                             if (eventDeactivator == this) {
                                                 deactivationTask.cancel(false);
-
-                                                //TODO: Cool disappear effects for non-air blocks in 'airBlockList'
-
+                                                Bukkit.getScheduler().runTask(
+                                                        Main.getInstance(),
+                                                        () -> airBlockList
+                                                                .stream()
+                                                                .peek(block -> {
+                                                                    block.setType(Material.AIR);
+                                                                    block.getWorld().spawnParticle(
+                                                                            Particle.SMOKE,
+                                                                            block.getLocation(),
+                                                                            4);
+                                                                }).findAny()
+                                                                .ifPresent(block -> block
+                                                                        .getWorld()
+                                                                        .playSound(
+                                                                                block.getLocation(),
+                                                                                Sound.BLOCK_SPONGE_ABSORB,
+                                                                                1,
+                                                                                1)));
                                                 state = 0;
                                                 eventDeactivator = () -> {};
                                             }
@@ -118,9 +134,44 @@ public final class StructuralEventImpl extends StructuralEvent {
                                                 .map(Bukkit::getPlayer)
                                                 .filter(Objects::nonNull)
                                                 .toArray(Player[]::new));
-
-                                //TODO: Make blocks appear
-
+                                SessionManager.getInstance()
+                                        .getDungeonSessions(dungeon)
+                                        .parallelStream()
+                                        .forEach(session -> {
+                                            final Player p;
+                                            if ((p = Bukkit.getPlayer(session.playerId())) != null) {
+                                                final Location playerLoc = p.getLocation();
+                                                if (fromX <= playerLoc.getBlockX() && playerLoc.getBlockX() <= toX
+                                                        && fromY <= playerLoc.getBlockY() && playerLoc.getBlockY() <= toY
+                                                        && fromZ <= playerLoc.getBlockZ() && playerLoc.getBlockZ() <= toZ) {
+                                                    p.setVelocity(p
+                                                            .getLocation()
+                                                            .subtract(new Location(
+                                                                    p.getWorld(),
+                                                                    toX - fromX >> 1,
+                                                                    fromY + 0.75f,
+                                                                    toZ - fromZ >> 1
+                                                            )).toVector()
+                                                            .multiply(5.0f));
+                                                }
+                                            }
+                                        });
+                                Bukkit.getScheduler().runTask(
+                                        Main.getInstance(),
+                                        () -> airBlockList
+                                                .stream()
+                                                .peek(block -> block
+                                                        .setType(blockTypes[ThreadLocalRandom
+                                                                .current()
+                                                                .nextInt(blockTypes.length)]))
+                                                .findAny()
+                                                .ifPresent(block -> block
+                                                        .getWorld()
+                                                        .playSound(
+                                                                block.getLocation(),
+                                                                Sound.BLOCK_MUD_PLACE,
+                                                                1,
+                                                                1)));
                             } else {
                                 final ScheduledFuture<?> retryTask = Main
                                         .getScheduledExecutor()

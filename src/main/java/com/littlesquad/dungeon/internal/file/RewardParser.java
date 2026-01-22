@@ -30,7 +30,7 @@ public final class RewardParser {
      */
     public List<Reward> parse() {
         // Initializing array of rewards
-        final Reward[] rewards = new Reward[0];
+        Reward[] rewards = new Reward[0];
 
         // Taking from parser the dungeon section about rewards
         final ConfigurationSection section = dungeonConf.getConfigurationSection("rewards");

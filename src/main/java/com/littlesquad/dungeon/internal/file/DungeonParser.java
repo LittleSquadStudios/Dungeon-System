@@ -162,6 +162,8 @@ public final class DungeonParser {
                                         config.getString("events." + key + ".boss-room", ""));
                                 case STRUCTURAL -> {
                                     try {
+                                        final TimeUnit retryUnit = TimeUnit.valueOf(config.getString("events." + key + ".time.retry.unit"));
+                                        final TimeUnit deactivationUnit = TimeUnit.valueOf(config.getString("events." + key + ".time.deactivation.unit"));
                                         final EnvironmentEvent environmentEvent = EnvironmentEvent.valueOf(config.getString("events." + key + ".environment_event"));
                                         final List<String> materialStrings = config.getStringList("events." + key + ".block_types");
                                         final Material[] mArray = new Material[materialStrings.size()];
@@ -175,7 +177,7 @@ public final class DungeonParser {
                                                 config.getStringList("events." + key + ".commands"),
                                                 environmentEvent,
                                                 mArray,
-                                                new Location[]{
+                                                new Location[] {
                                                         new Location(
                                                                 d.getWorld(),
                                                                 Double.parseDouble(loc.substring(0, i = loc.indexOf(' ', 1))),
@@ -190,7 +192,13 @@ public final class DungeonParser {
                                                 config.getStringList("events." + key + ".conditioned_by")
                                                         .stream()
                                                         .parallel()
-                                                        .collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)));
+                                                        .collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)),
+                                                config.getLong("events." + key + ".time.retry.time_min"),
+                                                config.getLong("events." + key + ".time.retry.time_max"),
+                                                retryUnit,
+                                                config.getLong("events." + key + ".time.deactivation.time_min"),
+                                                config.getLong("events." + key + ".time.deactivation.time_max"),
+                                                deactivationUnit);
                                     } catch (final Throwable _) {
                                         yield null;
                                     }

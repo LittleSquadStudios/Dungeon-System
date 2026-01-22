@@ -122,6 +122,19 @@ events:
       - "structural_event_B"
     commands:
       - "say STRUCTURAL!"
+    time:
+      # After how much time the re-scheduling is tried if the activation fail
+      # The time is chosen randomly from 'min' to 'max'
+      retry:
+        time_min: 10
+        time_max: 20
+        unit: MINUTES
+      # After how much time the event is deactivated in case of successful activation
+      # The time is chosen randomly from 'min' to 'max'
+      deactivation:
+        time_min: 15
+        time_max: 30
+        unit: MINUTES
 
 # The checkpoints are like save-points that gets activated once a OBJECTIVE
 # event gets fired

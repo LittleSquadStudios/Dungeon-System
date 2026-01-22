@@ -1,5 +1,6 @@
 package com.littlesquad.dungeon.internal.event;
 
+import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.event.StructuralEvent;
 import com.littlesquad.dungeon.api.event.structural.EnvironmentEvent;
@@ -13,6 +14,9 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
@@ -45,7 +49,13 @@ public final class StructuralEventImpl extends StructuralEvent {
                                 final EnvironmentEvent environmentEvent,
                                 final Material[] blockTypes,
                                 final Location[] locations,
-                                final Set<String> events) {
+                                final Set<String> events,
+                                final long minRetryTime,
+                                final long maxRetryTime,
+                                final TimeUnit retryUnit,
+                                final long minDeactivationTime,
+                                final long maxDeactivationTime,
+                                final TimeUnit deactivationUnit) {
         this.dungeon = dungeon;
         this.id = id;
         this.commands = commands;
@@ -73,18 +83,25 @@ public final class StructuralEventImpl extends StructuralEvent {
                             if (conditionedBy()
                                 .stream()
                                 .allMatch(Predicate.not(StructuralEvent::isActiveFor))) {
+                                final ScheduledFuture<?> deactivationTask = Main
+                                        .getScheduledExecutor()
+                                        .schedule(() -> eventDeactivator.run(),
+                                                ThreadLocalRandom.current().nextLong(
+                                                        minDeactivationTime,
+                                                        maxDeactivationTime + 1),
+                                                deactivationUnit);
                                 state = -1;
                                 eventDeactivator = new Runnable() {
                                     public void run () {
                                         try {
                                             globalStateLock.lock();
                                             if (eventDeactivator == this) {
+                                                deactivationTask.cancel(false);
 
                                                 //TODO: Cool disappear effects for non-air blocks in 'airBlockList'
 
                                                 state = 0;
-                                                eventDeactivator = () -> {
-                                                };
+                                                eventDeactivator = () -> {};
                                             }
                                         } finally {
                                             globalStateLock.unlock();
@@ -96,18 +113,33 @@ public final class StructuralEventImpl extends StructuralEvent {
                                         commands,
                                         SessionManager.getInstance()
                                                 .getDungeonSessions(dungeon)
-                                                .stream().parallel()
+                                                .parallelStream()
                                                 .map(DungeonSession::playerId)
                                                 .map(Bukkit::getPlayer)
                                                 .filter(Objects::nonNull)
                                                 .toArray(Player[]::new));
 
-                                //TODO: schedule event deactivation
+                                //TODO: Make blocks appear
 
                             } else {
-
-                                //TODO: schedule event retry
-
+                                final ScheduledFuture<?> retryTask = Main
+                                        .getScheduledExecutor()
+                                        .schedule(() -> triggerActivation(),
+                                                ThreadLocalRandom.current().nextLong(
+                                                        minRetryTime,
+                                                        maxRetryTime + 1),
+                                                retryUnit);
+                                eventDeactivator = new Runnable() {
+                                    public void run () {
+                                        try {
+                                            globalStateLock.lock();
+                                            if (eventDeactivator == this)
+                                                retryTask.cancel(false);
+                                        } finally {
+                                            globalStateLock.unlock();
+                                        }
+                                    }
+                                };
                             }
                         }
                     } finally {
@@ -122,15 +154,22 @@ public final class StructuralEventImpl extends StructuralEvent {
                         if (conditionedBy()
                                 .stream()
                                 .allMatch(Predicate.not(StructuralEvent::isActiveFor))) {
+                            final ScheduledFuture<?> deactivationTask = Main
+                                    .getScheduledExecutor()
+                                    .schedule(() -> eventDeactivator.run(),
+                                            ThreadLocalRandom.current().nextLong(
+                                                    minDeactivationTime,
+                                                    maxDeactivationTime + 1),
+                                            deactivationUnit);
                             state = -1;
                             eventDeactivator = new Runnable() {
-                                public void run() {
+                                public void run () {
                                     try {
                                         globalStateLock.lock();
                                         if (eventDeactivator == this) {
+                                            deactivationTask.cancel(false);
                                             state = 0;
-                                            eventDeactivator = () -> {
-                                            };
+                                            eventDeactivator = () -> {};
                                         }
                                     } finally {
                                         globalStateLock.unlock();
@@ -147,13 +186,25 @@ public final class StructuralEventImpl extends StructuralEvent {
                                             .map(Bukkit::getPlayer)
                                             .filter(Objects::nonNull)
                                             .toArray(Player[]::new));
-
-                            //TODO: schedule event deactivation
-
                         } else {
-
-                            //TODO: schedule event retry
-
+                            final ScheduledFuture<?> retryTask = Main
+                                    .getScheduledExecutor()
+                                    .schedule(() -> triggerActivation(),
+                                            ThreadLocalRandom.current().nextLong(
+                                                    minRetryTime,
+                                                    maxRetryTime + 1),
+                                            retryUnit);
+                            eventDeactivator = new Runnable() {
+                                public void run () {
+                                    try {
+                                        globalStateLock.lock();
+                                        if (eventDeactivator == this)
+                                            retryTask.cancel(false);
+                                    } finally {
+                                        globalStateLock.unlock();
+                                    }
+                                }
+                            };
                         }
                     }
                 } finally {
@@ -204,6 +255,11 @@ public final class StructuralEventImpl extends StructuralEvent {
     }
 
     public void close () {
-        eventDeactivator.run();
+        try {
+            globalStateLock.lock();
+            eventDeactivator.run();
+        } finally {
+            globalStateLock.unlock();
+        }
     }
 }

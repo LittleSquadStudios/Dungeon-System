@@ -15,7 +15,6 @@ import java.util.*;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 
@@ -33,7 +32,7 @@ public final class StructuralEventImpl extends StructuralEvent {
 
     private final Runnable eventApplier;
 
-    private static final Lock globalStateLock = new ReentrantLock(false);
+    private static final ReentrantLock globalStateLock = new ReentrantLock(false);
     /* State values:
      * [-1]: active
      * [0]: non-active / ready-for-activation
@@ -94,33 +93,50 @@ public final class StructuralEventImpl extends StructuralEvent {
                                 state = -1;
                                 eventDeactivator = new Runnable() {
                                     public void run () {
+                                        final boolean isClosing = globalStateLock.isHeldByCurrentThread();
                                         try {
                                             globalStateLock.lock();
                                             if (eventDeactivator == this) {
                                                 deactivationTask.cancel(false);
                                                 Bukkit.getScheduler().runTask(
                                                         Main.getInstance(),
-                                                        () -> airBlockList
-                                                                .stream()
-                                                                .peek(block -> {
+                                                        () -> {
+                                                            if (!airBlockList.isEmpty()) {
+                                                                airBlockList.forEach(block -> {
                                                                     block.setType(Material.AIR);
                                                                     block.getWorld().spawnParticle(
                                                                             Particle.SMOKE,
                                                                             block.getLocation(),
                                                                             4);
-                                                                }).findAny()
-                                                                .ifPresent(block -> block
+                                                                        });
+                                                                final Block block;
+                                                                (block = airBlockList
+                                                                        .getFirst())
                                                                         .getWorld()
                                                                         .playSound(
                                                                                 block.getLocation(),
                                                                                 Sound.BLOCK_SPONGE_ABSORB,
                                                                                 1,
-                                                                                1)));
+                                                                                1);
+                                                            }
+                                                        });
                                                 state = 0;
-                                                eventDeactivator = () -> {};
+                                                if (isClosing)
+                                                    eventDeactivator = () -> {};
+                                                else {
+                                                    final ScheduledFuture<?> retryTask = Main
+                                                            .getScheduledExecutor()
+                                                            .schedule(() -> triggerActivation(),
+                                                                    ThreadLocalRandom.current().nextLong(
+                                                                            minRetryTime,
+                                                                            maxRetryTime + 1),
+                                                                    retryUnit);
+                                                    eventDeactivator = () -> retryTask.cancel(false);
+                                                }
                                             }
                                         } finally {
-                                            globalStateLock.unlock();
+                                            if (!isClosing)
+                                                globalStateLock.unlock();
                                         }
                                     }
                                 };
@@ -158,20 +174,23 @@ public final class StructuralEventImpl extends StructuralEvent {
                                         });
                                 Bukkit.getScheduler().runTask(
                                         Main.getInstance(),
-                                        () -> airBlockList
-                                                .stream()
-                                                .peek(block -> block
+                                        () -> {
+                                            if (!airBlockList.isEmpty()) {
+                                                airBlockList.forEach(block -> block
                                                         .setType(blockTypes[ThreadLocalRandom
                                                                 .current()
-                                                                .nextInt(blockTypes.length)]))
-                                                .findAny()
-                                                .ifPresent(block -> block
+                                                                .nextInt(blockTypes.length)]));
+                                                final Block block;
+                                                (block = airBlockList
+                                                        .getFirst())
                                                         .getWorld()
                                                         .playSound(
                                                                 block.getLocation(),
                                                                 Sound.BLOCK_MUD_PLACE,
                                                                 1,
-                                                                1)));
+                                                                1);
+                                            }
+                                        });
                             } else {
                                 final ScheduledFuture<?> retryTask = Main
                                         .getScheduledExecutor()
@@ -180,17 +199,7 @@ public final class StructuralEventImpl extends StructuralEvent {
                                                         minRetryTime,
                                                         maxRetryTime + 1),
                                                 retryUnit);
-                                eventDeactivator = new Runnable() {
-                                    public void run () {
-                                        try {
-                                            globalStateLock.lock();
-                                            if (eventDeactivator == this)
-                                                retryTask.cancel(false);
-                                        } finally {
-                                            globalStateLock.unlock();
-                                        }
-                                    }
-                                };
+                                eventDeactivator = () -> retryTask.cancel(false);
                             }
                         }
                     } finally {
@@ -215,15 +224,28 @@ public final class StructuralEventImpl extends StructuralEvent {
                             state = -1;
                             eventDeactivator = new Runnable() {
                                 public void run () {
+                                    final boolean isClosing = globalStateLock.isHeldByCurrentThread();
                                     try {
                                         globalStateLock.lock();
                                         if (eventDeactivator == this) {
                                             deactivationTask.cancel(false);
                                             state = 0;
-                                            eventDeactivator = () -> {};
+                                            if (isClosing)
+                                                eventDeactivator = () -> {};
+                                            else {
+                                                final ScheduledFuture<?> retryTask = Main
+                                                        .getScheduledExecutor()
+                                                        .schedule(() -> triggerActivation(),
+                                                                ThreadLocalRandom.current().nextLong(
+                                                                        minRetryTime,
+                                                                        maxRetryTime + 1),
+                                                                retryUnit);
+                                                eventDeactivator = () -> retryTask.cancel(false);
+                                            }
                                         }
                                     } finally {
-                                        globalStateLock.unlock();
+                                        if (!isClosing)
+                                            globalStateLock.unlock();
                                     }
                                 }
                             };
@@ -245,17 +267,7 @@ public final class StructuralEventImpl extends StructuralEvent {
                                                     minRetryTime,
                                                     maxRetryTime + 1),
                                             retryUnit);
-                            eventDeactivator = new Runnable() {
-                                public void run () {
-                                    try {
-                                        globalStateLock.lock();
-                                        if (eventDeactivator == this)
-                                            retryTask.cancel(false);
-                                    } finally {
-                                        globalStateLock.unlock();
-                                    }
-                                }
-                            };
+                            eventDeactivator = () -> retryTask.cancel(false);
                         }
                     }
                 } finally {

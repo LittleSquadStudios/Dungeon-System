@@ -6,11 +6,10 @@ import com.littlesquad.dungeon.api.rewards.Reward;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.logging.Logger;
 
 @SuppressWarnings("ClassCanBeRecord")
 public final class RewardParser {
@@ -29,15 +28,15 @@ public final class RewardParser {
      * @author LittleSquad
      */
     public List<Reward> parse() {
-        // Initializing array of rewards
-        Reward[] rewards = new Reward[0];
+        // Use ArrayList to avoid null entries and size issues
+        List<Reward> rewards = new ArrayList<>();
 
         // Taking from parser the dungeon section about rewards
         final ConfigurationSection section = dungeonConf.getConfigurationSection("rewards");
 
         // Checking if configuration has this section
         if (section == null) {
-            return Arrays.stream(rewards).toList();
+            return rewards;
         }
 
         // Taking subsections of rewards so each reward
@@ -45,13 +44,9 @@ public final class RewardParser {
 
         // Check if there's some rewards registered
         if (subSections.isEmpty()) {
-            return Arrays.stream(rewards).toList();
+            return rewards;
         }
 
-        // Initializing rewards to reward final size taken from amount of rewards present in the config
-        rewards = new Reward[subSections.size()];
-
-        int i = 0;
         // Iterating along all subsections
         for (final String s : subSections) {
 
@@ -61,118 +56,33 @@ public final class RewardParser {
                 continue;
             }
 
-            // Log delle chiavi nella sezione reward
-
-            // Initializing items rewards array
-            ItemReward[] itemsR = new ItemReward[0];
-            final ConfigurationSection itemSec = section.getConfigurationSection(s + ".items");
-
-            // Checking if there's some items in this reward
-            if (itemSec != null) {
-                final Set<String> items = itemSec.getKeys(false);
-
-                if (!items.isEmpty()) {
-                    itemsR = new ItemReward[items.size()];
-
-                    int ia = 0;
-                    for (final String item : items) {
-
-                        String itemPath = item + ".";
-
-                        // Critic fields validation
-                        String type = itemSec.getString(itemPath + "type");
-                        if (type == null || type.isEmpty()) {
-                            continue;
-                        }
-
-                        boolean isMythic = itemSec.getBoolean(itemPath + "is_mythic_item");
-                        String mythicName = itemSec.getString(itemPath + "mythic_item_name");
-
-                        if (isMythic && (mythicName == null || mythicName.isEmpty())) {
-                            continue;
-                        }
-
-                        int amount = itemSec.getInt(itemPath + "amount");
-                        if (amount < 0) {
-                            continue;
-                        }
-
-                        // Building up the items
-                        itemsR[ia++] = new ItemReward() {
-                            @Override
-                            public boolean isMythicItem() {
-                                return isMythic;
-                            }
-
-                            @Override
-                            public Optional<String> mythicItemName() {
-                                return Optional.ofNullable(mythicName);
-                            }
-
-                            @Override
-                            public Optional<String> type() {
-                                return Optional.of(type);
-                            }
-
-                            @Override
-                            public int amount() {
-                                return amount;
-                            }
-
-                            @Override
-                            public boolean isGlowing() {
-                                return itemSec.getBoolean(item + ".is_glowing");
-                            }
-
-                            @Override
-                            public List<String> enchantments() {
-                                return itemSec.getStringList(item + ".enchants");
-                            }
-
-                            @Override
-                            public String displayName() {
-                                return itemSec.getString(item + ".display_name");
-                            }
-
-                            @Override
-                            public List<String> lore() {
-                                return itemSec.getStringList(item + ".lore");
-                            }
-                        };
-                    }
-                }
-            }
-
-            // Putting items into a copy array
-            final ItemReward[] finalItemsR = itemsR;
-
+            // Validate experience before processing
             double exp = section.getDouble(s + ".experience");
-            List<String> cmds = section.getStringList(s + ".commands"); // IT MAY CAUSE AN ERROR
-
-            // Validazione
-            if (section.getDouble(s + ".experience") < 0) {
+            if (exp < 0) {
                 continue;
             }
 
-            if (section.getStringList(s + ".commands").isEmpty()) {
-                continue;
-            }
+            // Get commands (may be empty - this is optional)
+            List<String> cmds = section.getStringList(s + ".commands");
+
+            // Parse items using ArrayList to avoid null entries
+            List<ItemReward> itemsList = parseItems(section, s);
+
+            // Create the reward with final variables
+            final String rewardId = s;
+            final double experience = exp;
+            final List<String> commands = cmds;
+            final List<ItemReward> itemRewards = itemsList;
 
             AbstractReward reward = new AbstractReward() {
-
-                private final String id = s;
-                private final ItemReward[] itemsRewards = finalItemsR;
-                private final double experience = exp;
-                private final List<String> commands = cmds;
-
                 @Override
                 public String id() {
-                    return id;
+                    return rewardId;
                 }
 
                 @Override
                 public List<ItemReward> rewards() {
-                    return Arrays.stream(itemsRewards).toList();
+                    return itemRewards;
                 }
 
                 @Override
@@ -186,10 +96,101 @@ public final class RewardParser {
                 }
             };
 
-            rewards[i] = reward;
-            i++;
+            rewards.add(reward);
         }
 
-        return Arrays.stream(rewards).toList();
+        return rewards;
+    }
+
+    /**
+     * Parse items for a specific reward section
+     */
+    private List<ItemReward> parseItems(ConfigurationSection section, String rewardId) {
+        List<ItemReward> itemsList = new ArrayList<>();
+
+        final ConfigurationSection itemSec = section.getConfigurationSection(rewardId + ".items");
+
+        // Checking if there's some items in this reward
+        if (itemSec == null) {
+            return itemsList;
+        }
+
+        final Set<String> items = itemSec.getKeys(false);
+        if (items.isEmpty()) {
+            return itemsList;
+        }
+
+        for (final String item : items) {
+            String itemPath = item + ".";
+
+            // Critic fields validation
+            String type = itemSec.getString(itemPath + "type");
+            if (type == null || type.isEmpty()) {
+                continue;
+            }
+
+            boolean isMythic = itemSec.getBoolean(itemPath + "is_mythic_item");
+            String mythicName = itemSec.getString(itemPath + "mythic_item_name");
+
+            if (isMythic && (mythicName == null || mythicName.isEmpty())) {
+                continue;
+            }
+
+            int amount = itemSec.getInt(itemPath + "amount");
+            if (amount <= 0) {
+                continue;
+            }
+            final boolean finalIsMythic = isMythic;
+            final String finalMythicName = mythicName;
+            final String finalType = type;
+            final int finalAmount = amount;
+
+            // Building up the items
+            ItemReward itemReward = new ItemReward() {
+                @Override
+                public boolean isMythicItem() {
+                    return finalIsMythic;
+                }
+
+                @Override
+                public Optional<String> mythicItemName() {
+                    return Optional.ofNullable(finalMythicName);
+                }
+
+                @Override
+                public Optional<String> type() {
+                    return Optional.of(finalType);
+                }
+
+                @Override
+                public int amount() {
+                    return finalAmount;
+                }
+
+                @Override
+                public boolean isGlowing() {
+                    return itemSec.getBoolean(itemPath + "is_glowing");
+                }
+
+                @Override
+                public List<String> enchantments() {
+                    return itemSec.getStringList(itemPath + "enchants");
+                }
+
+                @Override
+                public String displayName() {
+                    return itemSec.getString(itemPath + "display_name");
+                }
+
+                @Override
+                public List<String> lore() {
+                    return itemSec.getStringList(itemPath + "lore");
+                }
+            };
+
+            itemsList.add(itemReward);
+        }
+
+        return itemsList;
     }
 }

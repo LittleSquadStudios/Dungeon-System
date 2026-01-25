@@ -98,28 +98,49 @@ public final class StructuralEventImpl extends StructuralEvent {
                                             globalStateLock.lock();
                                             if (eventDeactivator == this) {
                                                 deactivationTask.cancel(false);
-                                                Bukkit.getScheduler().runTask(
-                                                        Main.getInstance(),
-                                                        () -> {
-                                                            if (!airBlockList.isEmpty()) {
-                                                                airBlockList.forEach(block -> {
-                                                                    block.setType(Material.AIR);
-                                                                    block.getWorld().spawnParticle(
-                                                                            Particle.SMOKE,
-                                                                            block.getLocation(),
-                                                                            4);
-                                                                        });
-                                                                final Block block;
-                                                                (block = airBlockList
-                                                                        .getFirst())
-                                                                        .getWorld()
-                                                                        .playSound(
+                                                try {
+                                                    Bukkit.getScheduler().runTask(
+                                                            Main.getInstance(),
+                                                            () -> {
+                                                                if (!airBlockList.isEmpty()) {
+                                                                    airBlockList.forEach(block -> {
+                                                                        block.setType(Material.AIR);
+                                                                        block.getWorld().spawnParticle(
+                                                                                Particle.SMOKE,
                                                                                 block.getLocation(),
-                                                                                Sound.BLOCK_SPONGE_ABSORB,
-                                                                                1,
-                                                                                1);
-                                                            }
+                                                                                4);
+                                                                    });
+                                                                    final Block block;
+                                                                    (block = airBlockList
+                                                                            .getFirst())
+                                                                            .getWorld()
+                                                                            .playSound(
+                                                                                    block.getLocation(),
+                                                                                    Sound.BLOCK_SPONGE_ABSORB,
+                                                                                    1,
+                                                                                    1);
+                                                                }
+                                                            });
+                                                } catch (final Throwable _) {
+                                                    if (!airBlockList.isEmpty()) {
+                                                        airBlockList.forEach(block -> {
+                                                            block.setType(Material.AIR);
+                                                            block.getWorld().spawnParticle(
+                                                                    Particle.SMOKE,
+                                                                    block.getLocation(),
+                                                                    4);
                                                         });
+                                                        final Block block;
+                                                        (block = airBlockList
+                                                                .getFirst())
+                                                                .getWorld()
+                                                                .playSound(
+                                                                        block.getLocation(),
+                                                                        Sound.BLOCK_SPONGE_ABSORB,
+                                                                        1,
+                                                                        1);
+                                                    }
+                                                }
                                                 state = 0;
                                                 if (isClosing)
                                                     eventDeactivator = () -> {};

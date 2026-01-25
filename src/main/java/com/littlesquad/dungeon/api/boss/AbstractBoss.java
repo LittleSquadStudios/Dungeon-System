@@ -148,11 +148,10 @@ public abstract class AbstractBoss implements Boss, Listener {
             return;
         Main.getWorkStealingExecutor().execute(() -> {
             final List<Reward> rewards = room.rewards();
-            if (rewards == null || rewards.isEmpty())
+            if (rewards != null && !rewards.isEmpty())
                 for (final UUID participantId : participants) {
                     final Player player = Bukkit.getPlayer(participantId);
                     if (player != null && player.isOnline()) {
-                        assert rewards != null;
                         for (final Reward reward : rewards)
                             ((AbstractReward) reward).give(player);
                     }

@@ -53,42 +53,47 @@ public abstract non-sealed class ObjectiveEvent implements Event {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public final void onEntityDeath (final EntityDeathEvent e) {
-        requirements.updateRequirements(RequirementType.SLAY, e);
+        if (e.getEntity().getWorld().equals(dungeon.getWorld()))
+            requirements.updateRequirements(RequirementType.SLAY, e);
     }
     @EventHandler(priority = EventPriority.HIGHEST)
     public final void onPlayerMove (final PlayerMoveEvent e) {
-        requirements.updateRequirements(RequirementType.MOVE, e);
+        if (e.getPlayer().getWorld().equals(dungeon.getWorld()))
+            requirements.updateRequirements(RequirementType.MOVE, e);
     }
     @EventHandler(priority = EventPriority.HIGHEST)
     public final void onPlayerInteract (final PlayerInteractEvent e) {
-        requirements.updateRequirements(RequirementType.INTERACT, e);
+        if (e.getPlayer().getWorld().equals(dungeon.getWorld()))
+            requirements.updateRequirements(RequirementType.INTERACT, e);
     }
     @EventHandler(priority = EventPriority.HIGHEST)
     public final void onPlayerInteractAtEntity (final PlayerInteractAtEntityEvent e) {
-        requirements.updateRequirements(RequirementType.INTERACT, e);
+        if (e.getPlayer().getWorld().equals(dungeon.getWorld()))
+            requirements.updateRequirements(RequirementType.INTERACT, e);
     }
     @EventHandler(priority = EventPriority.HIGHEST)
     public final void onItemPickUp (final EntityPickupItemEvent e) {
-        //noinspection deprecation
-        requirements.updateRequirements(RequirementType.ITEM, e, e
-                .getItem()
-                .getItemStack()
-                .hasItemMeta()
-                && e
-                .getItem()
-                .getItemStack()
-                .getItemMeta()
-                .hasDisplayName()
-                ? e
-                .getItem()
-                .getItemStack()
-                .getItemMeta()
-                .getDisplayName()
-                : e
-                .getItem()
-                .getItemStack()
-                .getType()
-                .name());
+        if (e.getEntity().getWorld().equals(dungeon.getWorld()))
+            //noinspection deprecation
+            requirements.updateRequirements(RequirementType.ITEM, e, e
+                    .getItem()
+                    .getItemStack()
+                    .hasItemMeta()
+                    && e
+                    .getItem()
+                    .getItemStack()
+                    .getItemMeta()
+                    .hasDisplayName()
+                    ? e
+                    .getItem()
+                    .getItemStack()
+                    .getItemMeta()
+                    .getDisplayName()
+                    : e
+                    .getItem()
+                    .getItemStack()
+                    .getType()
+                    .name());
     }
 
     public void close () {

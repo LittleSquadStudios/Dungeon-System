@@ -24,6 +24,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -509,7 +510,6 @@ public final class RequirementsParser {
                 }
                 case ITEM -> {
                     final ParticipantRequirements requirements;
-                    final String displayName;
                     final Player[] players;
                     if (e instanceof InventoryEvent
                             && args[0]
@@ -532,32 +532,45 @@ public final class RequirementsParser {
                         requirements = participantRequirements.computeIfAbsent(
                                 party != null ? party : player,
                                 ParticipantRequirements::new);
-                        displayName = (String) args[0];
                     } else yield null;
+                    final Map<String, Integer> itemAmounts = new HashMap<>();
+                    for (final Player p : players) {
+                        final Inventory inv = p.getInventory();
+                        for (int i = 0; i < inv.getSize(); ++i) {
+                            final ItemStack item;
+                            final ItemMeta m;
+                            if ((item = inv.getItem(i)) != null) {
+                                //noinspection deprecation
+                                final String itemName = item
+                                        .hasItemMeta()
+                                        && (m = item
+                                        .getItemMeta())
+                                        .hasDisplayName()
+                                        ? m
+                                        .getDisplayName()
+                                        : item
+                                        .getType()
+                                        .name();
+                                itemAmounts.compute(itemName,
+                                        (_, v) -> v != null
+                                                ? item.getAmount() + v
+                                                : item.getAmount());
+                            }
+                        }
+                    }
                     final AtomicBoolean present = new AtomicBoolean();
-                    if (requirements.itemRequirements.computeIfPresent(
-                            displayName,
-                            (_, v) -> {
-                                present.setPlain(true);
-                                int amount = 0;
-                                for (final Player p : players) {
-                                    final Inventory inv = p.getInventory();
-                                    for (int i = 0; i < inv.getSize(); ++i) {
-                                        final ItemStack item;
-                                        final ItemMeta m;
-                                        //noinspection deprecation
-                                        if ((item = inv.getItem(i)) != null
-                                                && displayName.equals(item.hasItemMeta()
-                                                && (m = item.getItemMeta()).hasDisplayName()
-                                                ? m.getDisplayName()
-                                                : item.getType().name()))
-                                            amount += item.getAmount();
-                                    }
-                                }
-                                if (v <= amount)
-                                    return v;
-                                return null;
-                            }) != null
+                    if (itemAmounts.entrySet()
+                            .stream()
+                            .allMatch(entry -> requirements
+                                    .itemRequirements
+                                    .computeIfPresent(
+                                            entry.getKey(),
+                                            (_, v) -> {
+                                                if (entry.getValue() < v)
+                                                    return v;
+                                                present.setPlain(true);
+                                                return null;
+                                            }) != null)
                             || !present.getPlain())
                         yield null;
                     yield requirements;
@@ -775,7 +788,6 @@ public final class RequirementsParser {
                 }
                 case ITEM -> {
                     final ParticipantRequirements requirements;
-                    final String displayName;
                     final Player[] players;
                     if (e instanceof InventoryEvent
                             && args[0]
@@ -798,32 +810,45 @@ public final class RequirementsParser {
                         requirements = participantRequirements.computeIfAbsent(
                                 party != null ? party : player,
                                 ParticipantRequirements::new);
-                        displayName = (String) args[0];
                     } else yield null;
+                    final Map<String, Integer> itemAmounts = new HashMap<>();
+                    for (final Player p : players) {
+                        final Inventory inv = p.getInventory();
+                        for (int i = 0; i < inv.getSize(); ++i) {
+                            final ItemStack item;
+                            final ItemMeta m;
+                            if ((item = inv.getItem(i)) != null) {
+                                //noinspection deprecation
+                                final String itemName = item
+                                        .hasItemMeta()
+                                        && (m = item
+                                        .getItemMeta())
+                                        .hasDisplayName()
+                                        ? m
+                                        .getDisplayName()
+                                        : item
+                                        .getType()
+                                        .name();
+                                itemAmounts.compute(itemName,
+                                        (_, v) -> v != null
+                                                ? item.getAmount() + v
+                                                : item.getAmount());
+                            }
+                        }
+                    }
                     final AtomicBoolean present = new AtomicBoolean();
-                    if (requirements.itemRequirements.computeIfPresent(
-                            displayName,
-                            (_, v) -> {
-                                present.setPlain(true);
-                                int amount = 0;
-                                for (final Player p : players) {
-                                    final Inventory inv = p.getInventory();
-                                    for (int i = 0; i < inv.getSize(); ++i) {
-                                        final ItemStack item;
-                                        final ItemMeta m;
-                                        //noinspection deprecation
-                                        if ((item = inv.getItem(i)) != null
-                                                && displayName.equals(item.hasItemMeta()
-                                                && (m = item.getItemMeta()).hasDisplayName()
-                                                ? m.getDisplayName()
-                                                : item.getType().name()))
-                                            amount += item.getAmount();
-                                    }
-                                }
-                                if (v <= amount)
-                                    return v;
-                                return null;
-                            }) != null
+                    if (itemAmounts.entrySet()
+                            .stream()
+                            .allMatch(entry -> requirements
+                                    .itemRequirements
+                                    .computeIfPresent(
+                                            entry.getKey(),
+                                            (_, v) -> {
+                                                if (entry.getValue() < v)
+                                                    return v;
+                                                present.setPlain(true);
+                                                return null;
+                                            }) != null)
                             || !present.getPlain())
                         yield null;
                     yield requirements;

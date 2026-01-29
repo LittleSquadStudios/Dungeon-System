@@ -16,9 +16,13 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.event.Event;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.inventory.InventoryEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.List;
 import java.util.Map;
@@ -84,14 +88,13 @@ public final class RequirementsParser {
             //RTV = Regions To Visit
             private final List<LocationPair> rtv = new CopyOnWriteArrayList<>(baseRTV);
             private final Map<Location, String> interactions = new ConcurrentHashMap<>(baseInteractions);
-            private final Map<String, VariableRequirement> itemRequirements;
+            private final Map<String, Integer> itemRequirements;
             private final AtomicBoolean completed = new AtomicBoolean();
             private ParticipantRequirements (final Object key) {
                 this.key = key;
                 slayRequirements = new ConcurrentHashMap<>(baseSlayRequirements.size());
                 baseSlayRequirements.forEach((s, obj) -> slayRequirements.put(s, new VariableRequirement(obj)));
-                itemRequirements = new ConcurrentHashMap<>(baseItemRequirements.size());
-                baseItemRequirements.forEach((s, obj) -> itemRequirements.put(s, new VariableRequirement(obj)));
+                (itemRequirements = new ConcurrentHashMap<>(baseItemRequirements.size())).putAll(baseItemRequirements);
             }
         }
         //key might be either a player or a party
@@ -507,12 +510,14 @@ public final class RequirementsParser {
                 case ITEM -> {
                     final ParticipantRequirements requirements;
                     final String displayName;
-                    if (e instanceof final EntityPickupItemEvent ev
-                            && !ev.isCancelled()
-                            && ev.getEntity()
+                    final Player[] players;
+                    if (e instanceof InventoryEvent
+                            && args[0]
                             instanceof final Player player) {
                         final AbstractParty party;
-                        if (!event.isActiveFor((party = Main
+                        if (!event.isActiveFor(players
+                                = (party
+                                = Main
                                 .getMMOCoreAPI()
                                 .getPlayerData(player)
                                 .getParty())
@@ -534,7 +539,22 @@ public final class RequirementsParser {
                             displayName,
                             (_, v) -> {
                                 present.setPlain(true);
-                                if (++v.current != v.objective)
+                                int amount = 0;
+                                for (final Player p : players) {
+                                    final Inventory inv = p.getInventory();
+                                    for (int i = 0; i < inv.getSize(); ++i) {
+                                        final ItemStack item;
+                                        final ItemMeta m;
+                                        //noinspection deprecation
+                                        if ((item = inv.getItem(i)) != null
+                                                && displayName.equals(item.hasItemMeta()
+                                                && (m = item.getItemMeta()).hasDisplayName()
+                                                ? m.getDisplayName()
+                                                : item.getType().name()))
+                                            amount += item.getAmount();
+                                    }
+                                }
+                                if (v <= amount)
                                     return v;
                                 return null;
                             }) != null
@@ -756,12 +776,14 @@ public final class RequirementsParser {
                 case ITEM -> {
                     final ParticipantRequirements requirements;
                     final String displayName;
-                    if (e instanceof final EntityPickupItemEvent ev
-                            && !ev.isCancelled()
-                            && ev.getEntity()
+                    final Player[] players;
+                    if (e instanceof InventoryEvent
+                            && args[0]
                             instanceof final Player player) {
                         final AbstractParty party;
-                        if (!event.isActiveFor((party = Main
+                        if (!event.isActiveFor(players
+                                = (party
+                                = Main
                                 .getMMOCoreAPI()
                                 .getPlayerData(player)
                                 .getParty())
@@ -783,7 +805,22 @@ public final class RequirementsParser {
                             displayName,
                             (_, v) -> {
                                 present.setPlain(true);
-                                if (++v.current != v.objective)
+                                int amount = 0;
+                                for (final Player p : players) {
+                                    final Inventory inv = p.getInventory();
+                                    for (int i = 0; i < inv.getSize(); ++i) {
+                                        final ItemStack item;
+                                        final ItemMeta m;
+                                        //noinspection deprecation
+                                        if ((item = inv.getItem(i)) != null
+                                                && displayName.equals(item.hasItemMeta()
+                                                && (m = item.getItemMeta()).hasDisplayName()
+                                                ? m.getDisplayName()
+                                                : item.getType().name()))
+                                            amount += item.getAmount();
+                                    }
+                                }
+                                if (v <= amount)
                                     return v;
                                 return null;
                             }) != null

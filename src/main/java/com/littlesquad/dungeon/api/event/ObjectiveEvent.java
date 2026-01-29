@@ -8,14 +8,19 @@ import com.littlesquad.dungeon.api.event.requirement.RequirementType;
 import com.littlesquad.dungeon.api.event.requirement.Requirements;
 import com.littlesquad.dungeon.internal.file.RequirementsParser;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.inventory.InventoryEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.inventory.Inventory;
+
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 public abstract non-sealed class ObjectiveEvent implements Event {
     private final Dungeon dungeon;
@@ -72,28 +77,22 @@ public abstract non-sealed class ObjectiveEvent implements Event {
             requirements.updateRequirements(RequirementType.INTERACT, e);
     }
     @EventHandler(priority = EventPriority.HIGHEST)
-    public final void onItemPickUp (final EntityPickupItemEvent e) {
-        if (e.getEntity().getWorld().equals(dungeon.getWorld()))
-            //noinspection deprecation
-            requirements.updateRequirements(RequirementType.ITEM, e, e
-                    .getItem()
-                    .getItemStack()
-                    .hasItemMeta()
-                    && e
-                    .getItem()
-                    .getItemStack()
-                    .getItemMeta()
-                    .hasDisplayName()
-                    ? e
-                    .getItem()
-                    .getItemStack()
-                    .getItemMeta()
-                    .getDisplayName()
-                    : e
-                    .getItem()
-                    .getItemStack()
-                    .getType()
-                    .name());
+    public final void onItemPickUp (final InventoryEvent e) {
+        final AtomicReference<HumanEntity> humanEntity = new AtomicReference<>();
+        final Inventory inventory;
+        if (Objects.equals((inventory = e
+                .getInventory())
+                .getViewers()
+                .stream()
+                .filter(he -> {
+                    if (he.getInventory().equals(inventory)) {
+                        humanEntity.setPlain(he);
+                        return true;
+                    } else return false;
+                }).map(HumanEntity::getWorld)
+                .findAny()
+                .orElse(null), dungeon.getWorld()))
+            requirements.updateRequirements(RequirementType.ITEM, e, humanEntity.getPlain());
     }
 
     public void close () {
@@ -101,6 +100,6 @@ public abstract non-sealed class ObjectiveEvent implements Event {
         PlayerMoveEvent.getHandlerList().unregister(this);
         PlayerInteractEvent.getHandlerList().unregister(this);
         PlayerInteractAtEntityEvent.getHandlerList().unregister(this);
-        EntityPickupItemEvent.getHandlerList().unregister(this);
+        InventoryEvent.getHandlerList().unregister(this);
     }
 }

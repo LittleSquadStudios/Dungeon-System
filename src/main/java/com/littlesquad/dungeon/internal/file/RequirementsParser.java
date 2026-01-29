@@ -622,8 +622,7 @@ public final class RequirementsParser {
                                     return v;
                                 return null;
                             }) != null
-                            || !present.getPlain()
-                            || !requirements.slayRequirements.isEmpty())
+                            || !present.getPlain())
                         yield null;
                     yield requirements;
                 }
@@ -658,10 +657,7 @@ public final class RequirementsParser {
                                     <= dr.distance
                                     && requirements
                                     .nearLTV
-                                    .remove(dr))
-                            && requirements
-                            .nearLTV
-                            .isEmpty())
+                                    .remove(dr)))
                             || (requirements
                             .rtv
                             .stream()
@@ -680,10 +676,7 @@ public final class RequirementsParser {
                                     >= loc.getZ()
                                     && requirements
                                     .rtv
-                                    .remove(lp))
-                            && requirements
-                            .rtv
-                            .isEmpty()))
+                                    .remove(lp))))
                         yield requirements;
                     yield null;
                 }
@@ -756,8 +749,7 @@ public final class RequirementsParser {
                                     return null;
                                 return v;
                             }) != null
-                            || !present.getPlain()
-                            || !requirements.interactions.isEmpty())
+                            || !present.getPlain())
                         yield null;
                     yield requirements;
                 }
@@ -795,8 +787,7 @@ public final class RequirementsParser {
                                     return v;
                                 return null;
                             }) != null
-                            || !present.getPlain()
-                            || !requirements.itemRequirements.isEmpty())
+                            || !present.getPlain())
                         yield null;
                     yield requirements;
                 }

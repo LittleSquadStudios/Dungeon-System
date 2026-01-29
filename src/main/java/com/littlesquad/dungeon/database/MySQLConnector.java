@@ -4,13 +4,11 @@ import com.littlesquad.Main;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.util.Credentials;
-import io.lumine.mythic.bukkit.utils.lib.jooq.util.mysql.MySQLDSL;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public final class MySQLConnector {
 

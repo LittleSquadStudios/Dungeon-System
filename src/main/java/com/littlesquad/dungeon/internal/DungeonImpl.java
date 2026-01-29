@@ -5,14 +5,12 @@ import com.littlesquad.dungeon.api.TypeFlag;
 import com.littlesquad.dungeon.api.boss.BossRoom;
 import com.littlesquad.dungeon.api.checkpoint.Checkpoint;
 import com.littlesquad.dungeon.api.entrance.Entrance;
-import com.littlesquad.dungeon.api.entrance.ExitReason;
 import com.littlesquad.dungeon.api.event.Event;
 import com.littlesquad.dungeon.api.event.EventType;
 import com.littlesquad.dungeon.api.rewards.Reward;
 import com.littlesquad.dungeon.api.status.Status;
 import com.littlesquad.dungeon.internal.file.DungeonParser;
 import org.bukkit.World;
-import org.bukkit.entity.Player;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

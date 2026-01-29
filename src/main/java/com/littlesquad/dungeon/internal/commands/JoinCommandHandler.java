@@ -3,7 +3,6 @@ package com.littlesquad.dungeon.internal.commands;
 import com.littlesquad.Main;
 import com.littlesquad.dungeon.api.Dungeon;
 import com.littlesquad.dungeon.api.entrance.EntryResponse;
-import com.littlesquad.dungeon.api.entrance.ExitReason;
 import com.littlesquad.dungeon.api.session.DungeonSession;
 import com.littlesquad.dungeon.internal.DungeonManager;
 import com.littlesquad.dungeon.internal.SessionManager;

@@ -1,7 +1,6 @@
 package com.littlesquad.dungeon.internal.commands;
 
 import com.littlesquad.dungeon.api.Dungeon;
-import com.littlesquad.dungeon.api.event.Event;
 import com.littlesquad.dungeon.api.session.DungeonSession;
 import com.littlesquad.dungeon.internal.DungeonManager;
 import com.littlesquad.dungeon.internal.SessionManager;

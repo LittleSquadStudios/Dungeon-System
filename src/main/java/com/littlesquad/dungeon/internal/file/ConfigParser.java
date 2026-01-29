@@ -2,7 +2,6 @@ package com.littlesquad.dungeon.internal.file;
 
 import com.littlesquad.Main;
 import com.littlesquad.dungeon.database.MySQLConnector;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.concurrent.ExecutorService;

@@ -5,7 +5,6 @@ import com.littlesquad.dungeon.database.MySQLConnector;
 import com.littlesquad.dungeon.internal.DungeonManager;
 import com.littlesquad.dungeon.internal.SessionManager;
 import com.littlesquad.dungeon.internal.commands.DungeonCommand;
-import com.littlesquad.dungeon.internal.file.ConfigParser;
 import com.littlesquad.dungeon.internal.file.FileManager;
 import com.littlesquad.dungeon.internal.utils.MessageProvider;
 import com.littlesquad.dungeon.placeholder.PlaceholderHook;

@@ -76,7 +76,6 @@ public final class DungeonParser {
     }
 
     public List<Reward> getRewards() {
-        System.out.println(id);
         return rewardParser.parse();
     }
 

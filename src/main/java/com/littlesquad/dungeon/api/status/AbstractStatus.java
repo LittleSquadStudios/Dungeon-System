@@ -159,54 +159,6 @@ public abstract class AbstractStatus implements Status {
         return true;
     }
 
-
-    /*@Override //TODO: Stessa cosa di sopra se quello vale per tutti i membri del party
-    public CompletableFuture<Boolean> isPartyInDungeon(AbstractParty party) {
-        return CompletableFuture.supplyAsync(() -> {
-
-            @SuppressWarnings("all")
-            final class AtomicBoolean {
-                private static final VarHandle valueVar;
-
-                static {
-                    try {
-                        valueVar = MethodHandles.lookup().findVarHandle(AtomicBoolean.class, "value", boolean.class);
-                    } catch (NoSuchFieldException | IllegalAccessException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-
-                private boolean value;
-
-                private AtomicBoolean(final boolean value) {
-                    this.value = value;
-                }
-
-            }
-
-            final AtomicBoolean result = new AtomicBoolean(true);
-            int partySize = party.getOnlineMembers().size();
-
-            //noinspection unchecked
-            final CompletableFuture<Void>[] futures = new CompletableFuture[partySize];
-
-            int i = 0;
-
-            for (final PlayerData pd : party.getOnlineMembers()) {
-
-                futures[i] = isPlayerInDungeon(pd.getUniqueId())
-                        .thenAcceptAsync(s ->
-                                AtomicBoolean.valueVar.getAndBitwiseAnd(result, s));
-
-                i++;
-
-            }
-
-            CompletableFuture.allOf(futures).join();
-
-            return (boolean) AtomicBoolean.valueVar.getOpaque(result);
-        });
-    }*/
     @Override
     public int playerKills(UUID uuid) {
         final DungeonSession session = SessionManager

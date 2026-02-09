@@ -53,7 +53,7 @@ public final class Main extends JavaPlugin {
         if (mainCommand != null) {
             mainCommand.setExecutor(exTabCompleter);
             mainCommand.setTabCompleter(exTabCompleter);
-        } else System.out.println("Command doesn't exists in plugin.yml");
+        }
 
     }
 

@@ -81,8 +81,9 @@ public final class StructuralEventImpl extends StructuralEvent {
                         globalStateLock.lock();
                         if (state == 0) {
                             if (conditionedBy()
-                                .stream()
-                                .allMatch(Predicate.not(StructuralEvent::isActiveFor))) {
+                                    .stream()
+                                    .filter(se -> se != this)
+                                    .anyMatch(Predicate.not(StructuralEvent::isActiveFor))) {
                                 final ScheduledFuture<?> deactivationTask = Main
                                         .getScheduledExecutor()
                                         .schedule(() -> eventDeactivator.run(),
@@ -234,7 +235,8 @@ public final class StructuralEventImpl extends StructuralEvent {
                     if (state == 0) {
                         if (conditionedBy()
                                 .stream()
-                                .allMatch(Predicate.not(StructuralEvent::isActiveFor))) {
+                                .filter(se -> se != this)
+                                .anyMatch(Predicate.not(StructuralEvent::isActiveFor))) {
                             final ScheduledFuture<?> deactivationTask = Main
                                     .getScheduledExecutor()
                                     .schedule(() -> eventDeactivator.run(),

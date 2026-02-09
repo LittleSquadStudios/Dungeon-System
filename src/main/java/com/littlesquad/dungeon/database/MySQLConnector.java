@@ -236,7 +236,7 @@ public final class MySQLConnector {
                 try {
                     return dataSource.getConnection();
                 } catch (SQLException e) {
-                    System.out.println("Connection failed: " + e.getMessage());
+                    System.err.println("Connection failed: " + e.getMessage());
                 }
             }
             return null;

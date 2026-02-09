@@ -70,26 +70,16 @@ public final class SessionManager {
 
         final ScheduledFuture<?> task = timedTasks.remove(playerId);
         if (task != null && !task.isDone()) {
-            if(!task.cancel(true)){
-                System.err.println("Failed to cancel timed task for player: " + playerId);
-            }
+            task.cancel(true);
         }
 
         final Dungeon dungeon = session.getDungeon();
         final List<DungeonSession> dungeonSessionSet = dungeonSessions.get(dungeon);
 
         if (dungeonSessionSet != null) {
-            if (dungeonSessionSet.remove(session)) {
-                session.stopSession(exitReason);
-                System.out.println("Stopped session for: " + playerId);
-            } else {
-                System.err.println("Warning: Session not found in dungeon list for player: " + playerId);
-                session.stopSession(exitReason);
-            }
-        } else {
-            System.err.println("Warning: No session list found for dungeon: " + dungeon.id());
-            session.stopSession(exitReason);
+            dungeonSessionSet.remove(session);
         }
+        session.stopSession(exitReason);
 
     }
 
@@ -182,11 +172,7 @@ public final class SessionManager {
                                                 endSession(playerId, ExitReason.TIME_EXPIRED);
                                             }
                                         }, remainingMillis, TimeUnit.MILLISECONDS));
-
-                                System.out.println("Recovered timed session for player " + playerId +
-                                        " with " + (remainingMillis / 1000) + " seconds remaining");
                             } else {
-                                System.out.println("Session expired while player was offline: " + playerId);
                                 markSessionAsTimeExpired(runId);
                             }
                         } else {
@@ -202,20 +188,14 @@ public final class SessionManager {
                             sessions.put(playerId, session);
                             dungeonSessions.computeIfAbsent(dungeon, _ -> new CopyOnWriteArrayList<>())
                                     .add(session);
-
-                            System.out.println("Recovered normal session for player " + playerId);
                         }
-                    } else {
-                        System.out.println("No active session to recover for player: " + playerId);
                     }
                 }
 
             } catch (SQLException e) {
-                System.err.println("Error recovering session for player " + playerId + ": " + e.getMessage());
                 throw new RuntimeException("Failed to recover session", e);
             }
         }, Main.getCachedExecutor()).exceptionallyAsync(ex -> {
-            System.err.println("Fatal error during session recovery: " + ex.getMessage());
             ex.printStackTrace();
             return null;
         }, Main.getWorkStealingExecutor());

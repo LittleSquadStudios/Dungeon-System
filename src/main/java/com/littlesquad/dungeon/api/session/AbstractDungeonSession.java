@@ -57,7 +57,6 @@ public abstract class AbstractDungeonSession implements DungeonSession {
                     loadSessionData()
             ).whenCompleteAsync((_, ex) -> {
                 if (ex != null) {
-                    System.err.println("Failed to recover session for run_id " + runId + ": " + ex.getMessage());
                     ex.printStackTrace();
                 } else {
                     Main.getInstance().getLogger().info("Session recovered for player " + playerUUID);
@@ -76,7 +75,6 @@ public abstract class AbstractDungeonSession implements DungeonSession {
     @Override
     public void stopSession(final ExitReason reason) {
         if (!active.compareAndSet(true, false)) {
-            System.out.println("Session already stopped for: " + playerUUID);
             return;
         }
 
@@ -109,10 +107,7 @@ public abstract class AbstractDungeonSession implements DungeonSession {
                 .thenRunAsync(() -> pushDatabase(reason), Main.getCachedExecutor())
                 .whenCompleteAsync((_, ex) -> {
                     if (ex != null) {
-                        System.err.println("Error saving session for " + playerUUID + ": " + ex.getMessage());
                         ex.printStackTrace();
-                    } else {
-                        System.out.println("Session saved successfully for: " + playerUUID);
                     }
                     CheckPointManager.removeCheckPointFor(playerUUID);
                 }, Main.getWorkStealingExecutor());
@@ -239,7 +234,6 @@ public abstract class AbstractDungeonSession implements DungeonSession {
                         stmt.setInt(7, runId);
 
                         int rows = stmt.executeUpdate();
-                        System.out.println("Updated session data: " + rows + " row(s) affected");
                     }
 
                 } else {
@@ -277,13 +271,6 @@ public abstract class AbstractDungeonSession implements DungeonSession {
                         stmt.setString(9, reason.name());
 
                         int rows = stmt.executeUpdate();
-
-                        if (rows == 0) {
-                            System.err.println("WARNING: UPDATE affected 0 rows for pr_id=" + runId +
-                                    ". Session might have been deleted from database!");
-                        } else {
-                            System.out.println("Updated session data for pr_id=" + runId + ": " + rows + " row(s) affected");
-                        }
                     }
                 }
 
@@ -291,7 +278,6 @@ public abstract class AbstractDungeonSession implements DungeonSession {
                 throw new RuntimeException("Error saving session data", e);
             }
         }, Main.getCachedExecutor()).exceptionally(ex -> {
-            System.err.println("Database push failed: " + ex.getMessage());
             ex.printStackTrace();
             return null;
         });

@@ -6,6 +6,9 @@ import com.littlesquad.dungeon.api.event.TimedEvent;
 import com.littlesquad.dungeon.internal.utils.CommandUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.Arrays;
 import java.util.List;
@@ -40,6 +43,12 @@ public final class TimedEventImpl extends TimedEvent {
         this.timeUnit = timeUnit;
         players = new ConcurrentHashMap<>();
         Bukkit.getPluginManager().registerEvents(this, Main.getInstance());
+    }
+
+    @SuppressWarnings("unused")
+    @EventHandler
+    public void onQuit (final PlayerQuitEvent e) {
+        deActiveFor(e.getPlayer());
     }
 
     public boolean isFixed () {
@@ -100,6 +109,7 @@ public final class TimedEventImpl extends TimedEvent {
     }
 
     public void close () {
+        PlayerQuitEvent.getHandlerList().unregister(this);
         deActiveFor(players.keySet().toArray(new Player[0]));
     }
 }
